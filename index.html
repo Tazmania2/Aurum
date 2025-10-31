@@ -54,12 +54,39 @@
             border: none;
         }
 
-        /* Widget container - full screen single widget */
+        /* View with title layout */
+        .view-with-title {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* View title styling */
+        .view-title {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            padding: 15px 40px;
+            background: rgba(138, 43, 226, 0.3);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Widget container - takes remaining space */
         .widget-container {
             width: 100%;
-            height: 100%;
+            flex: 1;
             position: relative;
             box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .widget-full {
@@ -91,24 +118,6 @@
             height: 100% !important;
             transform: none !important;
         }
-
-        /* View title styling */
-        .view-title {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            font-size: 48px;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            padding: 15px 40px;
-            background: rgba(138, 43, 226, 0.3);
-            border-radius: 16px;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
     </style>
 </head>
 
@@ -122,27 +131,27 @@
     </div>
 
     <!-- View 2: Widget 1 (espacial) -->
-    <div id="view-2" class="view">
-        <h1 class="view-title">Vendedores</h1>
-        <div class="widget-container">
-            <div class="widget-full" id="widget-1"></div>
-        </div>
+    <div id="view-2" class="view view-with-title"></div>
+    <h1 class="view-title">Vendedores</h1>
+    <div class="widget-container">
+        <div class="widget-full" id="widget-1"></div>
+    </div>
     </div>
 
     <!-- View 3: Widget 2 (corrida_espacial__referidos) -->
-    <div id="view-3" class="view">
-        <h1 class="view-title">Indicações</h1>
-        <div class="widget-container">
-            <div class="widget-full" id="widget-2"></div>
-        </div>
+    <div id="view-3" class="view view-with-title"></div>
+    <h1 class="view-title">Indicações</h1>
+    <div class="widget-container">
+        <div class="widget-full" id="widget-2"></div>
+    </div>
     </div>
 
     <!-- View 4: Widget 3 (corrida_espacial__sdr) -->
-    <div id="view-4" class="view">
-        <h1 class="view-title">SDRs</h1>
-        <div class="widget-container">
-            <div class="widget-full" id="widget-3"></div>
-        </div>
+    <div id="view-4" class="view view-with-title"></div>
+    <h1 class="view-title">SDRs</h1>
+    <div class="widget-container">
+        <div class="widget-full" id="widget-3"></div>
+    </div>
     </div>
 
     <script type="text/javascript">

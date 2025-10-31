@@ -20,6 +20,8 @@
             padding: 0;
             height: 100%;
             overflow: hidden;
+            background: linear-gradient(135deg, #1a0b2e 0%, #2d1b69 25%, #4a2c8f 50%, #6b46c1 75%, #8b5cf6 100%);
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .view {
@@ -45,25 +47,66 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            padding: 20px;
+            gap: 20px;
             box-sizing: border-box;
         }
 
         .widget-large {
-            height: 50%;
+            height: calc(50% - 10px);
             width: 100%;
+            position: relative;
             box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .widget-row {
             display: flex;
             flex-direction: row;
-            height: 50%;
+            height: calc(50% - 10px);
+            gap: 20px;
             box-sizing: border-box;
         }
 
         .widget-small {
             flex: 1;
+            position: relative;
             box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Funifier widget containment - critical for preventing overlap */
+        .widget-large,
+        .widget-small {
+            isolation: isolate;
+        }
+
+        /* Force all Funifier content to be contained */
+        .widget-large > *,
+        .widget-small > * {
+            max-width: 100% !important;
+            max-height: 100% !important;
+        }
+
+        /* Override Funifier's positioning */
+        .widget-large > div,
+        .widget-small > div,
+        .widget-large canvas,
+        .widget-small canvas,
+        .widget-large iframe,
+        .widget-small iframe {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            transform: none !important;
         }
     </style>
 </head>
@@ -129,6 +172,8 @@
         setInterval(cycleViews, 10000);
 
         // Funifier initialization
+        let widgetsRendered = false;
+
         $(document).ready(function() {
             Funifier.init({
                 apiKey: "69027af6e179d46fce283e7e",
@@ -137,12 +182,17 @@
                 // Set authorization token
                 Funifier.auth.setAuthorization("Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA==");
 
-                // Render all widget instances
-                renderAllWidgets();
+                // Render all widget instances with a slight delay to ensure DOM is ready
+                setTimeout(function() {
+                    renderAllWidgets();
+                    widgetsRendered = true;
+                }, 500);
             });
         });
 
         function renderAllWidgets() {
+            console.log("Rendering all widgets...");
+            
             // Render Widget 1 (espacial) instances
             renderWidget("espacial", "#widget-1-large");
             renderWidget("espacial", "#widget-1-small-v3");
@@ -160,6 +210,8 @@
         }
 
         function renderWidget(widgetName, selector) {
+            console.log("Rendering widget:", widgetName, "in", selector);
+            
             Funifier.widget.render({
                 widget: widgetName,
                 selector: selector,
@@ -167,6 +219,8 @@
             }, function(err, data) {
                 if (err) {
                     console.error("Widget error for " + widgetName + " in " + selector + ":", err);
+                } else {
+                    console.log("Widget rendered successfully:", widgetName, "in", selector);
                 }
             });
         }

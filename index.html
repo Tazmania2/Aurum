@@ -28,11 +28,23 @@
             position: absolute;
             width: 100vw;
             height: 100vh;
-            display: none;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
+            pointer-events: none;
         }
 
         .view.active {
-            display: block;
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .view.slide-out-left {
+            transform: translateX(-100%);
+            opacity: 0;
         }
 
         /* BI iframe styling */
@@ -79,6 +91,24 @@
             height: 100% !important;
             transform: none !important;
         }
+
+        /* View title styling */
+        .view-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            padding: 15px 40px;
+            background: rgba(138, 43, 226, 0.3);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
     </style>
 </head>
 
@@ -86,12 +116,14 @@
     <!-- View 1: BI Report -->
     <div id="view-1" class="view active">
         <iframe src="https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF"
-            width="100%" height="100%" frameborder="0" allowfullscreen>
+            frameborder="0" style="border:0" allowfullscreen
+            sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
         </iframe>
     </div>
 
     <!-- View 2: Widget 1 (espacial) -->
     <div id="view-2" class="view">
+        <h1 class="view-title">Vendedores</h1>
         <div class="widget-container">
             <div class="widget-full" id="widget-1"></div>
         </div>
@@ -99,6 +131,7 @@
 
     <!-- View 3: Widget 2 (corrida_espacial__referidos) -->
     <div id="view-3" class="view">
+        <h1 class="view-title">Indicações</h1>
         <div class="widget-container">
             <div class="widget-full" id="widget-2"></div>
         </div>
@@ -106,6 +139,7 @@
 
     <!-- View 4: Widget 3 (corrida_espacial__sdr) -->
     <div id="view-4" class="view">
+        <h1 class="view-title">SDRs</h1>
         <div class="widget-container">
             <div class="widget-full" id="widget-3"></div>
         </div>
@@ -117,19 +151,38 @@
         const totalViews = 4;
 
         function cycleViews() {
-            console.log('Cycling from view', currentView, 'to view', (currentView + 1) % totalViews);
-
-            // Remove 'active' class from current view
             const views = document.querySelectorAll('.view');
+            const nextView = (currentView + 1) % totalViews;
+
+            console.log('Cycling from view', currentView, 'to view', nextView);
+
+            // Add slide-out animation to current view
+            views[currentView].classList.add('slide-out-left');
             views[currentView].classList.remove('active');
 
-            // Increment currentView using modulo operator to loop back to 0 after view 3
-            currentView = (currentView + 1) % totalViews;
+            // Prepare next view (position it off-screen to the right)
+            views[nextView].style.transform = 'translateX(100%)';
+            views[nextView].style.opacity = '0';
 
-            // Add 'active' class to the new current view
-            views[currentView].classList.add('active');
+            // Small delay to ensure the next view is positioned before animating
+            setTimeout(() => {
+                // Slide in the next view
+                views[nextView].classList.add('active');
 
-            console.log('Now showing view', currentView);
+                // Update current view index
+                currentView = nextView;
+
+                console.log('Now showing view', currentView);
+            }, 50);
+
+            // Clean up slide-out class after animation completes
+            setTimeout(() => {
+                views.forEach((view, index) => {
+                    if (index !== currentView) {
+                        view.classList.remove('slide-out-left');
+                    }
+                });
+            }, 650);
         }
 
         // Start cycling every 5 seconds (5000 milliseconds)

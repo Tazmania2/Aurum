@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycling Dashboard</title>
+
+    <!-- jQuery (required by Funifier SDK) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Funifier SDK -->
+    <script src="https://client2.funifier.com/v3/funifier.js"></script>
+
+    <style>
+        /* Global styles and view visibility controls */
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .view {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* BI iframe styling */
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Flexbox layouts for widget views */
+        .widget-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .widget-large {
+            height: 50%;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .widget-row {
+            display: flex;
+            flex-direction: row;
+            height: 50%;
+            box-sizing: border-box;
+        }
+
+        .widget-small {
+            flex: 1;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- View 1: BI Report -->
+    <div id="view-1" class="view active">
+        <iframe src="https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF"
+            width="100%" height="100%" frameborder="0" allowfullscreen>
+        </iframe>
+    </div>
+
+    <!-- View 2: Widget 1 Large -->
+    <div id="view-2" class="view">
+        <div class="widget-container">
+            <div class="widget-large" id="widget-1-large"></div>
+            <div class="widget-row">
+                <div class="widget-small" id="widget-2-small-v2"></div>
+                <div class="widget-small" id="widget-3-small-v2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View 3: Widget 2 Large -->
+    <div id="view-3" class="view">
+        <div class="widget-container">
+            <div class="widget-large" id="widget-2-large"></div>
+            <div class="widget-row">
+                <div class="widget-small" id="widget-1-small-v3"></div>
+                <div class="widget-small" id="widget-3-small-v3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View 4: Widget 3 Large -->
+    <div id="view-4" class="view">
+        <div class="widget-container">
+            <div class="widget-large" id="widget-3-large"></div>
+            <div class="widget-row">
+                <div class="widget-small" id="widget-1-small-v4"></div>
+                <div class="widget-small" id="widget-2-small-v4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // View cycling logic
+        let currentView = 0;
+        const totalViews = 4;
+
+        function cycleViews() {
+            // Remove 'active' class from current view
+            document.querySelectorAll('.view')[currentView].classList.remove('active');
+
+            // Increment currentView using modulo operator to loop back to 0 after view 3
+            currentView = (currentView + 1) % totalViews;
+
+            // Add 'active' class to the new current view
+            document.querySelectorAll('.view')[currentView].classList.add('active');
+        }
+
+        // Start cycling every 10 seconds (10000 milliseconds)
+        setInterval(cycleViews, 10000);
+
+        // Funifier initialization
+        $(document).ready(function() {
+            Funifier.init({
+                apiKey: "69027af6e179d46fce283e7e",
+                service: "https://service2.funifier.com"
+            }, function() {
+                // Set authorization token
+                Funifier.auth.setAuthorization("Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA==");
+
+                // Render all widget instances
+                renderAllWidgets();
+            });
+        });
+
+        function renderAllWidgets() {
+            // Render Widget 1 (espacial) instances
+            renderWidget("espacial", "#widget-1-large");
+            renderWidget("espacial", "#widget-1-small-v3");
+            renderWidget("espacial", "#widget-1-small-v4");
+
+            // Render Widget 2 (corrida_espacial__referidos) instances
+            renderWidget("corrida_espacial__referidos", "#widget-2-small-v2");
+            renderWidget("corrida_espacial__referidos", "#widget-2-large");
+            renderWidget("corrida_espacial__referidos", "#widget-2-small-v4");
+
+            // Render Widget 3 (corrida_espacial__sdr) instances
+            renderWidget("corrida_espacial__sdr", "#widget-3-small-v2");
+            renderWidget("corrida_espacial__sdr", "#widget-3-small-v3");
+            renderWidget("corrida_espacial__sdr", "#widget-3-large");
+        }
+
+        function renderWidget(widgetName, selector) {
+            Funifier.widget.render({
+                widget: widgetName,
+                selector: selector,
+                bind: "replace"
+            }, function(err, data) {
+                if (err) {
+                    console.error("Widget error for " + widgetName + " in " + selector + ":", err);
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

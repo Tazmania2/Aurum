@@ -88,15 +88,15 @@
         }
 
         /* Force all Funifier content to be contained */
-        .widget-large > *,
-        .widget-small > * {
+        .widget-large>*,
+        .widget-small>* {
             max-width: 100% !important;
             max-height: 100% !important;
         }
 
         /* Override Funifier's positioning */
-        .widget-large > div,
-        .widget-small > div,
+        .widget-large>div,
+        .widget-small>div,
         .widget-large canvas,
         .widget-small canvas,
         .widget-large iframe,
@@ -158,58 +158,64 @@
         const totalViews = 4;
 
         function cycleViews() {
+            console.log('Cycling from view', currentView, 'to view', (currentView + 1) % totalViews);
+
             // Remove 'active' class from current view
-            document.querySelectorAll('.view')[currentView].classList.remove('active');
+            const views = document.querySelectorAll('.view');
+            views[currentView].classList.remove('active');
 
             // Increment currentView using modulo operator to loop back to 0 after view 3
             currentView = (currentView + 1) % totalViews;
 
             // Add 'active' class to the new current view
-            document.querySelectorAll('.view')[currentView].classList.add('active');
+            views[currentView].classList.add('active');
+
+            console.log('Now showing view', currentView);
         }
 
         // Start cycling every 10 seconds (10000 milliseconds)
         setInterval(cycleViews, 10000);
+        console.log('View cycling started - will cycle every 10 seconds');
 
         // Create widget HTML pages dynamically
         function createWidgetPage(widgetName) {
-            return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://client2.funifier.com/v3/funifier.js"></script>
-    <style>
-        body { margin: 0; padding: 0; overflow: hidden; }
-        #widget { width: 100%; height: 100vh; }
-    </style>
-</head>
-<body>
-    <div id="widget"></div>
-    <script type="text/javascript">
-        $(function() {
-            Funifier.init({
-                apiKey: "69027af6e179d46fce283e7e",
-                service: "https://service2.funifier.com"
-            }, function() {
-                Funifier.auth.setAuthorization("Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDUyMDk1ZTE3OWQ0NmZjZTRiZDkwNA==");
-                Funifier.widget.render({
-                    widget: "${widgetName}",
-                    selector: "#widget",
-                    bind: "replace"
-                }, function(err, data) {
-                    if (err) console.error("Widget error:", err);
-                });
-            });
-        });
-    </script>
-</body>
-</html>`;
+            return '<!DOCTYPE html>' +
+                '<html lang="en">' +
+                '<head>' +
+                '    <meta charset="UTF-8">' +
+                '    <meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+                '    <script src="https://code.jquery.com/jquery-3.6.0.min.js"><\/script>' +
+                '    <script src="https://client2.funifier.com/v3/funifier.js"><\/script>' +
+                '    <style>' +
+                '        body { margin: 0; padding: 0; overflow: hidden; }' +
+                '        #widget { width: 100%; height: 100vh; }' +
+                '    <\/style>' +
+                '<\/head>' +
+                '<body>' +
+                '    <div id="widget"><\/div>' +
+                '    <script type="text/javascript">' +
+                '        $(function() {' +
+                '            Funifier.init({' +
+                '                apiKey: "69027af6e179d46fce283e7e",' +
+                '                service: "https://service2.funifier.com"' +
+                '            }, function() {' +
+                '                Funifier.auth.setAuthorization("Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDUyMDk1ZTE3OWQ0NmZjZTRiZDkwNA==");' +
+                '                Funifier.widget.render({' +
+                '                    widget: "' + widgetName + '",' +
+                '                    selector: "#widget",' +
+                '                    bind: "replace"' +
+                '                }, function(err, data) {' +
+                '                    if (err) console.error("Widget error:", err);' +
+                '                });' +
+                '            });' +
+                '        });' +
+                '    <\/script>' +
+                '<\/body>' +
+                '<\/html>';
         }
 
         // Initialize iframes with widget content
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', function () {
             const widgets = [
                 { id: 'widget-1-large', name: 'espacial' },
                 { id: 'widget-1-small-v3', name: 'espacial' },

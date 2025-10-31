@@ -171,59 +171,48 @@
         // Start cycling every 10 seconds (10000 milliseconds)
         setInterval(cycleViews, 10000);
 
-        // Funifier initialization
-        let widgetsRendered = false;
-
-        $(document).ready(function() {
+        // Funifier initialization - using jQuery shorthand like reference
+        $(function() {
             Funifier.init({
                 apiKey: "69027af6e179d46fce283e7e",
                 service: "https://service2.funifier.com"
             }, function() {
-                // Set authorization token
                 Funifier.auth.setAuthorization("Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDUyMDk1ZTE3OWQ0NmZjZTRiZDkwNA==");
+                
+                // Render Widget 1 (espacial) instances
+                Funifier.widget.render({widget: "espacial", selector: "#widget-1-large", bind: "replace"}, function(err, data) {
+                    if (err) console.error("Widget error for espacial in #widget-1-large:", err);
+                });
+                Funifier.widget.render({widget: "espacial", selector: "#widget-1-small-v3", bind: "replace"}, function(err, data) {
+                    if (err) console.error("Widget error for espacial in #widget-1-small-v3:", err);
+                });
+                Funifier.widget.render({widget: "espacial", selector: "#widget-1-small-v4", bind: "replace"}, function(err, data) {
+                    if (err) console.error("Widget error for espacial in #widget-1-small-v4:", err);
+                });
 
-                // Render all widget instances with a slight delay to ensure DOM is ready
-                setTimeout(function() {
-                    renderAllWidgets();
-                    widgetsRendered = true;
-                }, 500);
+                // Render Widget 2 (corrida_espacial__referidos) instances
+                Funifier.widget.render({widget: "corrida_espacial__referidos", selector: "#widget-2-small-v2", bind: "replace"}, function(err, data) {
+                    if (err) console.error("Widget error for corrida_espacial__referidos in #widget-2-small-v2:", err);
+                });
+                Funifier.widget.render({widget: "corrida_espacial__referidos", selector: "#widget-2-large", bind: "replace"}, function(err, data) {
+                    if (err) console.error("Widget error for corrida_espacial__referidos in #widget-2-large:", err);
+                });
+                Funifier.widget.render({widget: "corrida_espacial__referidos", selector: "#widget-2-small-v4", bind: "replace"}, function(err, data) {
+                    if (err) console.error("Widget error for corrida_espacial__referidos in #widget-2-small-v4:", err);
+                });
+
+                // Render Widget 3 (corrida_espacial__sdr) instances
+                Funifier.widget.render({widget: "corrida_espacial__sdr", selector: "#widget-3-small-v2", bind: "replace"}, function(err, data) {
+                    if (err) console.error("Widget error for corrida_espacial__sdr in #widget-3-small-v2:", err);
+                });
+                Funifier.widget.render({widget: "corrida_espacial__sdr", selector: "#widget-3-small-v3", bind: "replace"}, function(err, data) {
+                    if (err) console.error("Widget error for corrida_espacial__sdr in #widget-3-small-v3:", err);
+                });
+                Funifier.widget.render({widget: "corrida_espacial__sdr", selector: "#widget-3-large", bind: "replace"}, function(err, data) {
+                    if (err) console.error("Widget error for corrida_espacial__sdr in #widget-3-large:", err);
+                });
             });
         });
-
-        function renderAllWidgets() {
-            console.log("Rendering all widgets...");
-            
-            // Render Widget 1 (espacial) instances
-            renderWidget("espacial", "#widget-1-large");
-            renderWidget("espacial", "#widget-1-small-v3");
-            renderWidget("espacial", "#widget-1-small-v4");
-
-            // Render Widget 2 (corrida_espacial__referidos) instances
-            renderWidget("corrida_espacial__referidos", "#widget-2-small-v2");
-            renderWidget("corrida_espacial__referidos", "#widget-2-large");
-            renderWidget("corrida_espacial__referidos", "#widget-2-small-v4");
-
-            // Render Widget 3 (corrida_espacial__sdr) instances
-            renderWidget("corrida_espacial__sdr", "#widget-3-small-v2");
-            renderWidget("corrida_espacial__sdr", "#widget-3-small-v3");
-            renderWidget("corrida_espacial__sdr", "#widget-3-large");
-        }
-
-        function renderWidget(widgetName, selector) {
-            console.log("Rendering widget:", widgetName, "in", selector);
-            
-            Funifier.widget.render({
-                widget: widgetName,
-                selector: selector,
-                bind: "replace"
-            }, function(err, data) {
-                if (err) {
-                    console.error("Widget error for " + widgetName + " in " + selector + ":", err);
-                } else {
-                    console.log("Widget rendered successfully:", widgetName, "in", selector);
-                }
-            });
-        }
     </script>
 </body>
 

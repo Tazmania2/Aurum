@@ -42,65 +42,36 @@
             border: none;
         }
 
-        /* Flexbox layouts for widget views */
+        /* Widget container - full screen single widget */
         .widget-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            padding: 20px;
-            gap: 20px;
-            box-sizing: border-box;
-        }
-
-        .widget-large {
-            height: calc(50% - 10px);
             width: 100%;
+            height: 100%;
             position: relative;
             box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .widget-row {
-            display: flex;
-            flex-direction: row;
-            height: calc(50% - 10px);
-            gap: 20px;
-            box-sizing: border-box;
-        }
-
-        .widget-small {
-            flex: 1;
+        .widget-full {
+            width: 100%;
+            height: 100%;
             position: relative;
             box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Funifier widget containment - critical for preventing overlap */
-        .widget-large,
-        .widget-small {
+        /* Funifier widget containment */
+        .widget-full {
             isolation: isolate;
         }
 
         /* Force all Funifier content to be contained */
-        .widget-large>*,
-        .widget-small>* {
+        .widget-full>* {
             max-width: 100% !important;
             max-height: 100% !important;
         }
 
         /* Override Funifier's positioning */
-        .widget-large>div,
-        .widget-small>div,
-        .widget-large canvas,
-        .widget-small canvas,
-        .widget-large iframe,
-        .widget-small iframe {
+        .widget-full>div,
+        .widget-full canvas,
+        .widget-full iframe {
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
@@ -119,36 +90,24 @@
         </iframe>
     </div>
 
-    <!-- View 2: Widget 1 Large -->
+    <!-- View 2: Widget 1 (espacial) -->
     <div id="view-2" class="view">
         <div class="widget-container">
-            <div class="widget-large" id="widget-1-large"></div>
-            <div class="widget-row">
-                <div class="widget-small" id="widget-2-small-v2"></div>
-                <div class="widget-small" id="widget-3-small-v2"></div>
-            </div>
+            <div class="widget-full" id="widget-1"></div>
         </div>
     </div>
 
-    <!-- View 3: Widget 2 Large -->
+    <!-- View 3: Widget 2 (corrida_espacial__referidos) -->
     <div id="view-3" class="view">
         <div class="widget-container">
-            <div class="widget-large" id="widget-2-large"></div>
-            <div class="widget-row">
-                <div class="widget-small" id="widget-1-small-v3"></div>
-                <div class="widget-small" id="widget-3-small-v3"></div>
-            </div>
+            <div class="widget-full" id="widget-2"></div>
         </div>
     </div>
 
-    <!-- View 4: Widget 3 Large -->
+    <!-- View 4: Widget 3 (corrida_espacial__sdr) -->
     <div id="view-4" class="view">
         <div class="widget-container">
-            <div class="widget-large" id="widget-3-large"></div>
-            <div class="widget-row">
-                <div class="widget-small" id="widget-1-small-v4"></div>
-                <div class="widget-small" id="widget-2-small-v4"></div>
-            </div>
+            <div class="widget-full" id="widget-3"></div>
         </div>
     </div>
 
@@ -173,9 +132,9 @@
             console.log('Now showing view', currentView);
         }
 
-        // Start cycling every 10 seconds (10000 milliseconds)
-        setInterval(cycleViews, 10000);
-        console.log('View cycling started - will cycle every 10 seconds');
+        // Start cycling every 5 seconds (5000 milliseconds)
+        setInterval(cycleViews, 5000);
+        console.log('View cycling started - will cycle every 5 seconds');
 
         // Create widget HTML pages dynamically
         function createWidgetPage(widgetName) {
@@ -217,15 +176,9 @@
         // Initialize iframes with widget content
         window.addEventListener('DOMContentLoaded', function () {
             const widgets = [
-                { id: 'widget-1-large', name: 'espacial' },
-                { id: 'widget-1-small-v3', name: 'espacial' },
-                { id: 'widget-1-small-v4', name: 'espacial' },
-                { id: 'widget-2-small-v2', name: 'corrida_espacial__referidos' },
-                { id: 'widget-2-large', name: 'corrida_espacial__referidos' },
-                { id: 'widget-2-small-v4', name: 'corrida_espacial__referidos' },
-                { id: 'widget-3-small-v2', name: 'corrida_espacial__sdr' },
-                { id: 'widget-3-small-v3', name: 'corrida_espacial__sdr' },
-                { id: 'widget-3-large', name: 'corrida_espacial__sdr' }
+                { id: 'widget-1', name: 'espacial' },
+                { id: 'widget-2', name: 'corrida_espacial__referidos' },
+                { id: 'widget-3', name: 'corrida_espacial__sdr' }
             ];
 
             widgets.forEach(widget => {

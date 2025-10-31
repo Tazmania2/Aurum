@@ -156,38 +156,35 @@
 
             console.log('Cycling from view', currentView, 'to view', nextView);
 
-            // Add slide-out animation to current view
+            // Slide out current view to the left
             views[currentView].classList.add('slide-out-left');
-            views[currentView].classList.remove('active');
 
-            // Prepare next view (position it off-screen to the right)
-            views[nextView].style.transform = 'translateX(100%)';
-            views[nextView].style.opacity = '0';
-
-            // Small delay to ensure the next view is positioned before animating
+            // Remove active from current view after a brief moment
             setTimeout(() => {
-                // Slide in the next view
+                views[currentView].classList.remove('active');
+            }, 100);
+
+            // Slide in next view from the right
+            setTimeout(() => {
                 views[nextView].classList.add('active');
-
-                // Update current view index
                 currentView = nextView;
-
                 console.log('Now showing view', currentView);
-            }, 50);
+            }, 100);
 
-            // Clean up slide-out class after animation completes
+            // Clean up classes after animation completes
             setTimeout(() => {
                 views.forEach((view, index) => {
                     if (index !== currentView) {
                         view.classList.remove('slide-out-left');
+                        view.classList.remove('active');
                     }
                 });
-            }, 650);
+            }, 700);
         }
 
-        // Start cycling every 5 seconds (5000 milliseconds)
-        setInterval(cycleViews, 5000);
-        console.log('View cycling started - will cycle every 5 seconds');
+        // Start cycling every 7 seconds (7000 milliseconds)
+        setInterval(cycleViews, 7000);
+        console.log('View cycling started - will cycle every 7 seconds');
 
         // Create widget HTML pages dynamically
         function createWidgetPage(widgetName) {

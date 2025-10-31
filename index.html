@@ -171,75 +171,67 @@
         // Start cycling every 10 seconds (10000 milliseconds)
         setInterval(cycleViews, 10000);
 
-        // Funifier initialization - using jQuery shorthand like reference
+        // Create widget HTML pages dynamically
+        function createWidgetPage(widgetName) {
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://client2.funifier.com/v3/funifier.js"></script>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+        #widget { width: 100%; height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="widget"></div>
+    <script type="text/javascript">
         $(function() {
-            // Temporarily make all views visible for widget initialization
-            document.querySelectorAll('.view').forEach(function(view) {
-                view.style.display = 'block';
-            });
-
             Funifier.init({
                 apiKey: "69027af6e179d46fce283e7e",
                 service: "https://service2.funifier.com"
             }, function() {
                 Funifier.auth.setAuthorization("Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDUyMDk1ZTE3OWQ0NmZjZTRiZDkwNA==");
-                
-                console.log("Funifier initialized, rendering widgets sequentially...");
-                
-                // Render widgets sequentially with delays to avoid conflicts
-                var widgets = [
-                    {widget: "espacial", selector: "#widget-1-large"},
-                    {widget: "corrida_espacial__referidos", selector: "#widget-2-small-v2"},
-                    {widget: "corrida_espacial__sdr", selector: "#widget-3-small-v2"},
-                    {widget: "corrida_espacial__referidos", selector: "#widget-2-large"},
-                    {widget: "espacial", selector: "#widget-1-small-v3"},
-                    {widget: "corrida_espacial__sdr", selector: "#widget-3-small-v3"},
-                    {widget: "corrida_espacial__sdr", selector: "#widget-3-large"},
-                    {widget: "espacial", selector: "#widget-1-small-v4"},
-                    {widget: "corrida_espacial__referidos", selector: "#widget-2-small-v4"}
-                ];
-                
-                var renderIndex = 0;
-                function renderNextWidget() {
-                    if (renderIndex >= widgets.length) {
-                        console.log("All widgets rendered successfully");
-                        return;
-                    }
-                    
-                    var w = widgets[renderIndex];
-                    console.log("Rendering widget " + (renderIndex + 1) + "/" + widgets.length + ": " + w.widget + " in " + w.selector);
-                    
-                    Funifier.widget.render({
-                        widget: w.widget, 
-                        selector: w.selector, 
-                        bind: "replace"
-                    }, function(err, data) {
-                        if (err) {
-                            console.error("Error rendering " + w.selector + ":", err);
-                        } else {
-                            console.log("Successfully rendered " + w.selector);
-                        }
-                        
-                        renderIndex++;
-                        // Wait 500ms before rendering next widget
-                        setTimeout(renderNextWidget, 500);
-                    });
-                }
-                
-                // Start rendering
-                renderNextWidget();
+                Funifier.widget.render({
+                    widget: "${widgetName}",
+                    selector: "#widget",
+                    bind: "replace"
+                }, function(err, data) {
+                    if (err) console.error("Widget error:", err);
+                });
+            });
+        });
+    </script>
+</body>
+</html>`;
+        }
 
-                // After a short delay, restore the view visibility logic
-                setTimeout(function() {
-                    document.querySelectorAll('.view').forEach(function(view, index) {
-                        if (index === currentView) {
-                            view.classList.add('active');
-                        } else {
-                            view.classList.remove('active');
-                        }
-                    });
-                    console.log("All widgets rendered, view cycling active");
-                }, 1000);
+        // Initialize iframes with widget content
+        window.addEventListener('DOMContentLoaded', function() {
+            const widgets = [
+                { id: 'widget-1-large', name: 'espacial' },
+                { id: 'widget-1-small-v3', name: 'espacial' },
+                { id: 'widget-1-small-v4', name: 'espacial' },
+                { id: 'widget-2-small-v2', name: 'corrida_espacial__referidos' },
+                { id: 'widget-2-large', name: 'corrida_espacial__referidos' },
+                { id: 'widget-2-small-v4', name: 'corrida_espacial__referidos' },
+                { id: 'widget-3-small-v2', name: 'corrida_espacial__sdr' },
+                { id: 'widget-3-small-v3', name: 'corrida_espacial__sdr' },
+                { id: 'widget-3-large', name: 'corrida_espacial__sdr' }
+            ];
+
+            widgets.forEach(widget => {
+                const container = document.getElementById(widget.id);
+                if (container) {
+                    const iframe = document.createElement('iframe');
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.style.border = 'none';
+                    iframe.srcdoc = createWidgetPage(widget.name);
+                    container.appendChild(iframe);
+                }
             });
         });
     </script>

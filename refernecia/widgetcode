@@ -1,0 +1,138 @@
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<div ng-app="espacial" ng-controller="espacial" id="espacial">
+  <div id="funifier-space-widget">
+    <div class="game-container">
+      <!-- Space Section (Full height) - Agora com background espacial completo -->
+      <div class="space-section">
+        <!-- Background espacial dinâmico -->
+        <div class="space-background">
+          <!-- Camada de estrelas -->
+          <div class="stars-layer"></div>
+          
+          <!-- Camada de nebulosas -->
+          <div class="nebula-layer"></div>
+          
+          <!-- Container de astros e planetas -->
+          <div class="astros-container">
+            <div class="astro planeta-1"></div>
+            <div class="astro planeta-2"></div>
+            <div class="astro lua-1"></div>
+            <div class="astro planeta-3"></div>
+            <div class="astro planeta-4"></div>
+          </div>
+          
+          <!-- Container de cometas aprimorado -->
+          <div class="comets-container">
+            <div class="comet comet-1"></div>
+            <div class="comet comet-2"></div>
+            <div class="comet comet-3"></div>
+            <div class="comet comet-4"></div>
+            <div class="comet comet-5"></div>
+          </div>
+          
+          <!-- Container de asteroides -->
+          <div class="asteroids-container">
+            <div class="asteroid asteroid-1"></div>
+            <div class="asteroid asteroid-2"></div>
+            <div class="asteroid asteroid-3"></div>
+            <div class="asteroid asteroid-4"></div>
+            <div class="asteroid asteroid-5"></div>
+            <div class="asteroid asteroid-6"></div>
+          </div>
+          
+          <!-- Container para estrelas de scroll -->
+          <div class="stars-container"></div>
+        </div>
+        
+        <!-- Connection status indicator -->
+        <div class="connection-status" ng-class="connectionStatus">
+          <div class="status-indicator"></div>
+          <span ng-if="connectionStatus === 'connected'">{{ t('CONNECTION_STATUS.CONNECTED') }}</span>
+          <span ng-if="connectionStatus === 'connecting'">{{ t('CONNECTION_STATUS.CONNECTING') }}</span>
+          <span ng-if="connectionStatus === 'disconnected'">{{ t('CONNECTION_STATUS.DISCONNECTED') }}</span>
+        </div>
+        
+        <!-- Área de scroll simplificada - sem container de pista -->
+        <div class="space-scroll">
+          <div class="space" ng-style="{'width': (maxDistance) + 'px'}">
+            <!-- Wormhole/Portal (finish line) -->
+            <div class="wormhole">
+              <div class="wormhole-inner"></div>
+            </div>
+            
+            <!-- Ambient effects -->
+            <div class="space-ambient-effects">
+              <div class="space-light-beam space-light-beam-1"></div>
+              <div class="space-light-beam space-light-beam-2"></div>
+              <div class="space-light-beam space-light-beam-3"></div>
+            </div>
+            
+            <!-- Player spaceships -->
+            <div
+              class="nave"
+              ng-repeat="player in players"
+              ng-style="getShipStyle($index, player.total)"
+              data-player-id="{{player.id || player.player}}"
+              ng-click="showPlayerSidebar(player)"
+            >
+              <div class="ship-wrapper">
+                <div class="ship-engine"></div>
+                <img ng-src="{{getShipImage(player.position)}}" alt="{{ t('PLAYER_SHIP') }}" />
+                <div class="ship-laser"></div>
+                <div class="energy-trail"></div>
+              </div>
+              
+              <!-- Player info card (always visible) -->
+              <div class="player-info-card">
+                <div class="position-badge" ng-class="getPositionClass(player.position)">
+                  {{player.position}}
+                </div>
+                <div class="player-info-text">
+                  <p class="player-info-name">{{player.name}}</p>
+                  <p class="player-info-points"><span>{{player.total}}</span> {{ t('POINTS') }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Scroll hint
+          <div class="scroll-hint"></div>  -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Aba lateral de informações do jogador -->
+    <div id="player-sidebar" class="player-sidebar">
+      <button class="sidebar-close" ng-click="hidePlayerSidebar()">&times;</button>
+      <div class="sidebar-header">
+        <img id="sidebar-photo" class="sidebar-photo" ng-src="{{selectedPlayer.image || getAssetUrl('default-player.png')}}" alt="{{ t('PLAYER_PHOTO') }}">
+        <div class="sidebar-title">
+          <h3 id="sidebar-name" class="sidebar-name">{{selectedPlayer.name || t('PLAYER_NAME')}}</h3>
+          <p id="sidebar-position" class="sidebar-position">
+            <span ng-if="currentLang === 'pt'">{{selectedPlayer.position}}º {{ t('PLACE') }}</span>
+            <span ng-if="currentLang === 'en'">{{formatPosition(selectedPlayer.position)}} place</span>
+          </p>
+        </div>
+      </div>
+      <div class="sidebar-details">
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">{{ t('SCORE') }}</span>
+          <span id="sidebar-points" class="sidebar-stat-value">{{selectedPlayer.total || 0}} {{ t('POINTS') }}</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">{{ t('SHIP') }}</span>
+          <span id="sidebar-ship" class="sidebar-stat-value">{{ getShipType(selectedPlayer.position) }}</span>
+        </div>
+        
+        <div class="sidebar-stat" ng-if="selectedPlayer.playerData">
+          <span class="sidebar-stat-label">{{ t('XP') }}</span>
+          <span class="sidebar-stat-value">{{getXP(selectedPlayer.playerData)}}</span>
+        </div>
+        <div class="sidebar-stat" ng-if="selectedPlayer.playerData">
+          <span class="sidebar-stat-label">{{ t('COINS') }}</span>
+          <span class="sidebar-stat-value">{{getCoins(selectedPlayer.playerData)}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

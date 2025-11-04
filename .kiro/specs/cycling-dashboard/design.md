@@ -166,6 +166,7 @@ No complex data models are required. The application manages:
 - Target modern browsers (Chrome, Firefox, Edge, Safari)
 - Use standard APIs (no polyfills needed for setInterval, flexbox)
 - Fallback: If Funifier fails to load, empty containers are displayed
+- Responsivity, it should work on 55' screens (TVS)
 
 ## Testing Strategy
 

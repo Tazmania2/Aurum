@@ -1,143 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>Cycling Dashboard - Lite</title>
     <style>
-        * { box-sizing: border-box; }
-        html, body {
-            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-            background: #1a0b2e; font-family: Arial, sans-serif; position: fixed;
-        }
-        .view {
-            position: fixed; width: 100%; height: 100%; top: 0; left: 0;
-            opacity: 0; pointer-events: none; overflow: hidden;
-        }
-        .view.active { opacity: 1; pointer-events: auto; }
-        iframe { width: 100%; height: 100%; border: none; }
-        .view-title {
-            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            font-size: 24px; color: white; background: rgba(0,0,0,0.7);
-            padding: 10px 20px; border-radius: 8px; z-index: 10;
-        }
-        .widget-container {
-            width: 100%; height: 100%; position: absolute; top: 0; left: 0;
-        }
-        .loading {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: white; font-size: 18px;
-        }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #1a0b2e;
+        font-family: Arial, sans-serif;
+        position: fixed;
+      }
+      .view {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .view.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+      .view-title {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 24px;
+        color: white;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 20px;
+        border-radius: 8px;
+        z-index: 10;
+      }
+      .widget-container {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 18px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- View 1: BI Report -->
     <div id="view-1" class="view active">
-        <iframe id="bi-iframe" loading="lazy" frameborder="0" allowfullscreen
-            sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
-        </iframe>
+      <iframe
+        id="bi-iframe"
+        loading="lazy"
+        frameborder="0"
+        allowfullscreen
+        sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+      >
+      </iframe>
     </div>
 
     <!-- View 2: Widget 1 -->
     <div id="view-2" class="view">
-        <div class="view-title">Vendedores</div>
-        <div class="widget-container">
-            <div class="loading" id="loading-2">Loading...</div>
-            <iframe id="widget-iframe-2" loading="lazy" style="display:none;"></iframe>
-        </div>
+      <div class="view-title">Vendedores</div>
+      <div class="widget-container">
+        <div class="loading" id="loading-2">Loading...</div>
+        <iframe
+          id="widget-iframe-2"
+          loading="lazy"
+          style="display: none"
+        ></iframe>
+      </div>
     </div>
 
     <!-- View 3: Widget 2 -->
     <div id="view-3" class="view">
-        <div class="view-title">Indicações</div>
-        <div class="widget-container">
-            <div class="loading" id="loading-3">Loading...</div>
-            <iframe id="widget-iframe-3" loading="lazy" style="display:none;"></iframe>
-        </div>
+      <div class="view-title">Indicações</div>
+      <div class="widget-container">
+        <div class="loading" id="loading-3">Loading...</div>
+        <iframe
+          id="widget-iframe-3"
+          loading="lazy"
+          style="display: none"
+        ></iframe>
+      </div>
     </div>
 
     <!-- View 4: Widget 3 -->
     <div id="view-4" class="view">
-        <div class="view-title">SDRs</div>
-        <div class="widget-container">
-            <div class="loading" id="loading-4">Loading...</div>
-            <iframe id="widget-iframe-4" loading="lazy" style="display:none;"></iframe>
-        </div>
+      <div class="view-title">SDRs</div>
+      <div class="widget-container">
+        <div class="loading" id="loading-4">Loading...</div>
+        <iframe
+          id="widget-iframe-4"
+          loading="lazy"
+          style="display: none"
+        ></iframe>
+      </div>
     </div>
 
     <script>
-        let currentView = 0;
-        const totalViews = 4;
-        let loadedViews = new Set([0]); // BI report is pre-loaded
+      let currentView = 0;
+      const totalViews = 4;
+      let loadedViews = new Set([0]); // BI report is pre-loaded
 
-        const widgets = {
-            2: { name: 'espacial', url: 'https://your-widget-host.com/espacial' },
-            3: { name: 'corrida_espacial__referidos', url: 'https://your-widget-host.com/referidos' },
-            4: { name: 'corrida_espacial__sdr', url: 'https://your-widget-host.com/sdr' }
-        };
+      const widgets = {
+        2: { name: "espacial", url: "https://your-widget-host.com/espacial" },
+        3: {
+          name: "corrida_espacial__referidos",
+          url: "https://your-widget-host.com/referidos",
+        },
+        4: {
+          name: "corrida_espacial__sdr",
+          url: "https://your-widget-host.com/sdr",
+        },
+      };
 
-        function loadView(viewIndex) {
-            if (loadedViews.has(viewIndex)) return;
+      function loadView(viewIndex) {
+        if (loadedViews.has(viewIndex)) return;
 
-            if (viewIndex === 0) {
-                document.getElementById('bi-iframe').src = 
-                    'https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF';
-            } else if (widgets[viewIndex]) {
-                const iframe = document.getElementById(`widget-iframe-${viewIndex}`);
-                const loading = document.getElementById(`loading-${viewIndex}`);
-                
-                // Use external widget URLs instead of inline srcdoc for better memory management
-                iframe.src = widgets[viewIndex].url;
-                iframe.onload = () => {
-                    loading.style.display = 'none';
-                    iframe.style.display = 'block';
-                };
+        if (viewIndex === 0) {
+          document.getElementById("bi-iframe").src =
+            "https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF";
+        } else if (widgets[viewIndex]) {
+          const iframe = document.getElementById(`widget-iframe-${viewIndex}`);
+          const loading = document.getElementById(`loading-${viewIndex}`);
+
+          // Use external widget URLs instead of inline srcdoc for better memory management
+          iframe.src = widgets[viewIndex].url;
+          iframe.onload = () => {
+            loading.style.display = "none";
+            iframe.style.display = "block";
+          };
+        }
+
+        loadedViews.add(viewIndex);
+      }
+
+      function cycleViews() {
+        const views = document.querySelectorAll(".view");
+        const nextView = (currentView + 1) % totalViews;
+
+        // Load next view if not loaded
+        loadView(nextView);
+
+        // Simple fade transition
+        views[currentView].style.opacity = "0";
+        views[currentView].style.pointerEvents = "none";
+
+        setTimeout(() => {
+          views[currentView].classList.remove("active");
+          views[nextView].classList.add("active");
+          views[nextView].style.opacity = "1";
+          views[nextView].style.pointerEvents = "auto";
+          currentView = nextView;
+        }, 200);
+
+        // Cleanup old views to save memory (keep current and next) - longer delay for slow devices
+        setTimeout(() => {
+          views.forEach((view, index) => {
+            if (index !== currentView && index !== ((currentView + 1) % totalViews) && index !== 0) {
+              const iframe = view.querySelector("iframe[src]");
+              if (iframe && iframe.src) {
+                console.log('Cleaning up view:', index);
+                iframe.src = "";
+                const loading = view.querySelector('.loading');
+                if (loading) loading.style.display = 'block';
+                iframe.style.display = 'none';
+                loadedViews.delete(index);
+              }
             }
-            
-            loadedViews.add(viewIndex);
+          });
+        }, 10000); // 10 seconds delay for cleanup
+      }
+
+      // Initialize with longer durations for low-memory devices
+      const CYCLE_DURATION = 20000; // 20 seconds per view
+      const PRELOAD_DELAY = 5000; // Start loading 5 seconds before switch
+      
+      loadView(0);
+      
+      // Preload next view before switching
+      setInterval(() => {
+        const nextView = (currentView + 1) % totalViews;
+        if (!loadedViews.has(nextView)) {
+          console.log('Preloading view:', nextView);
+          setTimeout(() => loadView(nextView), PRELOAD_DELAY);
         }
-
-        function cycleViews() {
-            const views = document.querySelectorAll('.view');
-            const nextView = (currentView + 1) % totalViews;
-
-            // Load next view if not loaded
-            loadView(nextView);
-
-            // Simple fade transition
-            views[currentView].style.opacity = '0';
-            views[currentView].style.pointerEvents = 'none';
-
-            setTimeout(() => {
-                views[currentView].classList.remove('active');
-                views[nextView].classList.add('active');
-                views[nextView].style.opacity = '1';
-                views[nextView].style.pointerEvents = 'auto';
-                currentView = nextView;
-            }, 200);
-
-            // Cleanup old views to save memory (keep current and next)
-            setTimeout(() => {
-                views.forEach((view, index) => {
-                    if (index !== currentView && index !== nextView && index !== 0) {
-                        const iframe = view.querySelector('iframe[src]');
-                        if (iframe) {
-                            iframe.src = '';
-                            loadedViews.delete(index);
-                        }
-                    }
-                });
-            }, 5000);
-        }
-
-        // Initialize
-        loadView(0);
-        setInterval(cycleViews, 7000);
-        
-        // Force garbage collection on supported browsers
-        if (window.gc) {
-            setInterval(() => window.gc(), 30000);
-        }
+      }, CYCLE_DURATION - PRELOAD_DELAY);
+      
+      // Main cycling
+      setInterval(cycleViews, CYCLE_DURATION);
+      
+      // Force garbage collection and cleanup more frequently
+      if (window.gc) {
+        setInterval(() => {
+          window.gc();
+          console.log('Forced garbage collection');
+        }, CYCLE_DURATION);
+      }
+      
+      console.log('Ultra-lite cycling: 20 seconds per view with 5-second preload');
     </script>
-</body>
+  </body>
 </html>

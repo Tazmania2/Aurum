@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycling Dashboard - Ultra Lite</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1a0b2e; font-family: Arial, sans-serif; }
+        .view { position: fixed; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; pointer-events: none; }
+        .view.active { opacity: 1; pointer-events: auto; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .title { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.8); padding: 8px 16px; border-radius: 4px; font-size: 18px; z-index: 10; }
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div id="view-1" class="view active">
+        <iframe id="main-iframe" loading="lazy"></iframe>
+    </div>
+    
+    <div id="view-2" class="view">
+        <div class="title">Vendedores</div>
+        <div class="loading" id="loading">Loading...</div>
+    </div>
+    
+    <div id="view-3" class="view">
+        <div class="title">Indicações</div>
+        <div class="loading" id="loading">Loading...</div>
+    </div>
+    
+    <div id="view-4" class="view">
+        <div class="title">SDRs</div>
+        <div class="loading" id="loading">Loading...</div>
+    </div>
+
+    <script>
+        let currentView = 0;
+        const totalViews = 4;
+        const CYCLE_DURATION = 30000; // 30 seconds per view - very conservative
+        
+        const content = [
+            'https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF',
+            'https://your-widget-host.com/espacial',
+            'https://your-widget-host.com/referidos', 
+            'https://your-widget-host.com/sdr'
+        ];
+
+        function loadCurrentView() {
+            const iframe = document.getElementById('main-iframe');
+            const loading = document.querySelector('.view.active .loading');
+            
+            if (loading) loading.style.display = 'block';
+            
+            // Clear previous content
+            iframe.src = '';
+            
+            // Small delay to ensure cleanup
+            setTimeout(() => {
+                iframe.src = content[currentView];
+                iframe.onload = () => {
+                    if (loading) loading.style.display = 'none';
+                    console.log('Loaded view:', currentView);
+                };
+            }, 500);
+        }
+
+        function cycleViews() {
+            const views = document.querySelectorAll('.view');
+            const nextView = (currentView + 1) % totalViews;
+            
+            // Simple instant switch - no animations to save resources
+            views[currentView].classList.remove('active');
+            views[nextView].classList.add('active');
+            currentView = nextView;
+            
+            // Load content for new view
+            loadCurrentView();
+            
+            console.log('Switched to view:', currentView);
+        }
+
+        // Initialize
+        loadCurrentView();
+        setInterval(cycleViews, CYCLE_DURATION);
+        
+        // Aggressive memory management
+        setInterval(() => {
+            if (window.gc) window.gc();
+            // Force browser to clean up
+            if (window.performance && window.performance.memory) {
+                console.log('Memory usage:', Math.round(window.performance.memory.usedJSHeapSize / 1024 / 1024) + 'MB');
+            }
+        }, CYCLE_DURATION / 2);
+        
+        console.log('Ultra-conservative cycling: 30 seconds per view, single iframe reuse');
+    </script>
+</body>
+</html>

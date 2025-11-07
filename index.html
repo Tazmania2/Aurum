@@ -176,8 +176,9 @@
 
             console.log('Cycling from view', currentView, 'to view', nextView);
 
-            // Lazy load widget only when needed
+            // Widget should already be preloaded, but load if not
             if (nextView > 0 && !loadedWidgets.has(nextView)) {
+                console.log('Loading widget on-demand (not preloaded):', nextView);
                 loadWidget(nextView);
                 loadedWidgets.add(nextView);
             }
@@ -203,25 +204,45 @@
                 if (index !== currentView && index !== 0) { // Keep BI report loaded
                     const iframe = view.querySelector('iframe');
                     if (iframe && loadedWidgets.has(index)) {
-                        // Remove iframe to free memory after 30 seconds of inactivity
+                        // Remove iframe to free memory after 45 seconds of inactivity (longer for slower devices)
                         setTimeout(() => {
                             if (index !== currentView) {
                                 iframe.remove();
                                 loadedWidgets.delete(index);
                                 console.log('Cleaned up widget', index);
                             }
-                        }, 30000);
+                        }, 45000);
                     }
                 }
             });
         }
 
-        // Start cycling every 7 seconds (7000 milliseconds)
-        setInterval(() => {
-            cycleViews();
-            cleanupInactiveViews();
-        }, 7000);
-        console.log('View cycling started - will cycle every 7 seconds');
+        // Start cycling every 15 seconds for better loading/unloading
+        const CYCLE_DURATION = 15000; // 15 seconds per view
+        const PRELOAD_TIME = 3000; // Start loading next view 3 seconds early
+        
+        let cycleTimer;
+        let preloadTimer;
+        
+        function startCycling() {
+            cycleTimer = setInterval(() => {
+                cycleViews();
+                cleanupInactiveViews();
+            }, CYCLE_DURATION);
+            
+            // Preload next view a few seconds before switching
+            preloadTimer = setInterval(() => {
+                const nextView = (currentView + 1) % totalViews;
+                if (nextView > 0 && !loadedWidgets.has(nextView)) {
+                    console.log('Preloading next view:', nextView);
+                    loadWidget(nextView);
+                    loadedWidgets.add(nextView);
+                }
+            }, CYCLE_DURATION);
+        }
+        
+        startCycling();
+        console.log('View cycling started - 15 seconds per view with 3-second preload');
 
         // Create optimized widget HTML pages dynamically
         function createWidgetPage(widgetName) {

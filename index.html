@@ -42,9 +42,10 @@
             left: 0;
             opacity: 0;
             transform: translateX(100%);
-            transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
             pointer-events: none;
             overflow: hidden;
+            will-change: transform, opacity;
         }
 
         .view.active {
@@ -67,6 +68,7 @@
             position: absolute;
             top: 0;
             left: 0;
+            loading: lazy;
         }
 
         /* View title styling - positioned at top, not overlapping */
@@ -133,7 +135,7 @@
     <!-- View 1: BI Report -->
     <div id="view-1" class="view active">
         <iframe src="https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF"
-            frameborder="0" style="border:0" allowfullscreen
+            frameborder="0" style="border:0" allowfullscreen loading="lazy"
             sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
         </iframe>
     </div>
@@ -163,9 +165,10 @@
     </div>
 
     <script type="text/javascript">
-        // View cycling logic
+        // View cycling logic with memory optimization
         let currentView = 0;
         const totalViews = 4;
+        let loadedWidgets = new Set();
 
         function cycleViews() {
             const views = document.querySelectorAll('.view');
@@ -173,92 +176,138 @@
 
             console.log('Cycling from view', currentView, 'to view', nextView);
 
-            // Slide out current view to the left
-            views[currentView].classList.add('slide-out-left');
+            // Lazy load widget only when needed
+            if (nextView > 0 && !loadedWidgets.has(nextView)) {
+                loadWidget(nextView);
+                loadedWidgets.add(nextView);
+            }
 
-            // Remove active from current view after a brief moment
+            // Simplified transition - just opacity for better performance
+            views[currentView].style.opacity = '0';
+            views[currentView].style.pointerEvents = 'none';
+
             setTimeout(() => {
                 views[currentView].classList.remove('active');
-            }, 100);
-
-            // Slide in next view from the right
-            setTimeout(() => {
                 views[nextView].classList.add('active');
+                views[nextView].style.opacity = '1';
+                views[nextView].style.pointerEvents = 'auto';
                 currentView = nextView;
                 console.log('Now showing view', currentView);
-            }, 100);
+            }, 150);
+        }
 
-            // Clean up classes after animation completes
-            setTimeout(() => {
-                views.forEach((view, index) => {
-                    if (index !== currentView) {
-                        view.classList.remove('slide-out-left');
-                        view.classList.remove('active');
+        // Memory cleanup function
+        function cleanupInactiveViews() {
+            const views = document.querySelectorAll('.view');
+            views.forEach((view, index) => {
+                if (index !== currentView && index !== 0) { // Keep BI report loaded
+                    const iframe = view.querySelector('iframe');
+                    if (iframe && loadedWidgets.has(index)) {
+                        // Remove iframe to free memory after 30 seconds of inactivity
+                        setTimeout(() => {
+                            if (index !== currentView) {
+                                iframe.remove();
+                                loadedWidgets.delete(index);
+                                console.log('Cleaned up widget', index);
+                            }
+                        }, 30000);
                     }
-                });
-            }, 700);
+                }
+            });
         }
 
         // Start cycling every 7 seconds (7000 milliseconds)
-        setInterval(cycleViews, 7000);
+        setInterval(() => {
+            cycleViews();
+            cleanupInactiveViews();
+        }, 7000);
         console.log('View cycling started - will cycle every 7 seconds');
 
-        // Create widget HTML pages dynamically
+        // Create optimized widget HTML pages dynamically
         function createWidgetPage(widgetName) {
             return '<!DOCTYPE html>' +
                 '<html lang="en">' +
                 '<head>' +
                 '    <meta charset="UTF-8">' +
                 '    <meta name="viewport" content="width=device-width, initial-scale=1.0">' +
-                '    <script src="https://code.jquery.com/jquery-3.6.0.min.js"><\/script>' +
-                '    <script src="https://client2.funifier.com/v3/funifier.js"><\/script>' +
                 '    <style>' +
-                '        body { margin: 0; padding: 0; overflow: hidden; }' +
+                '        body { margin: 0; padding: 0; overflow: hidden; font-size: 14px; }' +
                 '        #widget { width: 100%; height: 100vh; }' +
+                '        #loading { text-align: center; padding: 50px; color: #666; }' +
                 '    <\/style>' +
                 '<\/head>' +
                 '<body>' +
-                '    <div id="widget"><\/div>' +
-                '    <script type="text/javascript">' +
-                '        $(function() {' +
-                '            Funifier.init({' +
-                '                apiKey: "69027af6e179d46fce283e7e",' +
-                '                service: "https://service2.funifier.com"' +
-                '            }, function() {' +
-                '                Funifier.auth.setAuthorization("Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDUyMDk1ZTE3OWQ0NmZjZTRiZDkwNA==");' +
-                '                Funifier.widget.render({' +
-                '                    widget: "' + widgetName + '",' +
-                '                    selector: "#widget",' +
-                '                    bind: "replace"' +
-                '                }, function(err, data) {' +
-                '                    if (err) console.error("Widget error:", err);' +
+                '    <div id="loading">Loading widget...<\/div>' +
+                '    <div id="widget" style="display:none;"><\/div>' +
+                '    <script>' +
+                '        function loadWidget() {' +
+                '            if (window.jQuery && window.Funifier) {' +
+                '                initWidget();' +
+                '            } else {' +
+                '                var jq = document.createElement("script");' +
+                '                jq.src = "https://code.jquery.com/jquery-3.6.0.min.js";' +
+                '                jq.onload = function() {' +
+                '                    var fn = document.createElement("script");' +
+                '                    fn.src = "https://client2.funifier.com/v3/funifier.js";' +
+                '                    fn.onload = initWidget;' +
+                '                    document.head.appendChild(fn);' +
+                '                };' +
+                '                document.head.appendChild(jq);' +
+                '            }' +
+                '        }' +
+                '        function initWidget() {' +
+                '            jQuery(function($) {' +
+                '                Funifier.init({' +
+                '                    apiKey: "69027af6e179d46fce283e7e",' +
+                '                    service: "https://service2.funifier.com"' +
+                '                }, function() {' +
+                '                    Funifier.auth.setAuthorization("Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDUyMDk1ZTE3OWQ0NmZjZTRiZDkwNA==");' +
+                '                    Funifier.widget.render({' +
+                '                        widget: "' + widgetName + '",' +
+                '                        selector: "#widget",' +
+                '                        bind: "replace"' +
+                '                    }, function(err, data) {' +
+                '                        document.getElementById("loading").style.display = "none";' +
+                '                        document.getElementById("widget").style.display = "block";' +
+                '                        if (err) console.error("Widget error:", err);' +
+                '                    });' +
                 '                });' +
                 '            });' +
-                '        });' +
+                '        }' +
+                '        setTimeout(loadWidget, 100);' +
                 '    <\/script>' +
                 '<\/body>' +
                 '<\/html>';
         }
 
-        // Initialize iframes with widget content
-        window.addEventListener('DOMContentLoaded', function () {
+        // Lazy load widgets only when needed
+        function loadWidget(viewIndex) {
             const widgets = [
+                null, // view 0 is BI report
                 { id: 'widget-1', name: 'espacial' },
                 { id: 'widget-2', name: 'corrida_espacial__referidos' },
                 { id: 'widget-3', name: 'corrida_espacial__sdr' }
             ];
 
-            widgets.forEach(widget => {
-                const container = document.getElementById(widget.id);
-                if (container) {
-                    const iframe = document.createElement('iframe');
-                    iframe.style.width = '100%';
-                    iframe.style.height = '100%';
-                    iframe.style.border = 'none';
-                    iframe.srcdoc = createWidgetPage(widget.name);
-                    container.appendChild(iframe);
-                }
-            });
+            const widget = widgets[viewIndex];
+            if (!widget) return;
+
+            const container = document.getElementById(widget.id);
+            if (container && !container.querySelector('iframe')) {
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.loading = 'lazy';
+                iframe.srcdoc = createWidgetPage(widget.name);
+                container.appendChild(iframe);
+                console.log('Loaded widget:', widget.name);
+            }
+        }
+
+        // Initialize only the first view
+        window.addEventListener('DOMContentLoaded', function () {
+            console.log('Page loaded - widgets will load on demand');
         });
     </script>
 </body>

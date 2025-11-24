@@ -4,6 +4,8 @@
 
 The cycling dashboard is a single-page web application that automatically rotates between four views at 10-second intervals. The implementation uses vanilla HTML, CSS, and JavaScript to minimize dependencies and ensure quick development. The application consists of one HTML file with embedded styles and scripts.
 
+The application now includes a TV-friendly authentication system that requires users to select four words in a specific sequence from six randomized buttons displaying pediatric medical terminology. This provides basic access control while maintaining ease of use with TV remote controls.
+
 ## Architecture
 
 ### Single-Page Application Structure
@@ -13,7 +15,25 @@ The application uses a simple client-side architecture with no backend requireme
 - **Single HTML file** (`index.html`) containing all markup, styles, and logic
 - **CSS-based view management** using display properties to show/hide views
 - **JavaScript timer** to control view cycling
+- **Session-based authentication** using sessionStorage to maintain authenticated state
 - **External dependencies**: Funifier SDK (loaded via CDN) and jQuery (required by Funifier)
+
+### Authentication Flow
+
+```
+Page Load → Check sessionStorage → [Authenticated?]
+                                    ↓ No
+                            Authentication Screen
+                            (6 randomized buttons)
+                                    ↓
+                            User selects 4 buttons
+                                    ↓
+                            [Correct sequence?]
+                            ↓ Yes          ↓ No
+                    Set sessionStorage   Clear & Retry
+                            ↓
+                    Start View Cycling
+```
 
 ### View Cycling Mechanism
 
@@ -29,36 +49,53 @@ The cycling is implemented using `setInterval()` with a 10-second (10000ms) dela
 
 ```html
 <body>
-  <div id="view-1" class="view active">
-    <!-- BI iframe -->
-  </div>
-  
-  <div id="view-2" class="view">
-    <div class="widget-container">
-      <div class="widget-large" id="widget-1-large"></div>
-      <div class="widget-row">
-        <div class="widget-small" id="widget-2-small-v2"></div>
-        <div class="widget-small" id="widget-3-small-v2"></div>
+  <!-- Authentication Screen -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-container">
+      <h1 class="auth-title">Acceso al Dashboard</h1>
+      <div class="auth-progress">
+        <span id="auth-progress-text">Selecciona 4 palabras en orden</span>
       </div>
+      <div id="auth-buttons" class="auth-buttons">
+        <!-- 6 buttons dynamically generated and randomized -->
+      </div>
+      <div id="auth-feedback" class="auth-feedback"></div>
     </div>
   </div>
-  
-  <div id="view-3" class="view">
-    <div class="widget-container">
-      <div class="widget-large" id="widget-2-large"></div>
-      <div class="widget-row">
-        <div class="widget-small" id="widget-1-small-v3"></div>
-        <div class="widget-small" id="widget-3-small-v3"></div>
+
+  <!-- Dashboard Views -->
+  <div id="dashboard-container" class="dashboard-container" style="display: none;">
+    <div id="view-1" class="view active">
+      <!-- BI iframe -->
+    </div>
+    
+    <div id="view-2" class="view">
+      <div class="widget-container">
+        <div class="widget-large" id="widget-1-large"></div>
+        <div class="widget-row">
+          <div class="widget-small" id="widget-2-small-v2"></div>
+          <div class="widget-small" id="widget-3-small-v2"></div>
+        </div>
       </div>
     </div>
-  </div>
-  
-  <div id="view-4" class="view">
-    <div class="widget-container">
-      <div class="widget-large" id="widget-3-large"></div>
-      <div class="widget-row">
-        <div class="widget-small" id="widget-1-small-v4"></div>
-        <div class="widget-small" id="widget-2-small-v4"></div>
+    
+    <div id="view-3" class="view">
+      <div class="widget-container">
+        <div class="widget-large" id="widget-2-large"></div>
+        <div class="widget-row">
+          <div class="widget-small" id="widget-1-small-v3"></div>
+          <div class="widget-small" id="widget-3-small-v3"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="view-4" class="view">
+      <div class="widget-container">
+        <div class="widget-large" id="widget-3-large"></div>
+        <div class="widget-row">
+          <div class="widget-small" id="widget-1-small-v4"></div>
+          <div class="widget-small" id="widget-2-small-v4"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -66,6 +103,14 @@ The cycling is implemented using `setInterval()` with a 10-second (10000ms) dela
 ```
 
 ### CSS Layout Strategy
+
+**Authentication Screen:**
+- Full viewport overlay with centered content
+- Grid layout for 6 buttons (2 rows × 3 columns)
+- Large button size for TV remote navigation (minimum 150px height)
+- High contrast colors for visibility on TV screens
+- Focus states with prominent borders (4px solid)
+- Button spacing for clear visual separation
 
 **View Management:**
 - All views have `position: absolute` and `display: none` by default
@@ -83,7 +128,110 @@ The cycling is implemented using `setInterval()` with a 10-second (10000ms) dela
 
 ### JavaScript Components
 
-#### 1. View Cycling Controller
+#### 1. Authentication Controller
+
+```javascript
+// Configuration
+const AUTH_CONFIG = {
+  words: [
+    "PEDIATRÍA",
+    "VACUNA",
+    "DIAGNÓSTICO",
+    "TRATAMIENTO",
+    "PACIENTE",
+    "CONSULTA"
+  ],
+  correctSequence: ["PEDIATRÍA", "VACUNA", "DIAGNÓSTICO", "TRATAMIENTO"], // Configurable
+  sequenceLength: 4
+};
+
+let userSequence = [];
+
+function initAuth() {
+  // Check if already authenticated
+  if (sessionStorage.getItem('dashboard_authenticated') === 'true') {
+    showDashboard();
+    return;
+  }
+  
+  // Render randomized buttons
+  renderAuthButtons();
+}
+
+function renderAuthButtons() {
+  const shuffled = [...AUTH_CONFIG.words].sort(() => Math.random() - 0.5);
+  const container = document.getElementById('auth-buttons');
+  container.innerHTML = '';
+  
+  shuffled.forEach(word => {
+    const button = document.createElement('button');
+    button.className = 'auth-button';
+    button.textContent = word;
+    button.setAttribute('tabindex', '0');
+    button.onclick = () => handleWordSelection(word);
+    container.appendChild(button);
+  });
+  
+  // Focus first button for TV remote
+  container.firstChild.focus();
+}
+
+function handleWordSelection(word) {
+  userSequence.push(word);
+  updateProgress();
+  
+  if (userSequence.length === AUTH_CONFIG.sequenceLength) {
+    validateSequence();
+  }
+}
+
+function validateSequence() {
+  const isCorrect = userSequence.every((word, index) => 
+    word === AUTH_CONFIG.correctSequence[index]
+  );
+  
+  if (isCorrect) {
+    sessionStorage.setItem('dashboard_authenticated', 'true');
+    showDashboard();
+  } else {
+    showError();
+    setTimeout(resetAuth, 2000);
+  }
+}
+
+function resetAuth() {
+  userSequence = [];
+  updateProgress();
+  renderAuthButtons(); // Re-randomize
+  clearError();
+}
+
+function showDashboard() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('dashboard-container').style.display = 'block';
+  initializeFunifier();
+  startViewCycling();
+}
+
+function updateProgress() {
+  const text = `${userSequence.length} / ${AUTH_CONFIG.sequenceLength} seleccionadas`;
+  document.getElementById('auth-progress-text').textContent = text;
+}
+
+function showError() {
+  const feedback = document.getElementById('auth-feedback');
+  feedback.textContent = 'Secuencia incorrecta. Intenta de nuevo.';
+  feedback.className = 'auth-feedback error';
+}
+
+function clearError() {
+  const feedback = document.getElementById('auth-feedback');
+  feedback.textContent = '';
+  feedback.className = 'auth-feedback';
+}
+```
+
+#### 2. View Cycling Controller
 
 ```javascript
 let currentView = 0;
@@ -104,7 +252,7 @@ function cycleViews() {
 setInterval(cycleViews, 10000);
 ```
 
-#### 2. Funifier Widget Initializer
+#### 3. Funifier Widget Initializer
 
 ```javascript
 function initializeFunifier() {
@@ -142,12 +290,38 @@ function renderWidget(widgetName, selector) {
 
 ## Data Models
 
-No complex data models are required. The application manages:
+### Authentication Configuration
+
+```javascript
+{
+  words: Array<string>,           // 6 pediatric medical terms
+  correctSequence: Array<string>, // 4 words in specific order
+  sequenceLength: number          // Always 4
+}
+```
+
+### Authentication State
+
+```javascript
+{
+  userSequence: Array<string>,    // Current user selections (0-4 items)
+  isAuthenticated: boolean        // Stored in sessionStorage
+}
+```
+
+### View State
 
 - **View State**: Simple integer index (0-3) tracking current view
 - **Widget Configuration**: Static configuration objects for Funifier SDK
 
 ## Error Handling
+
+### Authentication Failures
+
+- Incorrect sequence triggers visual feedback (red error message)
+- After 2 seconds, authentication screen resets with re-randomized buttons
+- User can retry unlimited times
+- No lockout mechanism (suitable for trusted environment)
 
 ### Widget Loading Failures
 
@@ -161,44 +335,120 @@ No complex data models are required. The application manages:
 - Funifier SDK has built-in retry logic
 - Application continues cycling regardless of content load status
 
+### Session Management
+
+- Authentication state persists for browser session only
+- Closing browser/tab clears authentication
+- No persistent storage (cookies/localStorage) for security
+
 ### Browser Compatibility
 
 - Target modern browsers (Chrome, Firefox, Edge, Safari)
-- Use standard APIs (no polyfills needed for setInterval, flexbox)
+- Use standard APIs (no polyfills needed for setInterval, flexbox, sessionStorage)
 - Fallback: If Funifier fails to load, empty containers are displayed
 - Responsivity, it should work on 55' screens (TVS)
 
+## Correctness Properties
+
+*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+
+### Property 1: Button randomization produces different orderings
+
+*For any* two consecutive authentication screen renders, the button positions should differ with high probability (tested over multiple renders to account for randomness)
+**Validates: Requirements 8.3**
+
+### Property 2: Button selection updates state and provides feedback
+
+*For any* word button click, the user sequence array should grow by one and visual feedback should be displayed
+**Validates: Requirements 8.4**
+
+### Property 3: Sequence validation behavior is correct
+
+*For any* sequence of 4 button selections:
+- If the sequence matches the configured correct sequence, the authentication screen should hide and dashboard should show
+- If the sequence does not match, the selection should be cleared, error feedback should be shown, and the user can retry
+**Validates: Requirements 8.5, 9.1, 9.2, 9.3**
+
+### Property 4: Authentication state persists in session
+
+*For any* successful authentication, sessionStorage should contain the authentication flag and remain set for the duration of the browser session
+**Validates: Requirements 9.4**
+
+### Property 5: Focus state provides visual highlighting
+
+*For any* word button that receives focus, the button should display prominent visual highlighting (tested via computed styles)
+**Validates: Requirements 10.2**
+
+### Property 6: Selection count reflects actual selections
+
+*For any* number of button selections (0 to 4), the displayed progress count should match the length of the user sequence array
+**Validates: Requirements 10.4**
+
 ## Testing Strategy
+
+### Unit Testing
+
+Unit tests will verify specific examples and edge cases:
+
+1. **Authentication Initial State**
+   - Verify auth screen displays on first load (no sessionStorage)
+   - Verify exactly 6 buttons are rendered
+   - Verify buttons have minimum dimensions for TV navigation
+
+2. **Keyboard Navigation**
+   - Verify arrow keys navigate between buttons
+   - Verify Enter key selects focused button
+   - Verify Tab key cycles through buttons
+
+3. **Authentication Edge Cases**
+   - Test empty sequence handling
+   - Test partial sequence (less than 4 selections)
+   - Test session persistence across page refresh
+
+### Property-Based Testing
+
+Property-based tests will verify universal behaviors across many inputs. We will use a JavaScript property-testing library (such as fast-check) to implement the correctness properties defined above. Each property-based test should run a minimum of 100 iterations.
+
+Each property-based test must be tagged with a comment explicitly referencing the correctness property from this design document using the format: **Feature: cycling-dashboard, Property {number}: {property_text}**
 
 ### Manual Testing Checklist
 
-1. **View Cycling**
+1. **Authentication Flow**
+   - Verify auth screen appears on first load
+   - Test correct sequence unlocks dashboard
+   - Test incorrect sequence shows error and resets
+   - Verify button positions randomize on each reset
+   - Test TV remote navigation (arrow keys + select)
+
+2. **View Cycling**
    - Verify each view displays for 10 seconds
    - Confirm smooth transitions between views
    - Check that cycling loops back to View 1 after View 4
 
-2. **BI Iframe**
+3. **BI Iframe**
    - Verify Looker Studio report loads and displays correctly
    - Check iframe dimensions fill the viewport
 
-3. **Widget Layouts**
+4. **Widget Layouts**
    - Verify View 2 shows Widget 1 large (top 50%), Widgets 2 & 3 small (bottom 25% each)
    - Verify View 3 shows Widget 2 large (top 50%), Widgets 1 & 3 small (bottom 25% each)
    - Verify View 4 shows Widget 3 large (top 50%), Widgets 1 & 2 small (bottom 25% each)
 
-4. **Widget Functionality**
+5. **Widget Functionality**
    - Confirm all three Funifier widgets render with correct data
    - Verify widgets are interactive (if applicable)
 
-5. **Cross-Browser Testing**
+6. **Cross-Browser Testing**
    - Test in Chrome, Firefox, Edge
    - Verify layout consistency across browsers
+   - Test on actual TV browser if possible
 
 ### Performance Considerations
 
 - Widgets remain in DOM but hidden (faster transitions, no re-initialization)
 - Single timer for cycling (minimal CPU usage)
 - No animations or transitions (instant view switching for simplicity)
+- Authentication check happens once on page load (minimal overhead)
 
 ## Implementation Notes
 
@@ -213,6 +463,19 @@ No complex data models are required. The application manages:
 - No build process required
 - No server-side components needed
 
+### Configuration Management
+
+The authentication sequence is hardcoded in the JavaScript configuration object. To change the correct sequence:
+
+1. Modify the `AUTH_CONFIG.correctSequence` array
+2. Ensure the sequence uses words from the `AUTH_CONFIG.words` array
+3. Keep sequence length at 4 items
+
+Example:
+```javascript
+correctSequence: ["VACUNA", "PACIENTE", "TRATAMIENTO", "CONSULTA"]
+```
+
 ### Future Enhancements (Out of Scope)
 
 - Pause/resume controls
@@ -220,3 +483,6 @@ No complex data models are required. The application manages:
 - Transition animations
 - Responsive design for mobile devices
 - View navigation controls
+- Admin interface for changing authentication sequence
+- Multiple authentication sequences for different users
+- Attempt limiting or temporary lockout

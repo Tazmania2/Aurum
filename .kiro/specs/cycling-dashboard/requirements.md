@@ -11,6 +11,10 @@ This document specifies the requirements for a cycling dashboard web application
 - **Widget View**: A layout configuration displaying three Funifier widgets in specific arrangements
 - **Funifier Widget**: An interactive gamification component rendered via the Funifier JavaScript SDK
 - **View Cycle**: The automatic sequential transition from one view to the next at fixed intervals
+- **Authentication Screen**: The initial screen requiring user interaction before accessing dashboard views
+- **Word Button**: A clickable button displaying a pediatric medical term used for authentication
+- **Authentication Sequence**: The specific ordered selection of four Word Buttons required to unlock the dashboard
+- **Button Randomization**: The process of shuffling Word Button positions on each authentication attempt
 
 ## Requirements
 
@@ -89,3 +93,38 @@ This document specifies the requirements for a cycling dashboard web application
 1. THE Dashboard Application SHALL continue cycling through views without stopping
 2. WHEN the application starts, THE Dashboard Application SHALL begin the view cycle immediately
 3. THE Dashboard Application SHALL maintain the 10-second interval timing throughout operation
+
+### Requirement 8
+
+**User Story:** As a system administrator, I want to restrict dashboard access with a TV-friendly authentication method, so that only authorized users can view the dashboard content
+
+#### Acceptance Criteria
+
+1. WHEN the Dashboard Application loads, THE Dashboard Application SHALL display the Authentication Screen before showing any dashboard views
+2. THE Dashboard Application SHALL display exactly six Word Buttons on the Authentication Screen with pediatric medical terminology
+3. THE Dashboard Application SHALL randomize the position of all Word Buttons each time the Authentication Screen is displayed
+4. WHEN a user clicks a Word Button, THE Dashboard Application SHALL record the selection and provide visual feedback
+5. WHEN a user completes a sequence of four Word Button selections, THE Dashboard Application SHALL validate the sequence against the configured authentication sequence
+
+### Requirement 9
+
+**User Story:** As a system administrator, I want the authentication to validate the correct sequence, so that unauthorized users cannot access the dashboard
+
+#### Acceptance Criteria
+
+1. WHEN the user-entered sequence matches the configured authentication sequence, THE Dashboard Application SHALL hide the Authentication Screen and begin the view cycle
+2. WHEN the user-entered sequence does not match the configured authentication sequence, THE Dashboard Application SHALL clear the current selection and allow the user to retry
+3. WHEN an incorrect sequence is entered, THE Dashboard Application SHALL provide visual feedback indicating authentication failure
+4. THE Dashboard Application SHALL maintain the authentication state for the duration of the browser session
+
+### Requirement 10
+
+**User Story:** As a TV user, I want large, easily clickable buttons with clear visual feedback, so that I can authenticate using a TV remote control
+
+#### Acceptance Criteria
+
+1. THE Dashboard Application SHALL render each Word Button with minimum dimensions suitable for TV remote navigation
+2. WHEN a Word Button receives focus, THE Dashboard Application SHALL display prominent visual highlighting
+3. WHEN a Word Button is selected, THE Dashboard Application SHALL display visual confirmation of the selection
+4. THE Dashboard Application SHALL display the current selection count to indicate authentication progress
+5. THE Dashboard Application SHALL support keyboard navigation for TV remote compatibility

@@ -128,12 +128,121 @@
             height: 100% !important;
             transform: none !important;
         }
+
+        /* Authentication Screen Styles */
+        .auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a0b2e 0%, #2d1b69 25%, #4a2c8f 50%, #6b46c1 75%, #8b5cf6 100%);
+            z-index: 9999;
+        }
+
+        .auth-container {
+            max-width: 1200px;
+            width: 90%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .auth-title {
+            font-size: clamp(48px, 6vw, 72px);
+            color: white;
+            margin-bottom: 40px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+        }
+
+        .auth-progress {
+            font-size: clamp(24px, 3vw, 36px);
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+
+        .auth-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .auth-button {
+            min-height: 150px;
+            font-size: clamp(28px, 3.5vw, 40px);
+            font-weight: bold;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .auth-button:active {
+            background: rgba(139, 92, 246, 0.5);
+            transform: scale(0.98);
+        }
+
+        .auth-button:focus {
+            outline: none;
+            border: 4px solid #fbbf24;
+            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.3);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .auth-feedback {
+            font-size: clamp(24px, 3vw, 32px);
+            min-height: 50px;
+            font-weight: 600;
+        }
+
+        .auth-feedback.error {
+            color: #ef4444;
+            text-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+        }
+
+        .dashboard-container {
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 
 <body>
-    <!-- View 1: BI Report -->
-    <div id="view-1" class="view active">
+    <!-- Authentication Screen -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-container">
+            <h1 class="auth-title">Acceso al Dashboard</h1>
+            <div class="auth-progress">
+                <span id="auth-progress-text">Selecciona 4 palabras en orden</span>
+            </div>
+            <div id="auth-buttons" class="auth-buttons">
+                <!-- 6 buttons dynamically generated and randomized -->
+            </div>
+            <div id="auth-feedback" class="auth-feedback"></div>
+        </div>
+    </div>
+
+    <!-- Dashboard Views -->
+    <div id="dashboard-container" class="dashboard-container" style="display: none;">
+        <!-- View 1: BI Report -->
+        <div id="view-1" class="view active">
         <iframe src="https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF"
             frameborder="0" style="border:0" allowfullscreen loading="lazy"
             sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
@@ -156,15 +265,163 @@
         </div>
     </div>
 
-    <!-- View 4: Widget 3 (corrida_espacial__sdr) -->
-    <div id="view-4" class="view">
-        <h1 class="view-title">SDRs</h1>
-        <div class="widget-container">
-            <div class="widget-full" id="widget-3"></div>
+        <!-- View 4: Widget 3 (corrida_espacial__sdr) -->
+        <div id="view-4" class="view">
+            <h1 class="view-title">SDRs</h1>
+            <div class="widget-container">
+                <div class="widget-full" id="widget-3"></div>
+            </div>
         </div>
     </div>
 
     <script type="text/javascript">
+        // Authentication Configuration
+        const AUTH_CONFIG = {
+            words: [
+                "PEDIATRIA",
+                "VACINA",
+                "DIAGNÓSTICO",
+                "TRATAMENTO",
+                "PACIENTE",
+                "CONSULTA"
+            ],
+            correctSequence: ["PEDIATRIA", "VACINA", "DIAGNÓSTICO", "TRATAMENTO"],
+            sequenceLength: 4
+        };
+
+        let userSequence = [];
+
+        // Authentication Functions
+        function renderAuthButtons() {
+            const shuffled = [...AUTH_CONFIG.words].sort(() => Math.random() - 0.5);
+            const container = document.getElementById('auth-buttons');
+            container.innerHTML = '';
+
+            shuffled.forEach(word => {
+                const button = document.createElement('button');
+                button.className = 'auth-button';
+                button.textContent = word;
+                button.setAttribute('tabindex', '0');
+                button.onclick = () => handleWordSelection(word);
+                container.appendChild(button);
+            });
+
+            // Focus first button for TV remote
+            if (container.firstChild) {
+                container.firstChild.focus();
+            }
+        }
+
+        function handleWordSelection(word) {
+            userSequence.push(word);
+            updateProgress();
+
+            if (userSequence.length === AUTH_CONFIG.sequenceLength) {
+                validateSequence();
+            }
+        }
+
+        function validateSequence() {
+            const isCorrect = userSequence.every((word, index) =>
+                word === AUTH_CONFIG.correctSequence[index]
+            );
+
+            if (isCorrect) {
+                sessionStorage.setItem('dashboard_authenticated', 'true');
+                showDashboard();
+            } else {
+                showError();
+                setTimeout(resetAuth, 2000);
+            }
+        }
+
+        function updateProgress() {
+            const text = `${userSequence.length} / ${AUTH_CONFIG.sequenceLength} seleccionadas`;
+            document.getElementById('auth-progress-text').textContent = text;
+        }
+
+        function showError() {
+            const feedback = document.getElementById('auth-feedback');
+            feedback.textContent = 'Secuencia incorrecta. Intenta de nuevo.';
+            feedback.className = 'auth-feedback error';
+        }
+
+        function clearError() {
+            const feedback = document.getElementById('auth-feedback');
+            feedback.textContent = '';
+            feedback.className = 'auth-feedback';
+        }
+
+        function resetAuth() {
+            userSequence = [];
+            updateProgress();
+            renderAuthButtons();
+            clearError();
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('dashboard-container').style.display = 'block';
+            // Start view cycling will be called from initialization
+            startCycling();
+        }
+
+        function initAuth() {
+            // Check if already authenticated
+            if (sessionStorage.getItem('dashboard_authenticated') === 'true') {
+                showDashboard();
+                return;
+            }
+
+            // Render randomized buttons
+            renderAuthButtons();
+            
+            // Setup keyboard navigation
+            setupKeyboardNavigation();
+        }
+
+        function setupKeyboardNavigation() {
+            const authButtons = document.getElementById('auth-buttons');
+            
+            authButtons.addEventListener('keydown', function(e) {
+                const buttons = Array.from(authButtons.querySelectorAll('.auth-button'));
+                const currentIndex = buttons.indexOf(document.activeElement);
+                
+                if (currentIndex === -1) return;
+                
+                let nextIndex = currentIndex;
+                
+                switch(e.key) {
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        nextIndex = (currentIndex + 1) % buttons.length;
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        nextIndex = (currentIndex - 1 + buttons.length) % buttons.length;
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        // Move down one row (3 columns)
+                        nextIndex = (currentIndex + 3) % buttons.length;
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        // Move up one row (3 columns)
+                        nextIndex = (currentIndex - 3 + buttons.length) % buttons.length;
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        buttons[currentIndex].click();
+                        return;
+                }
+                
+                if (nextIndex !== currentIndex) {
+                    buttons[nextIndex].focus();
+                }
+            });
+        }
+
         // View cycling logic with memory optimization
         let currentView = 0;
         const totalViews = 4;
@@ -239,10 +496,9 @@
                     loadedWidgets.add(nextView);
                 }
             }, CYCLE_DURATION);
+            
+            console.log('View cycling started - 15 seconds per view with 3-second preload');
         }
-        
-        startCycling();
-        console.log('View cycling started - 15 seconds per view with 3-second preload');
 
         // Create optimized widget HTML pages dynamically
         function createWidgetPage(widgetName) {
@@ -326,9 +582,10 @@
             }
         }
 
-        // Initialize only the first view
+        // Initialize authentication on page load
         window.addEventListener('DOMContentLoaded', function () {
-            console.log('Page loaded - widgets will load on demand');
+            console.log('Page loaded - initializing authentication');
+            initAuth();
         });
     </script>
 </body>

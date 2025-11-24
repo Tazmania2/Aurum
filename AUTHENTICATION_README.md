@@ -27,7 +27,7 @@ The correct sequence is: **PEDIATRIA → VACINA → DIAGNÓSTICO → TRATAMENTO*
 ### 2. Test Incorrect Sequence
 1. Refresh the page (or clear sessionStorage)
 2. Click any 4 buttons in the wrong order
-3. You should see an error message: "Secuencia incorrecta. Intenta de nuevo."
+3. You should see an error message: "Sequência incorreta. Tente novamente."
 4. After 2 seconds, the buttons will re-randomize and you can try again
 
 ### 3. Test Session Persistence

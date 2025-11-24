@@ -228,9 +228,9 @@
     <!-- Authentication Screen -->
     <div id="auth-screen" class="auth-screen">
         <div class="auth-container">
-            <h1 class="auth-title">Acceso al Dashboard</h1>
+            <h1 class="auth-title">Acesso ao Dashboard</h1>
             <div class="auth-progress">
-                <span id="auth-progress-text">Selecciona 4 palabras en orden</span>
+                <span id="auth-progress-text">Selecione as palavras em ordem</span>
             </div>
             <div id="auth-buttons" class="auth-buttons">
                 <!-- 6 buttons dynamically generated and randomized -->
@@ -336,13 +336,17 @@
         }
 
         function updateProgress() {
-            const text = `${userSequence.length} / ${AUTH_CONFIG.sequenceLength} seleccionadas`;
-            document.getElementById('auth-progress-text').textContent = text;
+            if (userSequence.length === 0) {
+                document.getElementById('auth-progress-text').textContent = 'Selecione as palavras em ordem';
+            } else {
+                const text = `${userSequence.length} selecionada${userSequence.length > 1 ? 's' : ''}`;
+                document.getElementById('auth-progress-text').textContent = text;
+            }
         }
 
         function showError() {
             const feedback = document.getElementById('auth-feedback');
-            feedback.textContent = 'Secuencia incorrecta. Intenta de nuevo.';
+            feedback.textContent = 'Sequência incorreta. Tente novamente.';
             feedback.className = 'auth-feedback error';
         }
 

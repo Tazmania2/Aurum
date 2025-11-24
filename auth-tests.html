@@ -157,8 +157,12 @@
                 
                 function mockHandleWordSelection(word) {
                     testUserSequence.push(word);
-                    const text = `${testUserSequence.length} / ${AUTH_CONFIG.sequenceLength} seleccionadas`;
-                    mockContainer.textContent = text;
+                    if (testUserSequence.length === 0) {
+                        mockContainer.textContent = 'Selecione as palavras em ordem';
+                    } else {
+                        const text = `${testUserSequence.length} selecionada${testUserSequence.length > 1 ? 's' : ''}`;
+                        mockContainer.textContent = text;
+                    }
                 }
                 
                 const result = fc.assert(
@@ -172,7 +176,12 @@
                             const lengthIncreased = testUserSequence.length === initialLength + 1;
                             
                             // Verify progress display updated
-                            const expectedText = `${testUserSequence.length} / ${AUTH_CONFIG.sequenceLength} seleccionadas`;
+                            let expectedText;
+                            if (testUserSequence.length === 0) {
+                                expectedText = 'Selecione as palavras em ordem';
+                            } else {
+                                expectedText = `${testUserSequence.length} selecionada${testUserSequence.length > 1 ? 's' : ''}`;
+                            }
                             const feedbackUpdated = mockContainer.textContent === expectedText;
                             
                             // Reset for next iteration if we hit the limit
@@ -364,11 +373,21 @@
                             }
                             
                             // Update progress display
-                            const text = `${mockSequence.length} / ${AUTH_CONFIG.sequenceLength} seleccionadas`;
+                            let text;
+                            if (mockSequence.length === 0) {
+                                text = 'Selecione as palavras em ordem';
+                            } else {
+                                text = `${mockSequence.length} selecionada${mockSequence.length > 1 ? 's' : ''}`;
+                            }
                             mockContainer.textContent = text;
                             
                             // Verify progress text matches sequence length
-                            const expectedText = `${selectionCount} / ${AUTH_CONFIG.sequenceLength} seleccionadas`;
+                            let expectedText;
+                            if (selectionCount === 0) {
+                                expectedText = 'Selecione as palavras em ordem';
+                            } else {
+                                expectedText = `${selectionCount} selecionada${selectionCount > 1 ? 's' : ''}`;
+                            }
                             return mockContainer.textContent === expectedText;
                         }
                     ),

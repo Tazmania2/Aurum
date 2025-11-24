@@ -81,6 +81,8 @@ const AUTH_CONFIG = {
 ## Files Modified/Created
 
 - `index.html` - Main application with authentication
+- `index-lite.html` - Lite version with authentication
+- `index-ultra-lite.html` - Ultra-lite version with authentication
 - `auth-tests.html` - Comprehensive test suite
 - `AUTHENTICATION_README.md` - This file
 

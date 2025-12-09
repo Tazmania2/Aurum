@@ -47,31 +47,7 @@
     </div>
 
     <!-- Dashboard Views -->
-    <div id="dashboard-container" class="dashboard-container" style="display: none;">
-        <div id="view-1" class="view active">
-            <div class="title">Dashboard</div>
-            <div class="loading">Loading...</div>
-            <iframe class="view-iframe" loading="lazy"></iframe>
-        </div>
-
-        <div id="view-2" class="view">
-            <div class="title">Vendedores</div>
-            <div class="loading">Loading...</div>
-            <iframe class="view-iframe" loading="lazy"></iframe>
-        </div>
-
-        <div id="view-3" class="view">
-            <div class="title">Indicações</div>
-            <div class="loading">Loading...</div>
-            <iframe class="view-iframe" loading="lazy"></iframe>
-        </div>
-
-        <div id="view-4" class="view">
-            <div class="title">SDRs</div>
-            <div class="loading">Loading...</div>
-            <iframe class="view-iframe" loading="lazy"></iframe>
-        </div>
-    </div>
+    <div id="dashboard-container" class="dashboard-container" style="display: none;"></div>
 
     <div id="init-error" class="init-error">Não foi possível iniciar a página ultra lite. Recarregue ou tente em outro navegador.</div>
 
@@ -197,10 +173,10 @@
         const CYCLE_DURATION = 30000; // 30 seconds per view - very conservative
 
         const content = [
-            { type: 'url', value: 'https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF' },
-            { type: 'widget', value: 'espacial' },
-            { type: 'widget', value: 'corrida_espacial__referidos' },
-            { type: 'widget', value: 'corrida_espacial__sdr' }
+            { title: 'Dashboard', type: 'url', value: 'https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF' },
+            { title: 'Vendedores', type: 'widget', value: 'espacial' },
+            { title: 'Indicações', type: 'widget', value: 'corrida_espacial__referidos' },
+            { title: 'SDRs', type: 'widget', value: 'corrida_espacial__sdr' }
         ];
 
         const totalViews = content.length;
@@ -208,6 +184,42 @@
         // Create optimized widget HTML pages dynamically
         function createWidgetPage(widgetName) {
             return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;padding:0;overflow:hidden;font-size:14px}#widget{width:100%;height:100vh}#loading{text-align:center;padding:50px;color:#666}<\/style><\/head><body><div id="loading">Loading widget...<\/div><div id="widget" style="display:none;"><\/div><script>function loadWidget(){if(window.jQuery&&window.Funifier){initWidget()}else{var jq=document.createElement("script");jq.src="https://code.jquery.com/jquery-3.6.0.min.js";jq.onload=function(){var fn=document.createElement("script");fn.src="https://client2.funifier.com/v3/funifier.js";fn.onload=initWidget;document.head.appendChild(fn)};document.head.appendChild(jq)}}function initWidget(){jQuery(function($){Funifier.init({apiKey:"69027af6e179d46fce283e7e",service:"https://service2.funifier.com"},function(){Funifier.auth.setAuthorization("Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDUyMDk1ZTE3OWQ0NmZjZTRiZDkwNA==");Funifier.widget.render({widget:"' + widgetName + '",selector:"#widget",bind:"replace"},function(err,data){document.getElementById("loading").style.display="none";document.getElementById("widget").style.display="block";if(err)console.error("Widget error:",err)})})})}setTimeout(loadWidget,100)<\/script><\/body><\/html>';
+        }
+
+        function createViews() {
+            const container = document.getElementById('dashboard-container');
+
+            if (!container) return;
+
+            // Avoid rebuilding if already created
+            const existingViews = container.querySelectorAll('.view');
+            if (existingViews.length === totalViews) return;
+
+            container.innerHTML = '';
+
+            content.forEach((item, index) => {
+                const view = document.createElement('div');
+                view.id = `view-${index + 1}`;
+                view.className = `view${index === 0 ? ' active' : ''}`;
+
+                const title = document.createElement('div');
+                title.className = 'title';
+                title.textContent = item.title;
+
+                const loading = document.createElement('div');
+                loading.className = 'loading';
+                loading.textContent = 'Loading...';
+
+                const iframe = document.createElement('iframe');
+                iframe.className = 'view-iframe';
+                iframe.loading = 'lazy';
+
+                view.appendChild(title);
+                view.appendChild(loading);
+                view.appendChild(iframe);
+
+                container.appendChild(view);
+            });
         }
 
         function loadCurrentView() {
@@ -263,6 +275,7 @@
 
         function startCycling() {
             // Initialize
+            createViews();
             loadCurrentView();
             setInterval(cycleViews, CYCLE_DURATION);
             
@@ -289,6 +302,7 @@
                 // Fallback: show dashboard with first view to avoid a blank screen
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('dashboard-container').style.display = 'block';
+                createViews();
                 loadCurrentView();
             }
         });

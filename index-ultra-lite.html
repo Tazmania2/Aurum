@@ -186,40 +186,44 @@
             return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{margin:0;padding:0;overflow:hidden;font-size:14px}#widget{width:100%;height:100vh}#loading{text-align:center;padding:50px;color:#666}<\/style><\/head><body><div id="loading">Loading widget...<\/div><div id="widget" style="display:none;"><\/div><script>function loadWidget(){if(window.jQuery&&window.Funifier){initWidget()}else{var jq=document.createElement("script");jq.src="https://code.jquery.com/jquery-3.6.0.min.js";jq.onload=function(){var fn=document.createElement("script");fn.src="https://client2.funifier.com/v3/funifier.js";fn.onload=initWidget;document.head.appendChild(fn)};document.head.appendChild(jq)}}function initWidget(){jQuery(function($){Funifier.init({apiKey:"69027af6e179d46fce283e7e",service:"https://service2.funifier.com"},function(){Funifier.auth.setAuthorization("Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDUyMDk1ZTE3OWQ0NmZjZTRiZDkwNA==");Funifier.widget.render({widget:"' + widgetName + '",selector:"#widget",bind:"replace"},function(err,data){document.getElementById("loading").style.display="none";document.getElementById("widget").style.display="block";if(err)console.error("Widget error:",err)})})})}setTimeout(loadWidget,100)<\/script><\/body><\/html>';
         }
 
+        function buildViewShell(item, index) {
+            const view = document.createElement('div');
+            view.id = `view-${index + 1}`;
+            view.className = `view${index === 0 ? ' active' : ''}`;
+
+            const title = document.createElement('div');
+            title.className = 'title';
+            title.textContent = item.title;
+
+            const loading = document.createElement('div');
+            loading.className = 'loading';
+            loading.textContent = 'Loading...';
+
+            const iframe = document.createElement('iframe');
+            iframe.className = 'view-iframe';
+            iframe.loading = 'lazy';
+
+            view.appendChild(title);
+            view.appendChild(loading);
+            view.appendChild(iframe);
+
+            return view;
+        }
+
         function createViews() {
             const container = document.getElementById('dashboard-container');
 
-            if (!container) return;
-
-            // Avoid rebuilding if already created
-            const existingViews = container.querySelectorAll('.view');
-            if (existingViews.length === totalViews) return;
+            if (!container || container.dataset.initialized === 'true') return;
 
             container.innerHTML = '';
+            const fragment = document.createDocumentFragment();
 
             content.forEach((item, index) => {
-                const view = document.createElement('div');
-                view.id = `view-${index + 1}`;
-                view.className = `view${index === 0 ? ' active' : ''}`;
-
-                const title = document.createElement('div');
-                title.className = 'title';
-                title.textContent = item.title;
-
-                const loading = document.createElement('div');
-                loading.className = 'loading';
-                loading.textContent = 'Loading...';
-
-                const iframe = document.createElement('iframe');
-                iframe.className = 'view-iframe';
-                iframe.loading = 'lazy';
-
-                view.appendChild(title);
-                view.appendChild(loading);
-                view.appendChild(iframe);
-
-                container.appendChild(view);
+                fragment.appendChild(buildViewShell(item, index));
             });
+
+            container.appendChild(fragment);
+            container.dataset.initialized = 'true';
         }
 
         function loadCurrentView() {
@@ -273,11 +277,16 @@
             console.log('Switched to view:', currentView);
         }
 
+        let cycleInterval = null;
+
         function startCycling() {
             // Initialize
             createViews();
             loadCurrentView();
-            setInterval(cycleViews, CYCLE_DURATION);
+
+            if (!cycleInterval) {
+                cycleInterval = setInterval(cycleViews, CYCLE_DURATION);
+            }
             
             // Aggressive memory management
             setInterval(() => {

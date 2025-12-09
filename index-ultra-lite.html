@@ -6,26 +6,30 @@
     <title>Cycling Dashboard - Ultra Lite</title>
     <style>
         * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1a0b2e; font-family: Arial, sans-serif; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0f1424; color: #f5f5f5; font-family: Arial, sans-serif; }
         .view { position: fixed; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; pointer-events: none; }
         .view.active { opacity: 1; pointer-events: auto; }
         iframe { width: 100%; height: 100%; border: none; }
-        .title { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.8); padding: 8px 16px; border-radius: 4px; font-size: 18px; z-index: 10; }
-        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 16px; }
-        
+        .title { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: #f1f5f9; background: #111827; padding: 8px 16px; border-radius: 4px; font-size: 16px; z-index: 10; font-weight: 600; }
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #e5e7eb; font-size: 15px; }
+
         /* Authentication Screen Styles */
-        .auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a0b2e 0%, #2d1b69 25%, #4a2c8f 50%, #6b46c1 75%, #8b5cf6 100%); z-index: 9999; }
-        .auth-container { max-width: 1200px; width: 90%; padding: 40px; text-align: center; }
-        .auth-title { font-size: clamp(48px, 6vw, 72px); color: white; margin-bottom: 40px; text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); font-weight: bold; }
-        .auth-progress { font-size: clamp(24px, 3vw, 36px); color: rgba(255, 255, 255, 0.9); margin-bottom: 40px; font-weight: 500; }
-        .auth-buttons { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 30px; margin-bottom: 40px; }
-        .auth-button { min-height: 150px; font-size: clamp(28px, 3.5vw, 40px); font-weight: bold; padding: 30px 20px; background: rgba(255, 255, 255, 0.15); border: 3px solid rgba(255, 255, 255, 0.3); border-radius: 16px; color: white; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(10px); text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
-        .auth-button:hover { background: rgba(255, 255, 255, 0.25); border-color: rgba(255, 255, 255, 0.5); transform: scale(1.05); }
-        .auth-button:active { background: rgba(139, 92, 246, 0.5); transform: scale(0.98); }
-        .auth-button:focus { outline: none; border: 4px solid #fbbf24; box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.3); background: rgba(255, 255, 255, 0.25); }
-        .auth-feedback { font-size: clamp(24px, 3vw, 32px); min-height: 50px; font-weight: 600; }
-        .auth-feedback.error { color: #ef4444; text-shadow: 0 2px 8px rgba(239, 68, 68, 0.5); }
+        .auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #0f1424; z-index: 9999; }
+        .auth-container { max-width: 900px; width: 90%; padding: 24px; text-align: center; }
+        .auth-title { font-size: clamp(36px, 5vw, 54px); color: #f8fafc; margin-bottom: 24px; font-weight: 700; letter-spacing: 0.5px; }
+        .auth-progress { font-size: clamp(18px, 3vw, 24px); color: rgba(248, 250, 252, 0.9); margin-bottom: 24px; font-weight: 500; }
+        .auth-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+        .auth-button { min-height: 120px; font-size: clamp(22px, 3vw, 32px); font-weight: 700; padding: 20px 16px; background: rgba(255, 255, 255, 0.06); border: 2px solid rgba(255, 255, 255, 0.15); border-radius: 12px; color: #f8fafc; cursor: pointer; transition: background-color 120ms ease, border-color 120ms ease; }
+        .auth-button:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.25); }
+        .auth-button:active { background: rgba(139, 92, 246, 0.25); }
+        .auth-button:focus { outline: none; border: 3px solid #fbbf24; background: rgba(255, 255, 255, 0.18); }
+        .auth-feedback { font-size: clamp(18px, 2.5vw, 24px); min-height: 40px; font-weight: 600; }
+        .auth-feedback.error { color: #fca5a5; }
         .dashboard-container { width: 100%; height: 100%; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .auth-button { transition: none; }
+        }
     </style>
 </head>
 <body>

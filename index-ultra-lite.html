@@ -48,24 +48,24 @@
 
     <!-- Dashboard Views -->
     <div id="dashboard-container" class="dashboard-container" style="display: none;">
-    <div id="view-1" class="view active">
-        <iframe id="main-iframe" loading="lazy"></iframe>
-    </div>
-    
-    <div id="view-2" class="view">
-        <div class="title">Vendedores</div>
-        <div class="loading" id="loading">Loading...</div>
-    </div>
-    
-    <div id="view-3" class="view">
-        <div class="title">Indicações</div>
-        <div class="loading" id="loading">Loading...</div>
-    </div>
-    
-    <div id="view-4" class="view">
-        <div class="title">SDRs</div>
-        <div class="loading" id="loading">Loading...</div>
-    </div>
+        <div id="view-1" class="view active">
+            <iframe id="main-iframe" loading="lazy"></iframe>
+        </div>
+
+        <div id="view-2" class="view">
+            <div class="title">Vendedores</div>
+            <div class="loading">Loading...</div>
+        </div>
+
+        <div id="view-3" class="view">
+            <div class="title">Indicações</div>
+            <div class="loading">Loading...</div>
+        </div>
+
+        <div id="view-4" class="view">
+            <div class="title">SDRs</div>
+            <div class="loading">Loading...</div>
+        </div>
     </div>
 
     <div id="init-error" class="init-error">Não foi possível iniciar a página ultra lite. Recarregue ou tente em outro navegador.</div>
@@ -189,15 +189,16 @@
         }
 
         let currentView = 0;
-        const totalViews = 4;
         const CYCLE_DURATION = 30000; // 30 seconds per view - very conservative
-        
+
         const content = [
             { type: 'url', value: 'https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF' },
             { type: 'widget', value: 'espacial' },
             { type: 'widget', value: 'corrida_espacial__referidos' },
             { type: 'widget', value: 'corrida_espacial__sdr' }
         ];
+
+        const totalViews = content.length;
 
         // Create optimized widget HTML pages dynamically
         function createWidgetPage(widgetName) {

@@ -49,22 +49,27 @@
     <!-- Dashboard Views -->
     <div id="dashboard-container" class="dashboard-container" style="display: none;">
         <div id="view-1" class="view active">
-            <iframe id="main-iframe" loading="lazy"></iframe>
+            <div class="title">Dashboard</div>
+            <div class="loading">Loading...</div>
+            <iframe class="view-iframe" loading="lazy"></iframe>
         </div>
 
         <div id="view-2" class="view">
             <div class="title">Vendedores</div>
             <div class="loading">Loading...</div>
+            <iframe class="view-iframe" loading="lazy"></iframe>
         </div>
 
         <div id="view-3" class="view">
             <div class="title">Indicações</div>
             <div class="loading">Loading...</div>
+            <iframe class="view-iframe" loading="lazy"></iframe>
         </div>
 
         <div id="view-4" class="view">
             <div class="title">SDRs</div>
             <div class="loading">Loading...</div>
+            <iframe class="view-iframe" loading="lazy"></iframe>
         </div>
     </div>
 
@@ -206,29 +211,39 @@
         }
 
         function loadCurrentView() {
-            const iframe = document.getElementById('main-iframe');
-            const loading = document.querySelector('.view.active .loading');
-            
-            if (loading) loading.style.display = 'block';
-            
-            // Clear previous content
-            iframe.src = '';
-            iframe.srcdoc = '';
-            
-            // Small delay to ensure cleanup
-            setTimeout(() => {
-                const currentContent = content[currentView];
-                if (currentContent.type === 'url') {
-                    iframe.src = currentContent.value;
-                } else if (currentContent.type === 'widget') {
-                    iframe.srcdoc = createWidgetPage(currentContent.value);
+            const views = document.querySelectorAll('.view');
+
+            views.forEach((view, index) => {
+                const iframe = view.querySelector('.view-iframe');
+                const isActive = index === currentView;
+
+                if (!iframe) return;
+
+                if (isActive) {
+                    const loading = view.querySelector('.loading');
+                    if (loading) loading.style.display = 'block';
+
+                    iframe.src = '';
+                    iframe.srcdoc = '';
+
+                    setTimeout(() => {
+                        const currentContent = content[currentView];
+                        if (currentContent.type === 'url') {
+                            iframe.src = currentContent.value;
+                        } else if (currentContent.type === 'widget') {
+                            iframe.srcdoc = createWidgetPage(currentContent.value);
+                        }
+
+                        iframe.onload = () => {
+                            if (loading) loading.style.display = 'none';
+                            console.log('Loaded view:', currentView);
+                        };
+                    }, 500);
+                } else {
+                    iframe.src = '';
+                    iframe.srcdoc = '';
                 }
-                
-                iframe.onload = () => {
-                    if (loading) loading.style.display = 'none';
-                    console.log('Loaded view:', currentView);
-                };
-            }, 500);
+            });
         }
 
         function cycleViews() {

@@ -11,7 +11,7 @@
         script-src 'self' 'unsafe-inline' https://vercel.live;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com;
-        img-src 'self' https://client2.funifier.com data: blob:;
+        img-src 'self' https://client2.funifier.com https://s3.amazonaws.com data: blob:;
         connect-src 'self' https://service2.funifier.com https://httpbin.org https://vercel.live;
         frame-src 'self' https://lookerstudio.google.com https://*.google.com;
         object-src 'none';
@@ -24,10 +24,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     
-    <!-- Preload critical spaceship assets for performance optimization -->
-    <link rel="preload" href="assets/spaceships/spaceship_gold.svg" as="image" type="image/svg+xml">
-    <link rel="preload" href="assets/spaceships/spaceship_silver.svg" as="image" type="image/svg+xml">
-    <link rel="preload" href="assets/spaceships/spaceship_bronze.svg" as="image" type="image/svg+xml">
+    <!-- Spaceship assets loaded dynamically from API with lightweight CSS fallbacks -->
     
     <!-- CSS Files -->
     <link rel="stylesheet" href="styles/main.css">

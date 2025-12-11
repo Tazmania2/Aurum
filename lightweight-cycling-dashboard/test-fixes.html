@@ -38,11 +38,23 @@
             console.error('App error:', e);
         }
         
-        // Test 3: Check if spaceship assets exist
-        const testImage = new Image();
-        testImage.onload = () => addResult('Spaceship assets loading', true);
-        testImage.onerror = () => addResult('Spaceship assets loading', false);
-        testImage.src = 'assets/spaceships/spaceship_gold.svg';
+        // Test 3: Check if spaceship assets can be fetched from API
+        async function testSpaceshipAPI() {
+            try {
+                const df = new DataFetcher();
+                const assets = await df.fetchSpaceshipAssets();
+                addResult('Spaceship API fetch', assets && assets.length > 0);
+                
+                if (assets && assets.length > 0) {
+                    console.log('Fetched spaceship assets:', assets);
+                }
+            } catch (error) {
+                addResult('Spaceship API fetch', false);
+                console.error('Spaceship API error:', error);
+            }
+        }
+        
+        testSpaceshipAPI();
     </script>
     
     <!-- Load the same scripts as main app -->

@@ -184,71 +184,35 @@ class RankingRenderer {
         spaceshipElement.style.opacity = '0';
         
         // Create spaceship image
-        const spaceshipImage = document.createElement('img');
-        spaceshipImage.className = 'spaceship-image';
-        spaceshipImage.src = this.getSpaceshipAsset(position);
-        spaceshipImage.alt = `${player.name} spaceship`;
-        spaceshipImage.loading = 'lazy';
+        // Get spaceship asset info (may be null for CSS fallback)
+        const assetInfo = this.getSpaceshipAssetInfo(position);
         
-        // Enhanced image error handling with multiple fallback strategies
-        let imageLoadAttempts = 0;
-        const maxImageRetries = 2;
+        let spaceshipImage;
+        if (assetInfo.image) {
+            // Use real image from API
+            spaceshipImage = document.createElement('img');
+            spaceshipImage.className = 'spaceship-image';
+            spaceshipImage.src = assetInfo.image;
+            spaceshipImage.alt = `${player.name} spaceship`;
+            spaceshipImage.loading = 'lazy';
+        } else {
+            // Use lightweight CSS fallback
+            spaceshipImage = this.createCSSSpaceship(assetInfo, position);
+        }
         
-        const handleImageError = () => {
-            imageLoadAttempts++;
-            console.warn(`Failed to load spaceship image for position ${position} (attempt ${imageLoadAttempts})`);
-            
-            if (imageLoadAttempts <= maxImageRetries) {
-                // Try fallback asset
-                const fallbackSrc = this.getFallbackSpaceshipAsset();
-                if (fallbackSrc && fallbackSrc !== spaceshipImage.src) {
-                    console.log(`Trying fallback asset: ${fallbackSrc}`);
-                    spaceshipImage.src = fallbackSrc;
-                    return;
-                }
-            }
-            
-            // Ultimate fallback - create CSS-only spaceship
-            console.log('Using CSS fallback spaceship');
-            spaceshipImage.style.display = 'none';
-            
-            const cssSpaceship = document.createElement('div');
-            cssSpaceship.className = 'css-spaceship';
-            cssSpaceship.setAttribute('data-position', position);
-            
-            // Position-based colors for CSS fallback
-            const fallbackColors = {
-                1: 'linear-gradient(45deg, #ffd700, #ffed4e)', // Gold
-                2: 'linear-gradient(45deg, #c0c0c0, #e8e8e8)', // Silver
-                3: 'linear-gradient(45deg, #cd7f32, #daa520)', // Bronze
+        // Only add error handling for actual images, not CSS spaceships
+        if (assetInfo.image && spaceshipImage.tagName === 'IMG') {
+            const handleImageError = () => {
+                console.warn(`Failed to load spaceship image: ${assetInfo.image}`);
+                
+                // Replace with CSS fallback
+                const cssSpaceship = this.createCSSSpaceship(assetInfo, position);
+                spaceshipImage.parentNode.replaceChild(cssSpaceship, spaceshipImage);
+                spaceshipImage = cssSpaceship; // Update reference
             };
             
-            const gradient = fallbackColors[position] || 'linear-gradient(45deg, #4a90e2, #7b68ee)';
-            
-            cssSpaceship.style.cssText = `
-                width: 80px; height: 80px; 
-                background: ${gradient};
-                border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-                position: relative; margin: 0 auto;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-                border: 2px solid rgba(255,255,255,0.3);
-            `;
-            
-            // Add a simple spaceship shape with CSS
-            const cockpit = document.createElement('div');
-            cockpit.style.cssText = `
-                position: absolute; top: 20%; left: 50%; 
-                transform: translateX(-50%);
-                width: 20px; height: 20px;
-                background: rgba(255,255,255,0.8);
-                border-radius: 50%;
-            `;
-            cssSpaceship.appendChild(cockpit);
-            
-            spaceshipImage.parentNode.insertBefore(cssSpaceship, spaceshipImage);
-        };
-        
-        spaceshipImage.onerror = handleImageError;
+            spaceshipImage.onerror = handleImageError;
+        }
         
         // Create player info
         const playerInfo = document.createElement('div');
@@ -314,15 +278,60 @@ class RankingRenderer {
         return { x: Math.max(0, Math.min(x, containerWidth - 100)), y };
     }
     
-    getSpaceshipAsset(position) {
+    getSpaceshipAssetInfo(position) {
         const colorKey = this.colorMap[position] || 'red';
         const asset = this.spaceshipAssets.find(asset => asset.car === colorKey);
-        return asset ? asset.image : this.getFallbackSpaceshipAsset();
+        
+        if (asset) {
+            return asset;
+        }
+        
+        // Ultimate fallback
+        return {
+            car: colorKey,
+            image: null,
+            fallback: '🚀',
+            cssColor: '#4A90E2'
+        };
     }
     
-    getFallbackSpaceshipAsset() {
-        // Return first available asset as fallback
-        return this.spaceshipAssets.length > 0 ? this.spaceshipAssets[0].image : '';
+    createCSSSpaceship(assetInfo, position) {
+        const cssSpaceship = document.createElement('div');
+        cssSpaceship.className = 'css-spaceship spaceship-image';
+        cssSpaceship.setAttribute('data-position', position);
+        
+        // Create lightweight CSS spaceship shape
+        const gradient = `linear-gradient(45deg, ${assetInfo.cssColor}, ${this.lightenColor(assetInfo.cssColor, 20)})`;
+        
+        cssSpaceship.style.cssText = `
+            width: 60px; height: 60px; 
+            background: ${gradient};
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative; margin: 0 auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        `;
+        
+        // Add emoji as content
+        cssSpaceship.textContent = assetInfo.fallback;
+        
+        return cssSpaceship;
+    }
+    
+    lightenColor(color, percent) {
+        // Simple color lightening function
+        const num = parseInt(color.replace("#", ""), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = (num >> 16) + amt;
+        const G = (num >> 8 & 0x00FF) + amt;
+        const B = (num & 0x0000FF) + amt;
+        return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+            (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+            (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
     }
     
     animateSpaceships(container) {

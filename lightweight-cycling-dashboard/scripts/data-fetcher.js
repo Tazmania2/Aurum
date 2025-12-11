@@ -400,6 +400,152 @@ class DataFetcher {
         return results;
     }
     
+    // Fetch spaceship assets from Funifier database
+    async fetchSpaceshipAssets() {
+        console.log('Fetching spaceship assets from Funifier database...');
+        
+        const url = 'https://service2.funifier.com/v3/database/espacial__c';
+        
+        // Record the API call for testing purposes
+        this.callHistory.push({
+            type: 'spaceship-assets',
+            timestamp: Date.now(),
+            url: url
+        });
+        
+        for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+            try {
+                const data = await this.makeSpaceshipApiCall(url);
+                console.log(`Successfully fetched spaceship assets on attempt ${attempt}`);
+                return this.processSpaceshipData(data);
+                
+            } catch (error) {
+                console.warn(`Spaceship assets fetch attempt ${attempt} failed:`, error.message);
+                
+                if (attempt === this.maxRetries) {
+                    console.error(`All ${this.maxRetries} attempts failed for spaceship assets`);
+                    // Return fallback assets instead of throwing
+                    return this.getFallbackSpaceshipAssets();
+                }
+                
+                // Wait before retry (exponential backoff)
+                await this.delay(1000 * attempt);
+            }
+        }
+    }
+    
+    async makeSpaceshipApiCall(url) {
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+        
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            return data;
+            
+        } catch (error) {
+            clearTimeout(timeoutId);
+            
+            if (error.name === 'AbortError') {
+                throw new Error(`Request timeout after ${this.timeout}ms`);
+            }
+            
+            throw error;
+        }
+    }
+    
+    processSpaceshipData(data) {
+        try {
+            if (!Array.isArray(data)) {
+                console.warn('Spaceship data is not an array, using fallback');
+                return this.getFallbackSpaceshipAssets();
+            }
+            
+            // Filter and process spaceship assets
+            const spaceshipAssets = data
+                .filter(item => item.type === 'car' && item.car && item.image)
+                .map(item => ({
+                    car: item.car,
+                    image: item.image,
+                    fallback: this.getEmojiForCar(item.car)
+                }));
+            
+            // Ensure we have all required colors, add fallbacks if missing
+            const requiredColors = ['gold', 'silver', 'bronze', 'red', 'yellow', 'green'];
+            const existingColors = spaceshipAssets.map(asset => asset.car);
+            
+            requiredColors.forEach(color => {
+                if (!existingColors.includes(color)) {
+                    console.warn(`Missing ${color} spaceship, adding lightweight CSS fallback`);
+                    spaceshipAssets.push({
+                        car: color,
+                        image: null, // No image - will use CSS fallback
+                        fallback: this.getEmojiForCar(color),
+                        cssColor: this.getCssColorForCar(color)
+                    });
+                }
+            });
+            
+            console.log(`Processed ${spaceshipAssets.length} spaceship assets`);
+            return spaceshipAssets;
+            
+        } catch (error) {
+            console.error('Error processing spaceship data:', error);
+            return this.getFallbackSpaceshipAssets();
+        }
+    }
+    
+    getFallbackSpaceshipAssets() {
+        console.log('Using lightweight CSS fallback spaceship assets');
+        return [
+            { car: 'red', image: null, fallback: '🚀', cssColor: '#FF0000' },
+            { car: 'gold', image: null, fallback: '🥇', cssColor: '#FFD700' },
+            { car: 'silver', image: null, fallback: '🥈', cssColor: '#C0C0C0' },
+            { car: 'bronze', image: null, fallback: '🥉', cssColor: '#CD7F32' },
+            { car: 'yellow', image: null, fallback: '⭐', cssColor: '#FFFF00' },
+            { car: 'green', image: null, fallback: '🌟', cssColor: '#00FF00' }
+        ];
+    }
+    
+    getEmojiForCar(carColor) {
+        const emojiMap = {
+            'gold': '🥇',
+            'silver': '🥈', 
+            'bronze': '🥉',
+            'red': '🚀',
+            'yellow': '⭐',
+            'green': '🌟'
+        };
+        return emojiMap[carColor] || '🚀';
+    }
+    
+    getCssColorForCar(carColor) {
+        const colorMap = {
+            'gold': '#FFD700',
+            'silver': '#C0C0C0',
+            'bronze': '#CD7F32',
+            'red': '#FF0000',
+            'yellow': '#FFFF00',
+            'green': '#00FF00'
+        };
+        return colorMap[carColor] || '#4A90E2';
+    }
+
     // Call history methods for testing
     clearCallHistory() {
         this.callHistory = [];

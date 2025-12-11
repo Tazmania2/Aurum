@@ -34,14 +34,7 @@ class AppState {
                 leaderboardId: 'Fbdurjz'
             }
         ];
-        this.spaceshipAssets = [
-            { car: 'red', image: 'assets/spaceships/spaceship_red.svg', fallback: '🚀' },
-            { car: 'gold', image: 'assets/spaceships/spaceship_gold.svg', fallback: '🥇' },
-            { car: 'silver', image: 'assets/spaceships/spaceship_silver.svg', fallback: '🥈' },
-            { car: 'bronze', image: 'assets/spaceships/spaceship_bronze.svg', fallback: '🥉' },
-            { car: 'yellow', image: 'assets/spaceships/spaceship_yellow.svg', fallback: '⭐' },
-            { car: 'green', image: 'assets/spaceships/spaceship_green.svg', fallback: '🌟' }
-        ];
+        this.spaceshipAssets = []; // Will be populated from API
     }
     
     /**
@@ -95,6 +88,17 @@ class AppState {
      */
     getSpaceshipAssets() {
         return this.spaceshipAssets;
+    }
+    
+    /**
+     * Set spaceship assets (loaded from API)
+     * @param {Array} assets - Array of spaceship asset objects
+     */
+    setSpaceshipAssets(assets) {
+        if (Array.isArray(assets)) {
+            this.spaceshipAssets = assets;
+            console.log(`Updated spaceship assets: ${assets.length} assets loaded`);
+        }
     }
     
     /**
@@ -154,6 +158,10 @@ class App {
             // Initialize components
             this.viewController = new ViewController();
             this.dataFetcher = new DataFetcher();
+            
+            // Fetch spaceship assets from API
+            await this.loadSpaceshipAssets();
+            
             this.rankingRenderer = new RankingRenderer(
                 this.appState.getSpaceshipAssets(),
                 perfRecommendations
@@ -184,6 +192,28 @@ class App {
         }
     }
     
+    async loadSpaceshipAssets() {
+        try {
+            console.log('Loading spaceship assets from Funifier database...');
+            const spaceshipAssets = await this.dataFetcher.fetchSpaceshipAssets();
+            this.appState.setSpaceshipAssets(spaceshipAssets);
+            console.log('Spaceship assets loaded successfully');
+        } catch (error) {
+            console.error('Failed to load spaceship assets:', error);
+            // Use lightweight CSS fallback assets
+            const fallbackAssets = [
+                { car: 'red', image: null, fallback: '🚀', cssColor: '#FF0000' },
+                { car: 'gold', image: null, fallback: '🥇', cssColor: '#FFD700' },
+                { car: 'silver', image: null, fallback: '🥈', cssColor: '#C0C0C0' },
+                { car: 'bronze', image: null, fallback: '🥉', cssColor: '#CD7F32' },
+                { car: 'yellow', image: null, fallback: '⭐', cssColor: '#FFFF00' },
+                { car: 'green', image: null, fallback: '🌟', cssColor: '#00FF00' }
+            ];
+            this.appState.setSpaceshipAssets(fallbackAssets);
+            console.log('Using fallback spaceship assets');
+        }
+    }
+
     async preloadAssets() {
         console.log('Preloading spaceship assets for optimal performance...');
         

@@ -87,20 +87,29 @@ class AppState {
     
     /**
      * Get all spaceship assets
-     * @returns {Array} Array of spaceship asset objects
+     * @returns {Object|Array} Spaceship asset objects (object with ranking configs or array for fallback)
      */
     getSpaceshipAssets() {
-        return this.spaceshipAssets;
+        return this.spaceshipAssets || {};
     }
     
     /**
      * Set spaceship assets (loaded from API)
-     * @param {Array} assets - Array of spaceship asset objects
+     * @param {Object|Array} assets - Spaceship asset objects (object with ranking configs or array for fallback)
      */
     setSpaceshipAssets(assets) {
-        if (Array.isArray(assets)) {
+        if (assets && (Array.isArray(assets) || typeof assets === 'object')) {
             this.spaceshipAssets = assets;
-            console.log(`Updated spaceship assets: ${assets.length} assets loaded`);
+            
+            if (Array.isArray(assets)) {
+                console.log(`Updated spaceship assets: ${assets.length} assets loaded (array format)`);
+            } else {
+                const configCount = Object.keys(assets).length;
+                console.log(`Updated spaceship assets: ${configCount} ranking configs loaded (object format)`);
+                console.log(`Ranking configs: ${Object.keys(assets).join(', ')}`);
+            }
+        } else {
+            console.warn('Invalid spaceship assets provided:', assets);
         }
     }
     
@@ -170,8 +179,17 @@ class App {
             await this.loadSpaceshipAssets();
             console.log('🚀 Spaceship assets loading completed');
             
+            // Debug: Check what assets are in AppState before creating RankingRenderer
+            const assetsFromAppState = this.appState.getSpaceshipAssets();
+            console.log('🚀 [App] Assets from AppState before RankingRenderer creation:', assetsFromAppState);
+            console.log('🚀 [App] Assets type:', typeof assetsFromAppState);
+            console.log('🚀 [App] Assets is array:', Array.isArray(assetsFromAppState));
+            if (assetsFromAppState && typeof assetsFromAppState === 'object') {
+                console.log('🚀 [App] Assets keys:', Object.keys(assetsFromAppState));
+            }
+            
             this.rankingRenderer = new RankingRenderer(
-                this.appState.getSpaceshipAssets(),
+                assetsFromAppState,
                 perfRecommendations
             );
             this.lookerManager = new LookerManager();
@@ -263,7 +281,36 @@ class App {
         const loadedAssets = [];
         const failedAssets = [];
         
-        const promises = this.appState.getSpaceshipAssets().map(asset => {
+        // Get all spaceship assets and flatten them for preloading
+        const spaceshipAssets = this.appState.getSpaceshipAssets();
+        const allAssets = [];
+        
+        // Handle both object (new format) and array (fallback format) structures
+        if (spaceshipAssets && typeof spaceshipAssets === 'object') {
+            if (Array.isArray(spaceshipAssets)) {
+                // Old array format (fallback)
+                allAssets.push(...spaceshipAssets);
+            } else {
+                // New object format with ranking configs
+                Object.values(spaceshipAssets).forEach(config => {
+                    if (config.ships) {
+                        Object.values(config.ships).forEach(ship => {
+                            if (ship.image) {
+                                allAssets.push({
+                                    image: ship.image,
+                                    position: ship.position,
+                                    fallback: ship.fallback
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        }
+        
+        console.log(`Found ${allAssets.length} spaceship images to preload`);
+        
+        const promises = allAssets.map(asset => {
             return new Promise((resolve) => {
                 const img = new Image();
                 
@@ -272,14 +319,14 @@ class App {
                 
                 img.onload = () => {
                     const loadTime = Date.now() - assetStartTime;
-                    console.log(`✓ Loaded ${asset.car} spaceship (${loadTime}ms)`);
+                    console.log(`✓ Loaded ${asset.position} spaceship (${loadTime}ms)`);
                     loadedAssets.push({ ...asset, loadTime });
                     resolve(asset);
                 };
                 
                 img.onerror = () => {
                     const loadTime = Date.now() - assetStartTime;
-                    console.warn(`✗ Failed to load ${asset.car} spaceship after ${loadTime}ms: ${asset.image}`);
+                    console.warn(`✗ Failed to load ${asset.position} spaceship after ${loadTime}ms: ${asset.image}`);
                     failedAssets.push({ ...asset, loadTime });
                     resolve(asset); // Continue even if some assets fail
                 };

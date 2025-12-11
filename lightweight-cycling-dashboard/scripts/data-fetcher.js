@@ -17,7 +17,7 @@ class DataFetcher {
             timestamp: Date.now(),
             url: `${this.baseUrl}/${leaderboardId}/leader/aggregate`,
             method: 'POST',
-            body: { period: "", live: true }
+            body: {}
         });
         
         for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
@@ -55,10 +55,7 @@ class DataFetcher {
                     'Content-Type': 'application/json',
                     'Authorization': 'Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA=='
                 },
-                body: JSON.stringify({
-                    period: "",
-                    live: true
-                }),
+                body: JSON.stringify({}),
                 signal: controller.signal
             });
             

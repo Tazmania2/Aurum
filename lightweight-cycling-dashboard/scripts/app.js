@@ -19,19 +19,22 @@ class AppState {
                 id: 'ranking-1',
                 type: 'ranking',
                 title: 'Vendedores',
-                leaderboardId: 'FbdmEIT'
+                leaderboardId: 'FbdmEIT',
+                configId: 'ranking_vendedores'
             },
             {
                 id: 'ranking-2',
                 type: 'ranking',
                 title: 'Referidos', 
-                leaderboardId: 'Fbdup9L'
+                leaderboardId: 'Fbdup9L',
+                configId: 'ranking_referidos'
             },
             {
                 id: 'ranking-3',
                 type: 'ranking',
-                title: 'SDR',
-                leaderboardId: 'Fbdurjz'
+                title: 'SDRs',
+                leaderboardId: 'Fbdurjz',
+                configId: 'ranking_sdr'
             }
         ];
         this.spaceshipAssets = []; // Will be populated from API
@@ -624,7 +627,9 @@ class App {
                 const renderSuccess = this.rankingRenderer.renderRanking(
                     playerData, 
                     containerId, 
-                    viewConfig.title
+                    viewConfig.title,
+                    null, // errorInfo
+                    viewConfig.configId // Pass the configId for spaceship selection
                 );
                 
                 if (renderSuccess) {

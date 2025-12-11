@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Race Implementation Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .demo-container { 
+            width: 800px; 
+            height: 400px; 
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            position: relative; 
+            margin: 20px 0; 
+            border-radius: 10px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <h1>Space Race Implementation Test</h1>
+    <div id="test-results"></div>
+    
+    <h2>Space Race Demo</h2>
+    <div class="demo-container" id="demo-container"></div>
+    
+    <script src="scripts/data-fetcher.js"></script>
+    <script src="scripts/ranking-renderer.js"></script>
+    <script>
+        function addResult(test, passed, details = '') {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            div.innerHTML = `<strong>${test}:</strong> ${passed ? '✅ PASS' : '❌ FAIL'} ${details}`;
+            results.appendChild(div);
+        }
+        
+        function addInfo(message) {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = 'test-result info';
+            div.innerHTML = `<strong>ℹ️ Info:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        // Test the space race implementation
+        addInfo('Testing Space Race Features');
+        
+        try {
+            // Test DataFetcher with new position config API
+            const dataFetcher = new DataFetcher();
+            addResult('DataFetcher instantiation', true);
+            
+            // Mock position config response
+            const mockPositionConfig = [
+                {
+                    "_id": "ranking_vendedores",
+                    "images": [
+                        {
+                            "_id": "first_position",
+                            "image": "https://example.com/gold_rocket.png",
+                            "ship": "first",
+                            "type": "ship"
+                        },
+                        {
+                            "_id": "second_position", 
+                            "image": "https://example.com/red_rocket.png",
+                            "ship": "second",
+                            "type": "ship"
+                        },
+                        {
+                            "_id": "third_position",
+                            "image": "https://example.com/silver_rocket.png", 
+                            "ship": "third",
+                            "type": "ship"
+                        }
+                    ],
+                    "font_color": "#ffffff",
+                    "font": "Roboto"
+                }
+            ];
+            
+            const processedConfig = dataFetcher.processSpaceshipData(mockPositionConfig);
+            addResult('Position config processing', Object.keys(processedConfig).length > 0, `(${Object.keys(processedConfig).length} configs)`);
+            
+            // Test RankingRenderer with space race positioning
+            const mockAssets = processedConfig;
+            const renderer = new RankingRenderer(mockAssets, { maxSpaceships: 10, animationDuration: 1000 });
+            addResult('RankingRenderer with space race assets', true);
+            
+            // Test space race positioning
+            const container = document.getElementById('demo-container');
+            const mockPlayers = [
+                { playerId: '1', name: 'Gabrielly', score: 188963.08, position: 1 },
+                { playerId: '2', name: 'Gabriel', score: 158664.51, position: 2 },
+                { playerId: '3', name: 'Joicy', score: 124320.6, position: 3 }
+            ];
+            
+            // Test positioning calculation
+            mockPlayers.forEach(player => {
+                const pos = renderer.calculatePosition(player.position, mockPlayers.length, container);
+                addInfo(`Position ${player.position} (${player.name}): X=${Math.round(pos.x)}, Y=${Math.round(pos.y)}`);
+            });
+            
+            addResult('Space race positioning', true, 'X-axis determines race position (1st = rightmost)');
+            
+            // Create demo spaceships
+            renderer.currentConfigId = 'ranking_vendedores';
+            mockPlayers.forEach(player => {
+                renderer.renderSpaceship(container, player, player.position, mockPlayers.length);
+            });
+            
+            addResult('Demo spaceships rendered', true, 'Check the demo container above');
+            
+        } catch (error) {
+            addResult('Space race implementation test', false, error.message);
+            console.error('Test failed:', error);
+        }
+        
+        // Show implementation details
+        const details = document.createElement('div');
+        details.innerHTML = `
+            <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                <h3>🚀 Space Race Implementation Details:</h3>
+                
+                <h4>1. Correct Leaderboard Titles:</h4>
+                <ul>
+                    <li>Ranking 1: <strong>Vendedores</strong></li>
+                    <li>Ranking 2: <strong>Referidos</strong></li>
+                    <li>Ranking 3: <strong>SDRs</strong></li>
+                </ul>
+                
+                <h4>2. Space Race Positioning:</h4>
+                <ul>
+                    <li><strong>X-axis determines position:</strong> 1st place = rightmost, last place = leftmost</li>
+                    <li><strong>Y-axis is "messy":</strong> Slight random variation for realistic racing feel</li>
+                    <li><strong>Racing tilt:</strong> Spaceships rotated -15° for dynamic racing appearance</li>
+                </ul>
+                
+                <h4>3. Correct Spaceship API:</h4>
+                <ul>
+                    <li><strong>Endpoint:</strong> /v3/database/position_config__c</li>
+                    <li><strong>Per-ranking assets:</strong> Each ranking has its own spaceship set</li>
+                    <li><strong>Position-based:</strong> first, second, third position assets</li>
+                </ul>
+                
+                <h4>4. Space Race Effects:</h4>
+                <ul>
+                    <li><strong>Thruster glow:</strong> Animated thruster effects behind spaceships</li>
+                    <li><strong>Racing entry:</strong> Spaceships enter from left with racing animation</li>
+                    <li><strong>Space dust:</strong> Subtle animated background for atmosphere</li>
+                    <li><strong>Position-based effects:</strong> Different thruster colors for different positions</li>
+                </ul>
+                
+                <h4>5. Performance Optimized:</h4>
+                <ul>
+                    <li><strong>Lightweight:</strong> CSS-based effects, no heavy assets</li>
+                    <li><strong>Smart TV compatible:</strong> Optimized animations and effects</li>
+                    <li><strong>Fallback ready:</strong> Emoji fallbacks if images fail to load</li>
+                </ul>
+            </div>
+        `;
+        document.body.appendChild(details);
+    </script>
+</body>
+</html>

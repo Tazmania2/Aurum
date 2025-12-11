@@ -426,7 +426,7 @@ class DataFetcher {
     async fetchSpaceshipAssets() {
         console.log('Fetching spaceship assets from Funifier database...');
         
-        const url = 'https://service2.funifier.com/v3/database/espacial__c';
+        const url = 'https://service2.funifier.com/v3/database/position_config__c';
         
         // Record the API call for testing purposes
         this.callHistory.push({
@@ -499,33 +499,34 @@ class DataFetcher {
                 return this.getFallbackSpaceshipAssets();
             }
             
-            // Filter and process spaceship assets
-            const spaceshipAssets = data
-                .filter(item => item.type === 'car' && item.car && item.image)
-                .map(item => ({
-                    car: item.car,
-                    image: item.image,
-                    fallback: this.getEmojiForCar(item.car)
-                }));
+            // Process position config data - each ranking has its own spaceship set
+            const spaceshipConfigs = {};
             
-            // Ensure we have all required colors, add fallbacks if missing
-            const requiredColors = ['gold', 'silver', 'bronze', 'red', 'yellow', 'green'];
-            const existingColors = spaceshipAssets.map(asset => asset.car);
-            
-            requiredColors.forEach(color => {
-                if (!existingColors.includes(color)) {
-                    console.warn(`Missing ${color} spaceship, adding lightweight CSS fallback`);
-                    spaceshipAssets.push({
-                        car: color,
-                        image: null, // No image - will use CSS fallback
-                        fallback: this.getEmojiForCar(color),
-                        cssColor: this.getCssColorForCar(color)
+            data.forEach(config => {
+                if (config._id && config.images && Array.isArray(config.images)) {
+                    const configId = config._id; // e.g., 'ranking_vendedores'
+                    const ships = {};
+                    
+                    config.images.forEach(imageConfig => {
+                        if (imageConfig.ship && imageConfig.image) {
+                            ships[imageConfig.ship] = {
+                                image: imageConfig.image,
+                                position: imageConfig.ship, // 'first', 'second', 'third'
+                                fallback: this.getEmojiForPosition(imageConfig.ship)
+                            };
+                        }
                     });
+                    
+                    spaceshipConfigs[configId] = {
+                        ships: ships,
+                        fontColor: config.font_color || '#ffffff',
+                        font: config.font || 'Roboto'
+                    };
                 }
             });
             
-            console.log(`Processed ${spaceshipAssets.length} spaceship assets`);
-            return spaceshipAssets;
+            console.log(`Processed spaceship configs for ${Object.keys(spaceshipConfigs).length} rankings`);
+            return spaceshipConfigs;
             
         } catch (error) {
             console.error('Error processing spaceship data:', error);
@@ -535,14 +536,35 @@ class DataFetcher {
     
     getFallbackSpaceshipAssets() {
         console.log('Using lightweight CSS fallback spaceship assets');
-        return [
-            { car: 'red', image: null, fallback: '🚀', cssColor: '#FF0000' },
-            { car: 'gold', image: null, fallback: '🥇', cssColor: '#FFD700' },
-            { car: 'silver', image: null, fallback: '🥈', cssColor: '#C0C0C0' },
-            { car: 'bronze', image: null, fallback: '🥉', cssColor: '#CD7F32' },
-            { car: 'yellow', image: null, fallback: '⭐', cssColor: '#FFFF00' },
-            { car: 'green', image: null, fallback: '🌟', cssColor: '#00FF00' }
-        ];
+        return {
+            'ranking_vendedores': {
+                ships: {
+                    'first': { image: null, position: 'first', fallback: '🥇', cssColor: '#FFD700' },
+                    'second': { image: null, position: 'second', fallback: '🥈', cssColor: '#FF0000' },
+                    'third': { image: null, position: 'third', fallback: '🥉', cssColor: '#C0C0C0' }
+                },
+                fontColor: '#ffffff',
+                font: 'Roboto'
+            },
+            'ranking_referidos': {
+                ships: {
+                    'first': { image: null, position: 'first', fallback: '🥇', cssColor: '#FF0000' },
+                    'second': { image: null, position: 'second', fallback: '🥈', cssColor: '#000000' },
+                    'third': { image: null, position: 'third', fallback: '🥉', cssColor: '#FFFFFF' }
+                },
+                fontColor: '#ffffff',
+                font: 'Roboto'
+            },
+            'ranking_sdr': {
+                ships: {
+                    'first': { image: null, position: 'first', fallback: '🥇', cssColor: '#00FF00' },
+                    'second': { image: null, position: 'second', fallback: '🥈', cssColor: '#C0C0C0' },
+                    'third': { image: null, position: 'third', fallback: '🥉', cssColor: '#0000FF' }
+                },
+                fontColor: '#ffffff',
+                font: 'Roboto'
+            }
+        };
     }
     
     getEmojiForCar(carColor) {
@@ -555,6 +577,15 @@ class DataFetcher {
             'green': '🌟'
         };
         return emojiMap[carColor] || '🚀';
+    }
+    
+    getEmojiForPosition(position) {
+        const emojiMap = {
+            'first': '🥇',
+            'second': '🥈',
+            'third': '🥉'
+        };
+        return emojiMap[position] || '🚀';
     }
     
     getCssColorForCar(carColor) {

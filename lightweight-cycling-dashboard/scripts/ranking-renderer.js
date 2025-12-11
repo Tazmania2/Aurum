@@ -22,7 +22,7 @@ class RankingRenderer {
         console.log('RankingRenderer initialized with performance settings:', this.perfRecommendations);
     }
     
-    renderRanking(playerData, containerId, title, errorInfo = null) {
+    renderRanking(playerData, containerId, title, errorInfo = null, configId = null) {
         console.log(`Rendering ranking in container: ${containerId}`);
         console.log('Player data received:', playerData);
         
@@ -70,6 +70,9 @@ class RankingRenderer {
         
         try {
             // Render each player as a spaceship
+            // Store configId for spaceship rendering
+            this.currentConfigId = configId;
+            
             playersToRender.forEach((player, index) => {
                 const position = index + 1;
                 this.renderSpaceship(container, player, position, playersToRender.length);
@@ -205,13 +208,14 @@ class RankingRenderer {
         
         // Create spaceship image
         // Get spaceship asset info (may be null for CSS fallback)
-        const assetInfo = this.getSpaceshipAssetInfo(position);
+        const configId = this.getCurrentConfigId(); // We'll need to pass this from the render call
+        const assetInfo = this.getSpaceshipAssetInfo(position, configId);
         
         let spaceshipImage;
         if (assetInfo.image) {
             // Use real image from API
             spaceshipImage = document.createElement('img');
-            spaceshipImage.className = 'spaceship-image';
+            spaceshipImage.className = 'spaceship-image space-racer';
             spaceshipImage.src = assetInfo.image;
             spaceshipImage.alt = `${player.name} spaceship`;
             spaceshipImage.loading = 'lazy';
@@ -281,46 +285,69 @@ class RankingRenderer {
         containerWidth = containerWidth || 800;
         containerHeight = containerHeight || 600;
         
-        // Calculate horizontal position (spread across width)
-        const spacing = containerWidth / (totalPlayers + 1);
-        const x = spacing * position - 40; // Offset for spaceship width
+        // SPACE RACE POSITIONING: X-axis determines position (1st place = rightmost)
+        const margin = 100; // Margin from edges
+        const raceWidth = containerWidth - (margin * 2);
         
-        // Calculate vertical position based on score ranking
-        // Higher positions (better scores) get lower Y values (higher on screen)
-        const maxHeight = containerHeight - 150; // Leave space for player info
-        const minHeight = 50;
-        const heightRange = maxHeight - minHeight;
+        // Position 1 (1st place) should be rightmost, higher positions move left
+        // Invert the position calculation: lower position number = further right
+        const normalizedPosition = (position - 1) / Math.max(totalPlayers - 1, 1);
+        const x = margin + raceWidth * (1 - normalizedPosition); // Invert: 1st place = rightmost
         
-        // Position 1 should get minHeight (top), higher positions get higher Y values
-        const normalizedPosition = (position - 1) / (totalPlayers - 1 || 1);
-        const y = minHeight + (heightRange * normalizedPosition);
+        // Y position: Add some randomness for "messy" space race feel, but keep it reasonable
+        const centerY = containerHeight / 2;
+        const yVariation = 80; // Maximum variation from center
         
-        return { x: Math.max(0, Math.min(x, containerWidth - 100)), y };
+        // Use position as seed for consistent but varied Y positions
+        const yOffset = (Math.sin(position * 2.5) * yVariation) + (Math.cos(position * 1.7) * yVariation * 0.5);
+        const y = Math.max(50, Math.min(containerHeight - 150, centerY + yOffset));
+        
+        return { 
+            x: Math.max(50, Math.min(x, containerWidth - 150)), 
+            y: y 
+        };
     }
     
-    getSpaceshipAssetInfo(position) {
-        const colorKey = this.colorMap[position] || 'red';
-        const asset = this.spaceshipAssets.find(asset => asset.car === colorKey);
+    getSpaceshipAssetInfo(position, configId) {
+        // Get the position key (first, second, third)
+        const positionKey = position === 1 ? 'first' : position === 2 ? 'second' : 'third';
         
-        if (asset) {
-            return asset;
+        // Try to get from the specific ranking config
+        if (this.spaceshipAssets && this.spaceshipAssets[configId] && this.spaceshipAssets[configId].ships) {
+            const ship = this.spaceshipAssets[configId].ships[positionKey];
+            if (ship) {
+                return ship;
+            }
+        }
+        
+        // Fallback to any available config
+        if (this.spaceshipAssets && typeof this.spaceshipAssets === 'object') {
+            for (const config of Object.values(this.spaceshipAssets)) {
+                if (config.ships && config.ships[positionKey]) {
+                    return config.ships[positionKey];
+                }
+            }
         }
         
         // Ultimate fallback
         return {
-            car: colorKey,
             image: null,
-            fallback: '🚀',
-            cssColor: '#4A90E2'
+            position: positionKey,
+            fallback: position === 1 ? '🥇' : position === 2 ? '🥈' : '🥉',
+            cssColor: position === 1 ? '#FFD700' : position === 2 ? '#C0C0C0' : '#CD7F32'
         };
+    }
+    
+    getCurrentConfigId() {
+        return this.currentConfigId || 'ranking_vendedores'; // Default fallback
     }
     
     createCSSSpaceship(assetInfo, position) {
         const cssSpaceship = document.createElement('div');
-        cssSpaceship.className = 'css-spaceship spaceship-image';
+        cssSpaceship.className = 'css-spaceship spaceship-image space-racer';
         cssSpaceship.setAttribute('data-position', position);
         
-        // Create lightweight CSS spaceship shape
+        // Create lightweight CSS spaceship shape with space race styling
         const gradient = `linear-gradient(45deg, ${assetInfo.cssColor}, ${this.lightenColor(assetInfo.cssColor, 20)})`;
         
         cssSpaceship.style.cssText = `
@@ -328,12 +355,13 @@ class RankingRenderer {
             background: ${gradient};
             border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
             position: relative; margin: 0 auto;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3), 0 0 15px rgba(74, 144, 226, 0.3);
             border: 2px solid rgba(255,255,255,0.3);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
+            transform: rotate(-15deg); /* Slight tilt for racing effect */
         `;
         
         // Add emoji as content

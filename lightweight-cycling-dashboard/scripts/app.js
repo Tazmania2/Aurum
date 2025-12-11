@@ -316,14 +316,8 @@ class App {
     async preloadAdditionalResources() {
         console.log('Preloading additional performance-critical resources...');
         
-        // Preload network connectivity test endpoint
-        try {
-            const testImg = new Image();
-            testImg.src = 'https://httpbin.org/status/200';
-            // Don't wait for this - it's just for DNS prefetch
-        } catch (error) {
-            console.log('Network test preload skipped:', error.message);
-        }
+        // Skip image-based network test to avoid CSP violations
+        // Network connectivity will be tested via fetch in checkNetworkStatus if needed
         
         // Warm up the Funifier API connection
         if (this.dataFetcher) {

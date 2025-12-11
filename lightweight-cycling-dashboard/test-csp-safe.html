@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSP Safe Test</title>
+    
+    <!-- Same CSP as main app -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://vercel.live;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' https://client2.funifier.com https://s3.amazonaws.com https://httpbin.org data: blob:;
+        connect-src 'self' https://service2.funifier.com https://httpbin.org https://vercel.live;
+        frame-src 'self' https://lookerstudio.google.com https://*.google.com;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'none';
+        frame-ancestors 'none';
+    ">
+    
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .log { margin: 2px 0; padding: 3px 8px; background: #333; border-radius: 3px; font-family: monospace; font-size: 11px; }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .info { background: #1976d2; }
+        .warning { background: #f57c00; }
+        .network { background: #9c27b0; }
+        #logs { max-height: 400px; overflow-y: auto; border: 1px solid #555; padding: 10px; margin: 10px 0; }
+        button { padding: 8px 16px; margin: 5px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>CSP Safe Spaceship Test</h1>
+    <p>Testing spaceship fetch with proper CSP compliance.</p>
+    
+    <button onclick="testSpaceshipFetch()">Test Spaceship API</button>
+    <button onclick="testAppInit()">Test App Init</button>
+    <button onclick="clearLogs()">Clear</button>
+    
+    <div id="logs"></div>
+    
+    <script src="scripts/smart-tv-compat.js"></script>
+    <script src="scripts/data-fetcher.js"></script>
+    <script src="scripts/ranking-renderer.js"></script>
+    <script src="scripts/view-controller.js"></script>
+    <script src="scripts/looker-manager.js"></script>
+    <script src="scripts/cycle-manager.js"></script>
+    <script src="scripts/app.js"></script>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        // Monitor network requests
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const url = args[0];
+            const options = args[1] || {};
+            log(`🌐 FETCH: ${options.method || 'GET'} ${url}`, 'network');
+            
+            return originalFetch.apply(this, args).then(response => {
+                log(`📡 RESPONSE: ${response.status} for ${url}`, response.ok ? 'success' : 'error');
+                return response;
+            }).catch(error => {
+                log(`❌ FETCH ERROR: ${error.message}`, 'error');
+                throw error;
+            });
+        };
+        
+        // Monitor CSP violations
+        document.addEventListener('securitypolicyviolation', (e) => {
+            log(`🚨 CSP VIOLATION: ${e.violatedDirective} - ${e.blockedURI}`, 'error');
+        });
+        
+        async function testSpaceshipFetch() {
+            log('🚀 Testing spaceship fetch directly...', 'info');
+            
+            try {
+                const dataFetcher = new DataFetcher();
+                log('✅ DataFetcher created', 'success');
+                
+                const assets = await dataFetcher.fetchSpaceshipAssets();
+                log('✅ Spaceship assets fetched successfully', 'success');
+                log(`📊 Assets: ${Object.keys(assets).join(', ')}`, 'info');
+                
+            } catch (error) {
+                log(`❌ Spaceship fetch failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAppInit() {
+            log('🎯 Testing app initialization...', 'info');
+            
+            try {
+                const app = new App();
+                log('✅ App created', 'success');
+                
+                // Initialize DataFetcher
+                app.dataFetcher = new DataFetcher();
+                log('✅ DataFetcher initialized', 'success');
+                
+                // Test spaceship loading
+                await app.loadSpaceshipAssets();
+                log('✅ Spaceship assets loaded', 'success');
+                
+                const assets = app.appState.getSpaceshipAssets();
+                log(`📊 Assets in AppState: ${Object.keys(assets).join(', ')}`, 'info');
+                
+            } catch (error) {
+                log(`❌ App init failed: ${error.message}`, 'error');
+            }
+        }
+        
+        log('🎯 Ready to test with CSP compliance', 'info');
+    </script>
+</body>
+</html>

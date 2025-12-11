@@ -209,11 +209,16 @@ class RankingRenderer {
         // Create spaceship image
         // Get spaceship asset info (may be null for CSS fallback)
         const configId = this.getCurrentConfigId(); // We'll need to pass this from the render call
+        console.log(`🎨 [RankingRenderer] Creating spaceship for position ${position}, player: ${player.name}`);
+        console.log(`🎨 [RankingRenderer] Using configId: ${configId}`);
+        
         const assetInfo = this.getSpaceshipAssetInfo(position, configId);
+        console.log(`🎨 [RankingRenderer] Asset info received:`, assetInfo);
         
         let spaceshipImage;
         if (assetInfo.image) {
             // Use real image from API
+            console.log(`🎨 [RankingRenderer] ✅ Creating IMG element with src: ${assetInfo.image}`);
             spaceshipImage = document.createElement('img');
             spaceshipImage.className = 'spaceship-image space-racer';
             spaceshipImage.src = assetInfo.image;
@@ -221,6 +226,7 @@ class RankingRenderer {
             spaceshipImage.loading = 'lazy';
         } else {
             // Use lightweight CSS fallback
+            console.log(`🎨 [RankingRenderer] 🔄 Creating CSS fallback spaceship`);
             spaceshipImage = this.createCSSSpaceship(assetInfo, position);
         }
         
@@ -309,33 +315,62 @@ class RankingRenderer {
     }
     
     getSpaceshipAssetInfo(position, configId) {
+        console.log(`🎨 [RankingRenderer] Getting spaceship asset for position ${position}, configId: ${configId}`);
+        
         // Get the position key (first, second, third)
         const positionKey = position === 1 ? 'first' : position === 2 ? 'second' : 'third';
+        console.log(`🎨 [RankingRenderer] Position key: ${positionKey}`);
+        
+        // Debug: Log the current spaceship assets structure
+        console.log(`🎨 [RankingRenderer] Available spaceship assets:`, this.spaceshipAssets);
+        console.log(`🎨 [RankingRenderer] Assets type:`, typeof this.spaceshipAssets);
+        
+        if (this.spaceshipAssets) {
+            console.log(`🎨 [RankingRenderer] Asset keys:`, Object.keys(this.spaceshipAssets));
+        }
         
         // Try to get from the specific ranking config
         if (this.spaceshipAssets && this.spaceshipAssets[configId] && this.spaceshipAssets[configId].ships) {
+            console.log(`🎨 [RankingRenderer] Found config ${configId}, checking ships...`);
+            console.log(`🎨 [RankingRenderer] Ships in ${configId}:`, Object.keys(this.spaceshipAssets[configId].ships));
+            
             const ship = this.spaceshipAssets[configId].ships[positionKey];
             if (ship) {
+                console.log(`🎨 [RankingRenderer] ✅ Found ship for ${positionKey} in ${configId}:`, ship);
                 return ship;
+            } else {
+                console.log(`🎨 [RankingRenderer] ❌ No ship found for ${positionKey} in ${configId}`);
             }
+        } else {
+            console.log(`🎨 [RankingRenderer] ❌ Config ${configId} not found or has no ships`);
         }
         
         // Fallback to any available config
         if (this.spaceshipAssets && typeof this.spaceshipAssets === 'object') {
-            for (const config of Object.values(this.spaceshipAssets)) {
+            console.log(`🎨 [RankingRenderer] Trying fallback to any available config...`);
+            
+            for (const [configKey, config] of Object.entries(this.spaceshipAssets)) {
+                console.log(`🎨 [RankingRenderer] Checking fallback config: ${configKey}`);
+                
                 if (config.ships && config.ships[positionKey]) {
+                    console.log(`🎨 [RankingRenderer] ✅ Found fallback ship in ${configKey}:`, config.ships[positionKey]);
                     return config.ships[positionKey];
                 }
             }
+            
+            console.log(`🎨 [RankingRenderer] ❌ No fallback ships found for ${positionKey}`);
         }
         
         // Ultimate fallback
-        return {
+        const ultimateFallback = {
             image: null,
             position: positionKey,
             fallback: position === 1 ? '🥇' : position === 2 ? '🥈' : '🥉',
             cssColor: position === 1 ? '#FFD700' : position === 2 ? '#C0C0C0' : '#CD7F32'
         };
+        
+        console.log(`🎨 [RankingRenderer] 🔄 Using ultimate fallback:`, ultimateFallback);
+        return ultimateFallback;
     }
     
     getCurrentConfigId() {

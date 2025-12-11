@@ -17,6 +17,7 @@
         object-src 'none';
         base-uri 'self';
         form-action 'none';
+        frame-ancestors 'none';
     ">
     
     <!-- Google Fonts - Orbitron for futuristic space theme -->
@@ -39,7 +40,8 @@
             <iframe id="looker-iframe" 
                     src="" 
                     frameborder="0" 
-                    allowfullscreen>
+                    allowfullscreen
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation">
             </iframe>
         </div>
         

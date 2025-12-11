@@ -427,6 +427,7 @@ class DataFetcher {
         console.log('Fetching spaceship assets from Funifier database...');
         
         const url = 'https://service2.funifier.com/v3/database/position_config__c';
+        console.log('Spaceship API URL:', url);
         
         // Record the API call for testing purposes
         this.callHistory.push({
@@ -437,15 +438,20 @@ class DataFetcher {
         
         for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
             try {
+                console.log(`Spaceship assets fetch attempt ${attempt}/${this.maxRetries}`);
                 const data = await this.makeSpaceshipApiCall(url);
-                console.log(`Successfully fetched spaceship assets on attempt ${attempt}`);
-                return this.processSpaceshipData(data);
+                console.log(`Successfully fetched spaceship assets on attempt ${attempt}:`, data);
+                const processedData = this.processSpaceshipData(data);
+                console.log('Processed spaceship data:', processedData);
+                return processedData;
                 
             } catch (error) {
                 console.warn(`Spaceship assets fetch attempt ${attempt} failed:`, error.message);
+                console.error('Full error:', error);
                 
                 if (attempt === this.maxRetries) {
                     console.error(`All ${this.maxRetries} attempts failed for spaceship assets`);
+                    console.log('Using fallback spaceship assets');
                     // Return fallback assets instead of throwing
                     return this.getFallbackSpaceshipAssets();
                 }
@@ -457,6 +463,8 @@ class DataFetcher {
     }
     
     async makeSpaceshipApiCall(url) {
+        console.log('Making spaceship API call to:', url);
+        
         // Create abort controller for timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
@@ -474,11 +482,16 @@ class DataFetcher {
             
             clearTimeout(timeoutId);
             
+            console.log('Spaceship API response status:', response.status, response.statusText);
+            
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorText = await response.text();
+                console.error('Spaceship API error response:', errorText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
             }
             
             const data = await response.json();
+            console.log('Spaceship API response data:', data);
             return data;
             
         } catch (error) {
@@ -488,6 +501,7 @@ class DataFetcher {
                 throw new Error(`Request timeout after ${this.timeout}ms`);
             }
             
+            console.error('Spaceship API call error:', error);
             throw error;
         }
     }

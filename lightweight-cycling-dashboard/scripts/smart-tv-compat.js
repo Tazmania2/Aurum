@@ -531,7 +531,7 @@ class SmartTVCompat {
                               this.performanceMode === 'medium' ? 500 : 800,
             useComplexAnimations: this.performanceMode === 'high',
             useFilters: this.capabilities.cssFilters && this.performanceMode !== 'low',
-            cycleInterval: this.performanceMode === 'low' ? 25000 : 20000 // Slower cycling for low-end
+            cycleInterval: this.performanceMode === 'low' ? 45000 : 30000 // Slower cycling for better readability
         };
     }
     

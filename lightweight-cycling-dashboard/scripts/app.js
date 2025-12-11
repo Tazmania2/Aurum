@@ -129,7 +129,7 @@ class App {
         this.lookerManager = null;
         this.smartTVCompat = null;
         this.initialized = false;
-        this.cycleInterval = 20000; // 20 seconds per view
+        this.cycleInterval = 30000; // 30 seconds per view (will be adjusted by Smart TV performance)
         this.preloadedImages = [];
         this.animationFrameId = null;
         

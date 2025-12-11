@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Correct API Endpoint</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        pre { background: #333; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Correct API Endpoint Test</h1>
+    <div id="test-results"></div>
+    
+    <script src="scripts/data-fetcher.js"></script>
+    <script>
+        function addResult(test, passed, details = '') {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            div.innerHTML = `<strong>${test}:</strong> ${passed ? '✅ PASS' : '❌ FAIL'} ${details}`;
+            results.appendChild(div);
+        }
+        
+        function addInfo(message) {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = 'test-result info';
+            div.innerHTML = `<strong>ℹ️ Info:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        // Test the correct API endpoint construction
+        const dataFetcher = new DataFetcher();
+        
+        // Test URL construction
+        const testLeaderboardId = 'FbdmEIT';
+        
+        addInfo(`Testing with leaderboard ID: ${testLeaderboardId}`);
+        
+        // Check if the URL is constructed correctly
+        const expectedUrl = `https://service2.funifier.com/v3/leaderboard/${testLeaderboardId}/leader/aggregate?period=&live=true`;
+        
+        // We can't directly access the makeApiCall method, but we can check the call history
+        // Let's simulate what the URL should be
+        addInfo(`Expected URL: ${expectedUrl}`);
+        
+        // Test the new API response format parsing
+        const mockLeaderboardResponse = [
+            {
+                "_id": "gabriellydupin@gmail.com_FfgmTnN",
+                "total": 188963.08,
+                "position": 1,
+                "move": "up",
+                "player": "gabriellydupin@gmail.com",
+                "name": "Gabrielly",
+                "extra": {"cache": "FfgmTnN"},
+                "boardId": "FbdmEIT"
+            },
+            {
+                "_id": "gabriellima.aurum@gmail.com_FfgmTnN", 
+                "total": 158664.51,
+                "position": 2,
+                "move": "up",
+                "player": "gabriellima.aurum@gmail.com",
+                "name": "Gabriel",
+                "extra": {"cache": "FfgmTnN"},
+                "boardId": "FbdmEIT"
+            }
+        ];
+        
+        try {
+            const processedData = dataFetcher.processPlayerData(mockLeaderboardResponse);
+            addResult('New API format processing', processedData.length > 0, `(${processedData.length} players processed)`);
+            
+            if (processedData.length > 0) {
+                addInfo('Processed player data:');
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(processedData, null, 2);
+                document.body.appendChild(pre);
+                
+                // Verify the data structure
+                const firstPlayer = processedData[0];
+                const hasCorrectFields = firstPlayer.playerId && firstPlayer.name && typeof firstPlayer.score === 'number';
+                addResult('Data structure validation', hasCorrectFields, 'playerId, name, and score fields present');
+                
+                // Check if scores are correctly extracted from 'total' field
+                const scoresMatch = processedData.every(player => player.score > 0);
+                addResult('Score extraction from "total" field', scoresMatch, 'All players have positive scores');
+            }
+            
+        } catch (error) {
+            addResult('API format processing', false, error.message);
+            console.error('Processing failed:', error);
+        }
+        
+        // Show the difference between old and new endpoints
+        addInfo('API Endpoint Changes:');
+        const comparison = document.createElement('div');
+        comparison.innerHTML = `
+            <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                <h3>❌ Old (Wrong) Endpoint:</h3>
+                <code>https://service2.funifier.com/v3/leaderboard/{id}</code>
+                <p>Returns: Complex object with principals array</p>
+                
+                <h3>✅ New (Correct) Endpoint:</h3>
+                <code>https://service2.funifier.com/v3/leaderboard/{id}/leader/aggregate?period=&live=true</code>
+                <p>Returns: Direct array of leader objects with total, name, position, etc.</p>
+            </div>
+        `;
+        document.body.appendChild(comparison);
+    </script>
+</body>
+</html>

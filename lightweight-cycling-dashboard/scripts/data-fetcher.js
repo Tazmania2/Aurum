@@ -15,7 +15,7 @@ class DataFetcher {
         this.callHistory.push({
             leaderboardId: leaderboardId,
             timestamp: Date.now(),
-            url: `${this.baseUrl}/${leaderboardId}`
+            url: `${this.baseUrl}/${leaderboardId}/leader/aggregate?period=&live=true`
         });
         
         for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
@@ -39,7 +39,7 @@ class DataFetcher {
     }
     
     async makeApiCall(leaderboardId) {
-        const url = `${this.baseUrl}/${leaderboardId}`;
+        const url = `${this.baseUrl}/${leaderboardId}/leader/aggregate?period=&live=true`;
         
         // Create abort controller for timeout
         const controller = new AbortController();
@@ -78,19 +78,27 @@ class DataFetcher {
     
     processPlayerData(apiResponse) {
         try {
-            // Handle different possible API response formats
+            // Handle leaderboard aggregate API response format
             let players = [];
             
             if (Array.isArray(apiResponse)) {
+                // Direct array response from leaderboard aggregate API
                 players = apiResponse;
+                console.log('Using direct array from leaderboard aggregate API');
+                console.log('Sample player data:', players[0]);
             } else if (apiResponse.data && Array.isArray(apiResponse.data)) {
                 players = apiResponse.data;
             } else if (apiResponse.players && Array.isArray(apiResponse.players)) {
                 players = apiResponse.players;
             } else if (apiResponse.leaderboard && Array.isArray(apiResponse.leaderboard)) {
                 players = apiResponse.leaderboard;
+            } else if (apiResponse.principals && Array.isArray(apiResponse.principals)) {
+                // Handle old Funifier API format with principals array
+                players = apiResponse.principals;
+                console.log('Using principals array from old Funifier API response');
             } else {
                 console.warn('Unexpected API response format:', apiResponse);
+                console.log('Available keys:', Object.keys(apiResponse));
                 return [];
             }
             
@@ -123,27 +131,38 @@ class DataFetcher {
             return false;
         }
         
-        // Check for required fields (flexible field names)
-        const hasId = player.playerId || player.id || player.userId || player.user_id;
-        const hasScore = typeof (player.score || player.points || player.value) === 'number';
+        // Check for required fields (including leaderboard aggregate API format)
+        const hasId = player._id || player.player || player.playerId || player.id || 
+                     player.userId || player.user_id || player.principalId || player.principal_id;
+        const hasScore = typeof (player.total || player.score || player.points || player.value || 
+                               player.totalScore || player.total_score || 
+                               player.currentScore || player.current_score) === 'number';
         
         return hasId && hasScore;
     }
     
     extractPlayerId(player) {
-        const rawId = player.playerId || player.id || player.userId || player.user_id;
+        // Handle leaderboard aggregate API format and other formats
+        const rawId = player._id || player.player || player.playerId || player.id || 
+                     player.userId || player.user_id || player.principalId || player.principal_id;
         return this.sanitizePlayerId(rawId);
     }
     
     extractScore(player) {
-        const rawScore = player.score || player.points || player.value || 0;
+        // Handle leaderboard aggregate API format and other formats
+        const rawScore = player.total || player.score || player.points || player.value || 
+                        player.totalScore || player.total_score || 
+                        player.currentScore || player.current_score || 0;
         return this.sanitizeScore(rawScore);
     }
     
     extractPlayerName(player) {
+        // Handle leaderboard aggregate API format and other formats
         const name = player.name || player.playerName || player.username || 
-                    player.displayName || player.user_name || player.playerId || 
-                    player.id || 'Player';
+                    player.displayName || player.user_name || 
+                    player.principalName || player.principal_name ||
+                    player.title || player.label ||
+                    player.player || player.playerId || player.id || 'Player';
         
         return this.sanitizeName(name);
     }

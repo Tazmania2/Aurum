@@ -24,6 +24,7 @@ class RankingRenderer {
     
     renderRanking(playerData, containerId, title, errorInfo = null) {
         console.log(`Rendering ranking in container: ${containerId}`);
+        console.log('Player data received:', playerData);
         
         const container = document.getElementById(containerId);
         if (!container) {
@@ -36,19 +37,24 @@ class RankingRenderer {
         
         // Handle error states
         if (errorInfo) {
+            console.log('Rendering error state:', errorInfo);
             this.renderErrorState(container, errorInfo, containerId);
             return false;
         }
         
         // Handle empty or invalid data
         if (!playerData || !Array.isArray(playerData) || playerData.length === 0) {
+            console.log('No valid player data, rendering empty state');
             this.renderEmptyState(container, 'no_data');
             return false;
         }
         
         // Validate and sanitize player data
         const validatedPlayers = this.validateAndSanitizePlayers(playerData);
+        console.log('Validated players:', validatedPlayers);
+        
         if (validatedPlayers.length === 0) {
+            console.log('No players passed validation, rendering empty state');
             this.renderEmptyState(container, 'no_data');
             return false;
         }
@@ -102,23 +108,37 @@ class RankingRenderer {
                     return false;
                 }
                 
-                // Check required fields
-                const hasValidId = player.playerId && typeof player.playerId === 'string';
-                const hasValidScore = typeof player.score === 'number' && isFinite(player.score);
+                // Check required fields (including leaderboard aggregate API format)
+                const hasValidId = player._id || player.player || player.playerId || player.id || 
+                                  player.userId || player.user_id || player.principalId || player.principal_id;
+                const hasValidScore = typeof (player.total || player.score || player.points || player.value || 
+                                            player.totalScore || player.total_score || 
+                                            player.currentScore || player.current_score) === 'number';
                 
                 if (!hasValidId || !hasValidScore) {
                     console.warn('Player missing required fields:', player);
+                    console.log('Available fields:', Object.keys(player));
                     return false;
                 }
                 
                 return true;
             })
             .map(player => {
-                // Sanitize player data
+                // Sanitize player data using flexible field extraction (including leaderboard aggregate format)
+                const playerId = player._id || player.player || player.playerId || player.id || 
+                               player.userId || player.user_id || player.principalId || player.principal_id;
+                const score = player.total || player.score || player.points || player.value || 
+                            player.totalScore || player.total_score || 
+                            player.currentScore || player.current_score || 0;
+                const name = player.name || player.playerName || player.username || 
+                           player.displayName || player.user_name || 
+                           player.principalName || player.principal_name ||
+                           player.title || player.label || player.player || playerId || 'Player';
+                
                 return {
-                    playerId: this.sanitizePlayerId(player.playerId),
-                    score: this.sanitizeScore(player.score),
-                    name: this.sanitizeName(player.name || player.playerId),
+                    playerId: this.sanitizePlayerId(playerId),
+                    score: this.sanitizeScore(score),
+                    name: this.sanitizeName(name),
                     position: player.position || 0
                 };
             })

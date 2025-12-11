@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Fetch Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .log { margin: 5px 0; padding: 5px; background: #333; border-radius: 3px; font-family: monospace; font-size: 12px; }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .info { background: #1976d2; }
+        button { padding: 10px 20px; margin: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Minimal Fetch Test</h1>
+    <p>Testing if the spaceship API endpoint is reachable and returns data.</p>
+    
+    <button onclick="testFetch()">Test Spaceship API</button>
+    <button onclick="clearLogs()">Clear</button>
+    
+    <div id="logs"></div>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        async function testFetch() {
+            log('🚀 Testing spaceship API endpoint...', 'info');
+            
+            const url = 'https://service2.funifier.com/v3/database/position_config__c';
+            log(`📡 URL: ${url}`, 'info');
+            
+            try {
+                log('🌐 Making fetch request...', 'info');
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA=='
+                    }
+                });
+                
+                log(`📡 Response status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                log(`📡 Response headers: ${JSON.stringify([...response.headers.entries()])}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Success! Data length: ${JSON.stringify(data).length} chars`, 'success');
+                    log(`📊 Data type: ${Array.isArray(data) ? 'Array' : typeof data}`, 'info');
+                    
+                    if (Array.isArray(data)) {
+                        log(`📊 Array length: ${data.length}`, 'info');
+                        if (data.length > 0) {
+                            log(`📊 First item keys: ${Object.keys(data[0]).join(', ')}`, 'info');
+                        }
+                    } else {
+                        log(`📊 Object keys: ${Object.keys(data).join(', ')}`, 'info');
+                    }
+                    
+                    // Show first few items
+                    const preview = JSON.stringify(data, null, 2).substring(0, 1000);
+                    log(`📋 Data preview: ${preview}${JSON.stringify(data).length > 1000 ? '...' : ''}`, 'info');
+                    
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Error response: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Fetch failed: ${error.message}`, 'error');
+                log(`❌ Error type: ${error.name}`, 'error');
+                
+                if (error.stack) {
+                    log(`❌ Stack: ${error.stack}`, 'error');
+                }
+            }
+        }
+        
+        log('🎯 Ready to test. Click the button to test the spaceship API.', 'info');
+    </script>
+</body>
+</html>

@@ -145,7 +145,8 @@ class App {
     
     async init() {
         try {
-            console.log('Initializing Lightweight Cycling Dashboard...');
+            console.log('🚀 Initializing Lightweight Cycling Dashboard...');
+            console.log('🚀 App instance:', this);
             
             // Initialize Smart TV compatibility first - implements Requirements 5.1, 5.4, 5.5
             this.smartTVCompat = new SmartTVCompat();
@@ -159,11 +160,15 @@ class App {
             this.cycleInterval = perfRecommendations.cycleInterval;
             
             // Initialize components
+            console.log('🔧 Initializing components...');
             this.viewController = new ViewController();
             this.dataFetcher = new DataFetcher();
+            console.log('🔧 DataFetcher created:', this.dataFetcher);
             
             // Fetch spaceship assets from API
+            console.log('🚀 About to load spaceship assets...');
             await this.loadSpaceshipAssets();
+            console.log('🚀 Spaceship assets loading completed');
             
             this.rankingRenderer = new RankingRenderer(
                 this.appState.getSpaceshipAssets(),
@@ -197,23 +202,56 @@ class App {
     
     async loadSpaceshipAssets() {
         try {
-            console.log('Loading spaceship assets from Funifier database...');
+            console.log('🚀 Loading spaceship assets from Funifier database...');
+            console.log('🚀 DataFetcher instance:', this.dataFetcher);
+            console.log('🚀 DataFetcher type:', typeof this.dataFetcher);
+            
+            if (!this.dataFetcher) {
+                throw new Error('DataFetcher instance is null or undefined');
+            }
+            
+            if (typeof this.dataFetcher.fetchSpaceshipAssets !== 'function') {
+                throw new Error('fetchSpaceshipAssets method not found on DataFetcher instance');
+            }
+            
+            console.log('🚀 About to call this.dataFetcher.fetchSpaceshipAssets()...');
             const spaceshipAssets = await this.dataFetcher.fetchSpaceshipAssets();
+            console.log('🚀 Received spaceship assets:', spaceshipAssets);
+            console.log('🚀 Assets type:', typeof spaceshipAssets);
+            console.log('🚀 Assets keys:', spaceshipAssets ? Object.keys(spaceshipAssets) : 'null');
+            
             this.appState.setSpaceshipAssets(spaceshipAssets);
-            console.log('Spaceship assets loaded successfully');
+            console.log('🚀 Spaceship assets loaded successfully and set in AppState');
+            
+            // Verify assets were set correctly
+            const verifyAssets = this.appState.getSpaceshipAssets();
+            console.log('🚀 Verification - assets in AppState:', verifyAssets);
+            
         } catch (error) {
-            console.error('Failed to load spaceship assets:', error);
-            // Use lightweight CSS fallback assets
-            const fallbackAssets = [
-                { car: 'red', image: null, fallback: '🚀', cssColor: '#FF0000' },
-                { car: 'gold', image: null, fallback: '🥇', cssColor: '#FFD700' },
-                { car: 'silver', image: null, fallback: '🥈', cssColor: '#C0C0C0' },
-                { car: 'bronze', image: null, fallback: '🥉', cssColor: '#CD7F32' },
-                { car: 'yellow', image: null, fallback: '⭐', cssColor: '#FFFF00' },
-                { car: 'green', image: null, fallback: '🌟', cssColor: '#00FF00' }
-            ];
-            this.appState.setSpaceshipAssets(fallbackAssets);
-            console.log('Using fallback spaceship assets');
+            console.error('❌ Failed to load spaceship assets:', error);
+            console.error('❌ Error message:', error.message);
+            console.error('❌ Error stack:', error.stack);
+            console.error('❌ Error name:', error.name);
+            
+            // Check if DataFetcher is available for fallback
+            if (this.dataFetcher && typeof this.dataFetcher.getFallbackSpaceshipAssets === 'function') {
+                console.log('🔄 DataFetcher available, getting fallback assets...');
+                const fallbackAssets = this.dataFetcher.getFallbackSpaceshipAssets();
+                console.log('🔄 Using fallback spaceship assets:', fallbackAssets);
+                
+                this.appState.setSpaceshipAssets(fallbackAssets);
+                console.log('🔄 Fallback spaceship assets set in AppState');
+            } else {
+                console.error('❌ DataFetcher not available for fallback, using minimal fallback');
+                // Minimal fallback if DataFetcher is not available
+                const minimalFallback = {
+                    'ranking_vendedores': { ships: { 'first': { fallback: '🥇' }, 'second': { fallback: '🥈' }, 'third': { fallback: '🥉' } } },
+                    'ranking_referidos': { ships: { 'first': { fallback: '🥇' }, 'second': { fallback: '🥈' }, 'third': { fallback: '🥉' } } },
+                    'ranking_sdr': { ships: { 'first': { fallback: '🥇' }, 'second': { fallback: '🥈' }, 'third': { fallback: '🥉' } } }
+                };
+                this.appState.setSpaceshipAssets(minimalFallback);
+                console.log('🔄 Minimal fallback assets set in AppState');
+            }
         }
     }
 
@@ -825,15 +863,21 @@ class App {
 
 // Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing application...');
+    console.log('🌟 DOM loaded, initializing application...');
+    console.log('🌟 Creating App instance...');
     
     const app = new App();
+    console.log('🌟 App instance created:', app);
+    console.log('🌟 Starting app initialization...');
+    
     app.init().catch(error => {
-        console.error('Application initialization failed:', error);
+        console.error('❌ Application initialization failed:', error);
+        console.error('❌ Error stack:', error.stack);
     });
     
     // Make app globally available for debugging
     window.app = app;
+    console.log('🌟 App made globally available as window.app');
 });
 
 // Handle page visibility changes (for Smart TV power management)

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Spaceship Fetch Only</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .log { margin: 5px 0; padding: 5px; background: #333; border-radius: 3px; font-family: monospace; }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .info { background: #1976d2; }
+        pre { background: #333; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; max-height: 400px; }
+    </style>
+</head>
+<body>
+    <h1>Test Spaceship Fetch Only</h1>
+    <div id="logs"></div>
+    <div id="results"></div>
+    
+    <script src="scripts/data-fetcher.js"></script>
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+        }
+        
+        async function testSpaceshipFetchDirectly() {
+            log('🚀 Starting direct spaceship fetch test...', 'info');
+            
+            try {
+                // Test 1: Create DataFetcher
+                log('📦 Creating DataFetcher instance...', 'info');
+                const dataFetcher = new DataFetcher();
+                log('✅ DataFetcher created successfully', 'success');
+                
+                // Test 2: Check the method exists
+                if (typeof dataFetcher.fetchSpaceshipAssets === 'function') {
+                    log('✅ fetchSpaceshipAssets method exists', 'success');
+                } else {
+                    log('❌ fetchSpaceshipAssets method not found', 'error');
+                    return;
+                }
+                
+                // Test 3: Call the method
+                log('🌐 Calling fetchSpaceshipAssets()...', 'info');
+                const assets = await dataFetcher.fetchSpaceshipAssets();
+                
+                log('✅ fetchSpaceshipAssets() completed', 'success');
+                log(`📊 Assets type: ${typeof assets}`, 'info');
+                
+                if (assets) {
+                    log(`📊 Assets keys: ${Object.keys(assets).join(', ')}`, 'info');
+                    
+                    // Show the full response
+                    const results = document.getElementById('results');
+                    results.innerHTML = '<h2>Spaceship Assets Response:</h2>';
+                    const pre = document.createElement('pre');
+                    pre.textContent = JSON.stringify(assets, null, 2);
+                    results.appendChild(pre);
+                    
+                    // Check for expected rankings
+                    const expectedRankings = ['ranking_vendedores', 'ranking_sdr', 'ranking_referidos'];
+                    expectedRankings.forEach(ranking => {
+                        if (assets[ranking]) {
+                            log(`✅ Found ${ranking}`, 'success');
+                        } else {
+                            log(`❌ Missing ${ranking}`, 'error');
+                        }
+                    });
+                } else {
+                    log('❌ No assets returned', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                log(`❌ Stack: ${error.stack}`, 'error');
+                
+                // Try direct fetch
+                log('🔄 Trying direct fetch...', 'info');
+                try {
+                    const response = await fetch('https://service2.funifier.com/v3/database/position_config__c', {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA=='
+                        }
+                    });
+                    
+                    log(`🌐 Direct fetch status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        log('✅ Direct fetch successful', 'success');
+                        
+                        const results = document.getElementById('results');
+                        results.innerHTML = '<h2>Direct Fetch Response:</h2>';
+                        const pre = document.createElement('pre');
+                        pre.textContent = JSON.stringify(data, null, 2);
+                        results.appendChild(pre);
+                    } else {
+                        const errorText = await response.text();
+                        log(`❌ Direct fetch error: ${errorText}`, 'error');
+                    }
+                    
+                } catch (directError) {
+                    log(`❌ Direct fetch failed: ${directError.message}`, 'error');
+                }
+            }
+        }
+        
+        // Monitor network requests
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const url = args[0];
+            if (typeof url === 'string' && url.includes('position_config__c')) {
+                log(`🌐 Network request detected: ${url}`, 'info');
+            }
+            return originalFetch.apply(this, args);
+        };
+        
+        // Start the test
+        log('🎯 Starting spaceship fetch test...', 'info');
+        testSpaceshipFetchDirectly();
+    </script>
+</body>
+</html>

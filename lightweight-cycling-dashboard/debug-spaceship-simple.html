@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Spaceship Simple</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .log { margin: 5px 0; padding: 5px; background: #333; border-radius: 3px; font-family: monospace; }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .info { background: #1976d2; }
+        .warning { background: #f57c00; }
+        pre { background: #333; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; max-height: 400px; }
+        button { padding: 10px 20px; margin: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #45a049; }
+    </style>
+</head>
+<body>
+    <h1>Debug Spaceship Fetch - Simple Test</h1>
+    <button onclick="testDirectFetch()">Test Direct Fetch</button>
+    <button onclick="testDataFetcherMethod()">Test DataFetcher Method</button>
+    <button onclick="testAppInit()">Test App Init</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    
+    <div id="logs"></div>
+    <div id="results"></div>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Monitor all network requests
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const url = args[0];
+            const options = args[1] || {};
+            log(`🌐 NETWORK REQUEST: ${options.method || 'GET'} ${url}`, 'info');
+            
+            return originalFetch.apply(this, args).then(response => {
+                log(`📡 RESPONSE: ${response.status} ${response.statusText} for ${url}`, response.ok ? 'success' : 'error');
+                return response;
+            }).catch(error => {
+                log(`❌ NETWORK ERROR: ${error.message} for ${url}`, 'error');
+                throw error;
+            });
+        };
+        
+        async function testDirectFetch() {
+            log('🚀 Testing direct fetch to position_config__c...', 'info');
+            
+            try {
+                const url = 'https://service2.funifier.com/v3/database/position_config__c';
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA=='
+                    }
+                });
+                
+                log(`✅ Direct fetch completed: ${response.status} ${response.statusText}`, 'success');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`📊 Data received: ${JSON.stringify(data).length} characters`, 'success');
+                    
+                    const results = document.getElementById('results');
+                    results.innerHTML = '<h2>Direct Fetch Response:</h2>';
+                    const pre = document.createElement('pre');
+                    pre.textContent = JSON.stringify(data, null, 2);
+                    results.appendChild(pre);
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Error response: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Direct fetch failed: ${error.message}`, 'error');
+                log(`❌ Error stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        async function testDataFetcherMethod() {
+            log('🔧 Testing DataFetcher method...', 'info');
+            
+            try {
+                // Load DataFetcher script if not already loaded
+                if (typeof DataFetcher === 'undefined') {
+                    log('📦 Loading DataFetcher script...', 'info');
+                    await loadScript('scripts/data-fetcher.js');
+                }
+                
+                log('📦 Creating DataFetcher instance...', 'info');
+                const dataFetcher = new DataFetcher();
+                
+                log('🚀 Calling fetchSpaceshipAssets()...', 'info');
+                const assets = await dataFetcher.fetchSpaceshipAssets();
+                
+                log(`✅ fetchSpaceshipAssets completed`, 'success');
+                log(`📊 Assets type: ${typeof assets}`, 'info');
+                
+                if (assets && typeof assets === 'object') {
+                    log(`📊 Assets keys: ${Object.keys(assets).join(', ')}`, 'info');
+                    
+                    const results = document.getElementById('results');
+                    results.innerHTML = '<h2>DataFetcher Method Response:</h2>';
+                    const pre = document.createElement('pre');
+                    pre.textContent = JSON.stringify(assets, null, 2);
+                    results.appendChild(pre);
+                } else {
+                    log(`❌ Invalid assets response: ${assets}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ DataFetcher method failed: ${error.message}`, 'error');
+                log(`❌ Error stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        async function testAppInit() {
+            log('🎯 Testing App initialization...', 'info');
+            
+            try {
+                // Load all required scripts
+                const scripts = [
+                    'scripts/smart-tv-compat.js',
+                    'scripts/data-fetcher.js',
+                    'scripts/ranking-renderer.js',
+                    'scripts/view-controller.js',
+                    'scripts/looker-manager.js',
+                    'scripts/cycle-manager.js',
+                    'scripts/app.js'
+                ];
+                
+                for (const script of scripts) {
+                    log(`📦 Loading ${script}...`, 'info');
+                    await loadScript(script);
+                }
+                
+                log('🚀 Creating App instance...', 'info');
+                const app = new App();
+                
+                log('🔧 Calling app.loadSpaceshipAssets() directly...', 'info');
+                await app.loadSpaceshipAssets();
+                
+                log('✅ App spaceship loading completed', 'success');
+                
+                const assets = app.appState.getSpaceshipAssets();
+                log(`📊 Assets in AppState: ${JSON.stringify(assets).length} characters`, 'info');
+                
+                const results = document.getElementById('results');
+                results.innerHTML = '<h2>App Init Response:</h2>';
+                const pre = document.createElement('pre');
+                pre.textContent = JSON.stringify(assets, null, 2);
+                results.appendChild(pre);
+                
+            } catch (error) {
+                log(`❌ App init failed: ${error.message}`, 'error');
+                log(`❌ Error stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => {
+                    log(`✅ Loaded ${src}`, 'success');
+                    resolve();
+                };
+                script.onerror = () => {
+                    log(`❌ Failed to load ${src}`, 'error');
+                    reject(new Error(`Failed to load ${src}`));
+                };
+                document.head.appendChild(script);
+            });
+        }
+        
+        log('🎯 Debug page loaded. Click buttons to test different scenarios.', 'info');
+    </script>
+</body>
+</html>

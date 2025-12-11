@@ -424,10 +424,13 @@ class DataFetcher {
     
     // Fetch spaceship assets from Funifier database
     async fetchSpaceshipAssets() {
-        console.log('Fetching spaceship assets from Funifier database...');
+        console.log('🚀 [DataFetcher] Starting fetchSpaceshipAssets...');
+        console.log('🚀 [DataFetcher] Method called successfully');
         
         const url = 'https://service2.funifier.com/v3/database/position_config__c';
-        console.log('Spaceship API URL:', url);
+        console.log('🚀 [DataFetcher] Spaceship API URL:', url);
+        console.log('🚀 [DataFetcher] Max retries:', this.maxRetries);
+        console.log('🚀 [DataFetcher] Timeout:', this.timeout);
         
         // Record the API call for testing purposes
         this.callHistory.push({
@@ -435,42 +438,60 @@ class DataFetcher {
             timestamp: Date.now(),
             url: url
         });
+        console.log('🚀 [DataFetcher] Call recorded in history');
         
         for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
             try {
-                console.log(`Spaceship assets fetch attempt ${attempt}/${this.maxRetries}`);
+                console.log(`🚀 [DataFetcher] Spaceship assets fetch attempt ${attempt}/${this.maxRetries}`);
+                console.log(`🚀 [DataFetcher] About to call makeSpaceshipApiCall with URL: ${url}`);
+                
                 const data = await this.makeSpaceshipApiCall(url);
-                console.log(`Successfully fetched spaceship assets on attempt ${attempt}:`, data);
+                console.log(`🚀 [DataFetcher] Successfully fetched spaceship assets on attempt ${attempt}:`, data);
+                console.log(`🚀 [DataFetcher] Data type:`, typeof data);
+                console.log(`🚀 [DataFetcher] Data is array:`, Array.isArray(data));
+                
+                console.log(`🚀 [DataFetcher] About to process spaceship data...`);
                 const processedData = this.processSpaceshipData(data);
-                console.log('Processed spaceship data:', processedData);
+                console.log('🚀 [DataFetcher] Processed spaceship data:', processedData);
+                console.log('🚀 [DataFetcher] Processed data type:', typeof processedData);
+                console.log('🚀 [DataFetcher] Processed data keys:', processedData ? Object.keys(processedData) : 'null');
+                
                 return processedData;
                 
             } catch (error) {
-                console.warn(`Spaceship assets fetch attempt ${attempt} failed:`, error.message);
-                console.error('Full error:', error);
+                console.warn(`❌ [DataFetcher] Spaceship assets fetch attempt ${attempt} failed:`, error.message);
+                console.error('❌ [DataFetcher] Full error:', error);
+                console.error('❌ [DataFetcher] Error name:', error.name);
+                console.error('❌ [DataFetcher] Error stack:', error.stack);
                 
                 if (attempt === this.maxRetries) {
-                    console.error(`All ${this.maxRetries} attempts failed for spaceship assets`);
-                    console.log('Using fallback spaceship assets');
-                    // Return fallback assets instead of throwing
-                    return this.getFallbackSpaceshipAssets();
+                    console.error(`❌ [DataFetcher] All ${this.maxRetries} attempts failed for spaceship assets`);
+                    console.log('🔄 [DataFetcher] Throwing error to trigger fallback in App');
+                    // Throw the error so App can handle fallback
+                    throw error;
                 }
                 
                 // Wait before retry (exponential backoff)
-                await this.delay(1000 * attempt);
+                const delayMs = 1000 * attempt;
+                console.log(`🔄 [DataFetcher] Waiting ${delayMs}ms before retry...`);
+                await this.delay(delayMs);
             }
         }
     }
     
     async makeSpaceshipApiCall(url) {
-        console.log('Making spaceship API call to:', url);
+        console.log('🌐 [DataFetcher] Making spaceship API call to:', url);
+        console.log('🌐 [DataFetcher] Creating abort controller with timeout:', this.timeout);
         
         // Create abort controller for timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+        const timeoutId = setTimeout(() => {
+            console.log('⏰ [DataFetcher] Request timeout triggered, aborting...');
+            controller.abort();
+        }, this.timeout);
         
         try {
-            const response = await fetch(url, {
+            const requestOptions = {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -478,30 +499,57 @@ class DataFetcher {
                     'Authorization': 'Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA=='
                 },
                 signal: controller.signal
-            });
+            };
+            
+            console.log('🌐 [DataFetcher] Request options:', requestOptions);
+            console.log('🌐 [DataFetcher] About to call fetch()...');
+            
+            const response = await fetch(url, requestOptions);
             
             clearTimeout(timeoutId);
+            console.log('🌐 [DataFetcher] Fetch completed, clearing timeout');
             
-            console.log('Spaceship API response status:', response.status, response.statusText);
+            console.log('📡 [DataFetcher] Spaceship API response status:', response.status, response.statusText);
+            console.log('📡 [DataFetcher] Response headers:', [...response.headers.entries()]);
+            console.log('📡 [DataFetcher] Response ok:', response.ok);
+            console.log('📡 [DataFetcher] Response type:', response.type);
+            console.log('📡 [DataFetcher] Response url:', response.url);
             
             if (!response.ok) {
+                console.error('❌ [DataFetcher] Response not ok, getting error text...');
                 const errorText = await response.text();
-                console.error('Spaceship API error response:', errorText);
+                console.error('❌ [DataFetcher] Spaceship API error response:', errorText);
                 throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
             }
             
+            console.log('📡 [DataFetcher] Response ok, parsing JSON...');
             const data = await response.json();
-            console.log('Spaceship API response data:', data);
+            console.log('📡 [DataFetcher] Spaceship API response data:', data);
+            console.log('📡 [DataFetcher] Data type:', typeof data);
+            console.log('📡 [DataFetcher] Data is array:', Array.isArray(data));
+            if (Array.isArray(data)) {
+                console.log('📡 [DataFetcher] Array length:', data.length);
+            }
+            
             return data;
             
         } catch (error) {
             clearTimeout(timeoutId);
+            console.error('❌ [DataFetcher] Spaceship API call error caught:', error);
+            console.error('❌ [DataFetcher] Error name:', error.name);
+            console.error('❌ [DataFetcher] Error message:', error.message);
             
             if (error.name === 'AbortError') {
+                console.error('⏰ [DataFetcher] Request was aborted due to timeout');
                 throw new Error(`Request timeout after ${this.timeout}ms`);
             }
             
-            console.error('Spaceship API call error:', error);
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                console.error('🌐 [DataFetcher] Network error - fetch failed');
+                throw new Error(`Network error: ${error.message}`);
+            }
+            
+            console.error('❌ [DataFetcher] Rethrowing original error');
             throw error;
         }
     }

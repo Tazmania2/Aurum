@@ -40,16 +40,16 @@
         
         const dataFetcher = new DataFetcher();
         
-        // Show the correct API configuration with empty body
+        // Show the correct API configuration with empty array body
         const apiConfig = {
             method: 'POST',
-            url: 'https://service2.funifier.com/v3/leaderboard/{id}/leader/aggregate',
+            url: 'https://service2.funifier.com/v3/leaderboard/{id}/leader/aggregate?period=&live=true',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
                 'Authorization': 'Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA=='
             },
-            body: {}
+            body: []
         };
         
         addInfo('Correct API Configuration with Empty Body:');
@@ -97,18 +97,18 @@
                 <p>• Parameters in body</p>
                 
                 <h4>✅ Final (Correct):</h4>
-                <code>POST /v3/leaderboard/{id}/leader/aggregate</code>
-                <p>Body: {} (empty)</p>
-                <p>• Correct endpoint</p>
+                <code>POST /v3/leaderboard/{id}/leader/aggregate?period=&live=true</code>
+                <p>Body: [] (empty array)</p>
+                <p>• Correct endpoint with query parameters</p>
                 <p>• Correct method (POST)</p>
-                <p>• Empty body as required by API</p>
+                <p>• Empty array body as required by API</p>
                 
-                <h3>Why Empty Body:</h3>
+                <h3>Why Empty Array Body:</h3>
                 <ul>
-                    <li><strong>API Requirement:</strong> Funifier aggregate API expects empty POST body</li>
-                    <li><strong>Simplicity:</strong> No parameters needed for basic aggregation</li>
+                    <li><strong>API Requirement:</strong> Funifier aggregate API expects empty array in POST body</li>
+                    <li><strong>Query Parameters:</strong> period and live parameters stay in URL</li>
                     <li><strong>Performance:</strong> Minimal request payload</li>
-                    <li><strong>Compliance:</strong> Follows API specification exactly</li>
+                    <li><strong>Compliance:</strong> Matches working jQuery example exactly</li>
                 </ul>
             </div>
         `;

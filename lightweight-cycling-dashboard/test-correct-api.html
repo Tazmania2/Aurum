@@ -44,9 +44,9 @@
         addInfo(`Testing with leaderboard ID: ${testLeaderboardId}`);
         
         // Check if the URL is constructed correctly
-        const expectedUrl = `https://service2.funifier.com/v3/leaderboard/${testLeaderboardId}/leader/aggregate`;
+        const expectedUrl = `https://service2.funifier.com/v3/leaderboard/${testLeaderboardId}/leader/aggregate?period=&live=true`;
         const expectedMethod = 'POST';
-        const expectedBody = {};
+        const expectedBody = [];
         
         // We can't directly access the makeApiCall method, but we can check the call history
         // Let's simulate what the URL should be
@@ -113,8 +113,8 @@
                 <p>Returns: Complex object with principals array</p>
                 
                 <h3>✅ New (Correct) Endpoint:</h3>
-                <code>POST https://service2.funifier.com/v3/leaderboard/{id}/leader/aggregate</code>
-                <p>Body: {} (empty)</p>
+                <code>POST https://service2.funifier.com/v3/leaderboard/{id}/leader/aggregate?period=&live=true</code>
+                <p>Body: [] (empty array)</p>
                 <p>Returns: Direct array of leader objects with total, name, position, etc.</p>
             </div>
         `;

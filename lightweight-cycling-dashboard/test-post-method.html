@@ -49,7 +49,7 @@
                 'Content-Type': 'application/json',
                 'Authorization': 'Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA=='
             },
-            body: {}
+            body: []
         };
         
         addInfo('Correct API Configuration:');
@@ -84,9 +84,10 @@
                 <p>• GET method</p>
                 
                 <h4>✅ Current (Correct):</h4>
-                <code>POST /v3/leaderboard/{id}/leader/aggregate</code>
-                <p>• Empty request body: {}</p>
+                <code>POST /v3/leaderboard/{id}/leader/aggregate?period=&live=true</code>
+                <p>• Empty array body: []</p>
                 <p>• POST method</p>
+                <p>• Query parameters in URL</p>
                 <p>• Proper Content-Type: application/json</p>
                 
                 <h3>Why POST is Correct:</h3>

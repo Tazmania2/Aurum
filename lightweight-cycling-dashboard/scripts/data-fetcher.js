@@ -15,7 +15,9 @@ class DataFetcher {
         this.callHistory.push({
             leaderboardId: leaderboardId,
             timestamp: Date.now(),
-            url: `${this.baseUrl}/${leaderboardId}/leader/aggregate?period=&live=true`
+            url: `${this.baseUrl}/${leaderboardId}/leader/aggregate`,
+            method: 'POST',
+            body: { period: "", live: true }
         });
         
         for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
@@ -39,7 +41,7 @@ class DataFetcher {
     }
     
     async makeApiCall(leaderboardId) {
-        const url = `${this.baseUrl}/${leaderboardId}/leader/aggregate?period=&live=true`;
+        const url = `${this.baseUrl}/${leaderboardId}/leader/aggregate`;
         
         // Create abort controller for timeout
         const controller = new AbortController();
@@ -47,12 +49,16 @@ class DataFetcher {
         
         try {
             const response = await fetch(url, {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'Authorization': 'Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA=='
                 },
+                body: JSON.stringify({
+                    period: "",
+                    live: true
+                }),
                 signal: controller.signal
             });
             

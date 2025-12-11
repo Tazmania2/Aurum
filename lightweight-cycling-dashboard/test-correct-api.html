@@ -44,11 +44,15 @@
         addInfo(`Testing with leaderboard ID: ${testLeaderboardId}`);
         
         // Check if the URL is constructed correctly
-        const expectedUrl = `https://service2.funifier.com/v3/leaderboard/${testLeaderboardId}/leader/aggregate?period=&live=true`;
+        const expectedUrl = `https://service2.funifier.com/v3/leaderboard/${testLeaderboardId}/leader/aggregate`;
+        const expectedMethod = 'POST';
+        const expectedBody = { period: "", live: true };
         
         // We can't directly access the makeApiCall method, but we can check the call history
         // Let's simulate what the URL should be
         addInfo(`Expected URL: ${expectedUrl}`);
+        addInfo(`Expected Method: ${expectedMethod}`);
+        addInfo(`Expected Body: ${JSON.stringify(expectedBody)}`);
         
         // Test the new API response format parsing
         const mockLeaderboardResponse = [
@@ -105,11 +109,12 @@
         comparison.innerHTML = `
             <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
                 <h3>❌ Old (Wrong) Endpoint:</h3>
-                <code>https://service2.funifier.com/v3/leaderboard/{id}</code>
+                <code>GET https://service2.funifier.com/v3/leaderboard/{id}</code>
                 <p>Returns: Complex object with principals array</p>
                 
                 <h3>✅ New (Correct) Endpoint:</h3>
-                <code>https://service2.funifier.com/v3/leaderboard/{id}/leader/aggregate?period=&live=true</code>
+                <code>POST https://service2.funifier.com/v3/leaderboard/{id}/leader/aggregate</code>
+                <p>Body: {"period": "", "live": true}</p>
                 <p>Returns: Direct array of leader objects with total, name, position, etc.</p>
             </div>
         `;

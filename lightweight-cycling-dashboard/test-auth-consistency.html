@@ -46,18 +46,23 @@
         const endpoints = [
             {
                 name: 'Leaderboard API',
-                url: 'https://service2.funifier.com/v3/leaderboard/FbdmEIT/leader/aggregate?period=&live=true',
+                method: 'POST',
+                url: 'https://service2.funifier.com/v3/leaderboard/FbdmEIT/leader/aggregate',
+                body: '{"period": "", "live": true}',
                 description: 'Fetches leaderboard data'
             },
             {
-                name: 'Spaceship Database API', 
+                name: 'Spaceship Database API',
+                method: 'GET', 
                 url: 'https://service2.funifier.com/v3/database/espacial__c',
+                body: 'N/A',
                 description: 'Fetches spaceship assets'
             }
         ];
         
         endpoints.forEach(endpoint => {
-            addInfo(`${endpoint.name}: ${endpoint.url}`);
+            addInfo(`${endpoint.name}: ${endpoint.method} ${endpoint.url}`);
+            addInfo(`Body: ${endpoint.body}`);
             addInfo(`Purpose: ${endpoint.description}`);
         });
         
@@ -95,8 +100,8 @@
                 
                 <h3>🔐 API Calls Using Same Auth:</h3>
                 <ul>
-                    <li>Leaderboard data: <code>/v3/leaderboard/{id}/leader/aggregate</code></li>
-                    <li>Spaceship assets: <code>/v3/database/espacial__c</code></li>
+                    <li>Leaderboard data: <code>POST /v3/leaderboard/{id}/leader/aggregate</code></li>
+                    <li>Spaceship assets: <code>GET /v3/database/espacial__c</code></li>
                 </ul>
             </div>
         `;

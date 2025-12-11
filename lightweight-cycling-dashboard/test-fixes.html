@@ -38,18 +38,18 @@
             console.error('App error:', e);
         }
         
-        // Test 3: Check if spaceship assets can be fetched from API
+        // Test 3: Check if spaceship assets can be fetched from API (now with proper authentication)
         async function testSpaceshipAPI() {
             try {
                 const df = new DataFetcher();
                 const assets = await df.fetchSpaceshipAssets();
-                addResult('Spaceship API fetch', assets && assets.length > 0);
+                addResult('Spaceship API fetch (with auth)', assets && assets.length > 0);
                 
                 if (assets && assets.length > 0) {
-                    console.log('Fetched spaceship assets:', assets);
+                    console.log('Fetched spaceship assets with authentication:', assets);
                 }
             } catch (error) {
-                addResult('Spaceship API fetch', false);
+                addResult('Spaceship API fetch (with auth)', false);
                 console.error('Spaceship API error:', error);
             }
         }

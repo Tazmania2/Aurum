@@ -35,12 +35,12 @@ class AppState {
             }
         ];
         this.spaceshipAssets = [
-            { car: 'red', image: 'https://client2.funifier.com/v3/assets/spaceship_red.png' },
-            { car: 'gold', image: 'https://client2.funifier.com/v3/assets/spaceship_gold.png' },
-            { car: 'silver', image: 'https://client2.funifier.com/v3/assets/spaceship_silver.png' },
-            { car: 'bronze', image: 'https://client2.funifier.com/v3/assets/spaceship_bronze.png' },
-            { car: 'yellow', image: 'https://client2.funifier.com/v3/assets/spaceship_yellow.png' },
-            { car: 'green', image: 'https://client2.funifier.com/v3/assets/spaceship_green.png' }
+            { car: 'red', image: 'assets/spaceships/spaceship_red.svg', fallback: '🚀' },
+            { car: 'gold', image: 'assets/spaceships/spaceship_gold.svg', fallback: '🥇' },
+            { car: 'silver', image: 'assets/spaceships/spaceship_silver.svg', fallback: '🥈' },
+            { car: 'bronze', image: 'assets/spaceships/spaceship_bronze.svg', fallback: '🥉' },
+            { car: 'yellow', image: 'assets/spaceships/spaceship_yellow.svg', fallback: '⭐' },
+            { car: 'green', image: 'assets/spaceships/spaceship_green.svg', fallback: '🌟' }
         ];
     }
     
@@ -309,7 +309,11 @@ class App {
     
     stop() {
         console.log('Stopping application...');
-        this.appState.setRunning(false);
+        
+        // Check if appState exists before calling setRunning
+        if (this.appState) {
+            this.appState.setRunning(false);
+        }
         
         if (this.cycleManager) {
             this.cycleManager.stop();

@@ -414,6 +414,3 @@ class DataFetcher {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = DataFetcher;
 }
-
-// ES module export
-export { DataFetcher };

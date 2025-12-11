@@ -8,11 +8,11 @@
     <!-- Content Security Policy for iframe security - Requirements 2.3 -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-inline';
+        script-src 'self' 'unsafe-inline' https://vercel.live;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com;
         img-src 'self' https://client2.funifier.com data: blob:;
-        connect-src 'self' https://service2.funifier.com https://httpbin.org;
+        connect-src 'self' https://service2.funifier.com https://httpbin.org https://vercel.live;
         frame-src 'self' https://lookerstudio.google.com https://*.google.com;
         object-src 'none';
         base-uri 'self';
@@ -25,9 +25,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     
     <!-- Preload critical spaceship assets for performance optimization -->
-    <link rel="preload" href="https://client2.funifier.com/v3/assets/spaceship_gold.png" as="image" type="image/png">
-    <link rel="preload" href="https://client2.funifier.com/v3/assets/spaceship_silver.png" as="image" type="image/png">
-    <link rel="preload" href="https://client2.funifier.com/v3/assets/spaceship_bronze.png" as="image" type="image/png">
+    <link rel="preload" href="assets/spaceships/spaceship_gold.svg" as="image" type="image/svg+xml">
+    <link rel="preload" href="assets/spaceships/spaceship_silver.svg" as="image" type="image/svg+xml">
+    <link rel="preload" href="assets/spaceships/spaceship_bronze.svg" as="image" type="image/svg+xml">
     
     <!-- CSS Files -->
     <link rel="stylesheet" href="styles/main.css">
@@ -77,15 +77,15 @@
         <p>Loading...</p>
     </div>
     
-    <!-- JavaScript Modules -->
+    <!-- JavaScript Modules - Load in correct order -->
     <script src="scripts/smart-tv-compat.js"></script>
     <script src="scripts/smart-tv-simulator.js"></script>
-    <script src="scripts/app.js"></script>
-    <script src="scripts/cycle-manager.js"></script>
     <script src="scripts/data-fetcher.js"></script>
     <script src="scripts/ranking-renderer.js"></script>
     <script src="scripts/view-controller.js"></script>
     <script src="scripts/looker-manager.js"></script>
+    <script src="scripts/cycle-manager.js"></script>
+    <script src="scripts/app.js"></script>
 </body>
 </html>
 </html>

@@ -136,9 +136,9 @@
 }
 
 .spaceship:hover .spaceship-image {
-    filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.8)) 
-            drop-shadow(0 0 50px rgba(83, 52, 131, 0.6))
-            drop-shadow(0 0 75px rgba(255, 255, 255, 0.3));
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.6)) 
+            drop-shadow(0 0 25px rgba(83, 52, 131, 0.4))
+            drop-shadow(0 0 35px rgba(255, 255, 255, 0.2));
 }
 
 .spaceship:hover .player-info {
@@ -148,15 +148,15 @@
 
 /* Special hover effects for top 3 */
 .spaceship.rank-1:hover .spaceship-image {
-    filter: drop-shadow(0 0 30px #ffd700) drop-shadow(0 0 60px #ffd700) drop-shadow(0 0 90px rgba(255, 215, 0, 0.6));
+    filter: drop-shadow(0 0 15px #ffd700) drop-shadow(0 0 30px #ffd700) drop-shadow(0 0 45px rgba(255, 215, 0, 0.3));
 }
 
 .spaceship.rank-2:hover .spaceship-image {
-    filter: drop-shadow(0 0 25px #c0c0c0) drop-shadow(0 0 50px #c0c0c0) drop-shadow(0 0 75px rgba(192, 192, 192, 0.5));
+    filter: drop-shadow(0 0 12px #c0c0c0) drop-shadow(0 0 25px #c0c0c0) drop-shadow(0 0 35px rgba(192, 192, 192, 0.3));
 }
 
 .spaceship.rank-3:hover .spaceship-image {
-    filter: drop-shadow(0 0 20px #cd7f32) drop-shadow(0 0 40px #cd7f32) drop-shadow(0 0 60px rgba(205, 127, 50, 0.5));
+    filter: drop-shadow(0 0 10px #cd7f32) drop-shadow(0 0 20px #cd7f32) drop-shadow(0 0 30px rgba(205, 127, 50, 0.3));
 }
 
 /* Enhanced ranking position animations */

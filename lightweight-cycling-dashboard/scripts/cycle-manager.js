@@ -9,6 +9,9 @@ class CycleManager {
         this.currentIndex = 0;
         this.intervalId = null;
         this.isRunning = false;
+        this.isPaused = false;
+        this.viewReadyTimeout = null;
+        this.maxViewLoadTime = 20000; // Maximum time to wait for view to load
     }
     
     start() {
@@ -19,22 +22,12 @@ class CycleManager {
         
         console.log(`🚀 Starting view cycling with ${this.intervalMs}ms interval`);
         this.isRunning = true;
+        this.isPaused = false;
         
-        // Start the interval with enhanced error handling
-        this.intervalId = setInterval(() => {
-            try {
-                console.log(`⏰ Interval triggered - about to call nextView()`);
-                this.nextView();
-                console.log(`✅ nextView() completed successfully`);
-            } catch (error) {
-                console.error('❌ Critical error in cycle interval:', error);
-                console.error('❌ Error stack:', error.stack);
-                // Don't stop cycling - log error and continue
-                console.log('🔄 Continuing cycle despite interval error');
-            }
-        }, this.intervalMs);
+        // Start the interval timer
+        this.restartTimer();
         
-        console.log(`🚀 Cycle manager started with interval ID: ${this.intervalId}`);
+        console.log(`🚀 Cycle manager started with dynamic timing support`);
     }
     
     stop() {
@@ -44,10 +37,16 @@ class CycleManager {
         
         console.log('Stopping view cycling');
         this.isRunning = false;
+        this.isPaused = false;
         
         if (this.intervalId) {
             clearInterval(this.intervalId);
             this.intervalId = null;
+        }
+        
+        if (this.viewReadyTimeout) {
+            clearTimeout(this.viewReadyTimeout);
+            this.viewReadyTimeout = null;
         }
     }
     
@@ -57,23 +56,30 @@ class CycleManager {
             return;
         }
         
+        if (this.isPaused) {
+            console.log('Cycle manager is paused, skipping view change');
+            return;
+        }
+        
         // Calculate next view index
         this.currentIndex = (this.currentIndex + 1) % this.views.length;
         const nextView = this.views[this.currentIndex];
         
         console.log(`🔄 Cycling to view ${this.currentIndex}: ${nextView.id} (${nextView.type})`);
-        console.log(`🔄 Cycle manager status: running=${this.isRunning}, interval=${this.intervalMs}ms`);
+        console.log(`🔄 Cycle manager status: running=${this.isRunning}, paused=${this.isPaused}, interval=${this.intervalMs}ms`);
         
         // Update app state
         if (this.appState) {
             this.appState.setCurrentViewIndex(this.currentIndex);
         }
         
+        // Pause the cycle timer until view is ready (especially for iframe views)
+        this.pauseForViewLoad(nextView);
+        
         // Call the callback if provided with enhanced error handling
         if (this.onViewChangeCallback && typeof this.onViewChangeCallback === 'function') {
             try {
                 // Use Promise.resolve to handle both sync and async callbacks
-                // Don't await - let it run asynchronously to prevent blocking the cycle
                 Promise.resolve(this.onViewChangeCallback(nextView))
                     .then(() => {
                         console.log(`View change callback completed for ${nextView.id}`);
@@ -83,13 +89,73 @@ class CycleManager {
                         console.error('Error details:', error.message, error.stack);
                         // Continue cycling despite callback errors
                         console.log('Continuing view cycling despite callback error');
+                        // Make sure to resume cycling even if callback fails
+                        this.onViewReady();
                     });
             } catch (error) {
                 console.error('Synchronous error in view change callback:', error);
                 console.error('Error details:', error.message, error.stack);
                 // Continue cycling despite callback errors
                 console.log('Continuing view cycling despite synchronous callback error');
+                // Make sure to resume cycling even if callback fails
+                this.onViewReady();
             }
+        }
+    }
+    
+    // Pause cycling until view is ready to be displayed
+    pauseForViewLoad(viewConfig) {
+        if (viewConfig.type === 'looker') {
+            console.log('⏸️ Pausing cycle timer for iframe loading...');
+            this.isPaused = true;
+            
+            // Set a maximum wait time as safety net
+            this.viewReadyTimeout = setTimeout(() => {
+                console.warn('⏰ View load timeout, resuming cycling');
+                this.onViewReady();
+            }, this.maxViewLoadTime);
+        } else {
+            // For non-iframe views, don't pause - they load quickly
+            console.log('🏆 Non-iframe view, no pause needed');
+        }
+    }
+    
+    // Called when view is ready to be displayed
+    onViewReady() {
+        if (this.viewReadyTimeout) {
+            clearTimeout(this.viewReadyTimeout);
+            this.viewReadyTimeout = null;
+        }
+        
+        if (this.isPaused) {
+            console.log('▶️ View ready, resuming cycle timer');
+            this.isPaused = false;
+            
+            // Restart the interval timer for the next cycle
+            this.restartTimer();
+        }
+    }
+    
+    // Restart the interval timer
+    restartTimer() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+        }
+        
+        if (this.isRunning) {
+            console.log(`🔄 Restarting cycle timer (${this.intervalMs}ms)`);
+            this.intervalId = setInterval(() => {
+                try {
+                    console.log(`⏰ Interval triggered - about to call nextView()`);
+                    this.nextView();
+                    console.log(`✅ nextView() completed successfully`);
+                } catch (error) {
+                    console.error('❌ Critical error in cycle interval:', error);
+                    console.error('❌ Error stack:', error.stack);
+                    // Don't stop cycling - log error and continue
+                    console.log('🔄 Continuing cycle despite interval error');
+                }
+            }, this.intervalMs);
         }
     }
     

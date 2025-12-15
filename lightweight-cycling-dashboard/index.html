@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lightweight Cycling Dashboard</title>
+    
+    <!-- Content Security Policy for iframe security - Requirements 2.3 -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://vercel.live;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' https://client2.funifier.com https://s3.amazonaws.com https://httpbin.org data: blob:;
+        connect-src 'self' https://service2.funifier.com https://httpbin.org https://vercel.live;
+        frame-src 'self' https://lookerstudio.google.com https://*.google.com;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'none';
+        frame-ancestors 'none';
+    ">
+    
+    <!-- Google Fonts - Orbitron for futuristic space theme -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Spaceship assets loaded dynamically from API with lightweight CSS fallbacks -->
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body>
+    <!-- View Container -->
+    <div id="app-container">
+        <!-- Looker Studio View -->
+        <div id="looker-view" class="view active">
+            <iframe id="looker-iframe" 
+                    src="" 
+                    frameborder="0" 
+                    allowfullscreen
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation">
+            </iframe>
+        </div>
+        
+        <!-- Ranking View 1 -->
+        <div id="ranking-1" class="view ranking-view">
+            <h1 class="ranking-title">Leaderboard 1</h1>
+            <div class="ranking-container" id="ranking-container-1">
+                <!-- Spaceships will be rendered here -->
+            </div>
+        </div>
+        
+        <!-- Ranking View 2 -->
+        <div id="ranking-2" class="view ranking-view">
+            <h1 class="ranking-title">Leaderboard 2</h1>
+            <div class="ranking-container" id="ranking-container-2">
+                <!-- Spaceships will be rendered here -->
+            </div>
+        </div>
+        
+        <!-- Ranking View 3 -->
+        <div id="ranking-3" class="view ranking-view">
+            <h1 class="ranking-title">Leaderboard 3</h1>
+            <div class="ranking-container" id="ranking-container-3">
+                <!-- Spaceships will be rendered here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading indicator -->
+    <div id="loading-indicator" class="loading-indicator">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+    
+    <!-- JavaScript Modules - Load in correct order -->
+    <script src="scripts/smart-tv-compat.js"></script>
+    <script src="scripts/smart-tv-simulator.js"></script>
+    <script src="scripts/data-fetcher.js"></script>
+    <script src="scripts/ranking-renderer.js"></script>
+    <script src="scripts/view-controller.js"></script>
+    <script src="scripts/looker-manager.js"></script>
+    <script src="scripts/cycle-manager.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>
+</html>

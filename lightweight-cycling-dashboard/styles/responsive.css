@@ -1,0 +1,380 @@
+/* Responsive CSS - Smart TV optimizations and responsive design */
+
+/* Smart TV base optimizations */
+@media screen and (min-width: 1920px) {
+    .ranking-title {
+        font-size: 4rem;
+        margin-bottom: 40px;
+    }
+    
+    .spaceship-image {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .spaceship.rank-1 .spaceship-image {
+        width: 115px;
+        height: 115px;
+    }
+    
+    .spaceship.rank-2 .spaceship-image {
+        width: 108px;
+        height: 108px;
+    }
+    
+    .spaceship.rank-3 .spaceship-image {
+        width: 105px;
+        height: 105px;
+    }
+    
+    .player-name {
+        font-size: 1.4rem;
+    }
+    
+    .player-score {
+        font-size: 1.2rem;
+    }
+    
+    .player-info {
+        padding: 12px 18px;
+    }
+}
+
+/* 4K TV optimizations */
+@media screen and (min-width: 3840px) {
+    .ranking-title {
+        font-size: 6rem;
+        margin-bottom: 50px;
+    }
+    
+    .spaceship-image {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .player-info {
+        padding: 15px 20px;
+        border-radius: 12px;
+    }
+    
+    .player-name {
+        font-size: 2rem;
+        margin-bottom: 8px;
+    }
+    
+    .player-score {
+        font-size: 1.6rem;
+    }
+}
+
+/* Smaller screens (tablets, smaller TVs) */
+@media screen and (max-width: 1366px) {
+    .ranking-title {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+    }
+    
+    .spaceship-image {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .player-info {
+        padding: 6px 10px;
+    }
+    
+    .player-name {
+        font-size: 1rem;
+    }
+    
+    .player-score {
+        font-size: 0.9rem;
+    }
+    
+    .ranking-view {
+        padding: 15px;
+    }
+}
+
+/* Mobile devices (fallback) */
+@media screen and (max-width: 768px) {
+    .ranking-title {
+        font-size: 2rem;
+        margin-bottom: 15px;
+    }
+    
+    .spaceship-image {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .player-info {
+        padding: 4px 8px;
+        margin-top: 5px;
+    }
+    
+    .player-name {
+        font-size: 0.9rem;
+        margin-bottom: 2px;
+    }
+    
+    .player-score {
+        font-size: 0.8rem;
+    }
+    
+    .ranking-view {
+        padding: 10px;
+    }
+}
+
+/* Smart TV browser compatibility */
+@supports not (display: grid) {
+    /* Fallback for older Smart TV browsers */
+    .ranking-container {
+        display: block;
+    }
+    
+    .spaceship {
+        position: relative;
+        display: inline-block;
+        margin: 10px;
+    }
+}
+
+/* Reduced motion for accessibility and performance */
+@media (prefers-reduced-motion: reduce) {
+    .spaceship,
+    .view,
+    .loading-indicator {
+        transition: none;
+        animation: none;
+    }
+    
+    .spaceship.rank-1,
+    .spaceship.rank-2,
+    .spaceship.rank-3 {
+        animation: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .player-info {
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #fff;
+    }
+    
+    .spaceship.rank-1 .player-info {
+        border-color: #ffff00;
+    }
+    
+    .spaceship.rank-2 .player-info {
+        border-color: #ffffff;
+    }
+    
+    .spaceship.rank-3 .player-info {
+        border-color: #ff8c00;
+    }
+}
+
+/* Performance optimizations for resource-constrained devices */
+@media screen and (max-device-width: 1920px) and (max-device-height: 1080px) {
+    /* Reduce animation complexity for Smart TVs */
+    .spaceship {
+        transition: transform 0.6s ease, opacity 0.6s ease, left 0.8s ease, top 0.8s ease;
+    }
+    
+    .spaceship.entering {
+        animation-duration: 1s;
+    }
+    
+    .spaceship.rank-1,
+    .spaceship.rank-2,
+    .spaceship.rank-3 {
+        animation-duration: 3.5s;
+    }
+    
+    /* Simplify glow effects for better performance */
+    .spaceship.rank-1 .spaceship-image {
+        filter: drop-shadow(0 0 15px #ffd700) drop-shadow(0 0 30px #ffd700);
+    }
+    
+    .spaceship.rank-2 .spaceship-image {
+        filter: drop-shadow(0 0 12px #c0c0c0) drop-shadow(0 0 25px #c0c0c0);
+    }
+    
+    .spaceship.rank-3 .spaceship-image {
+        filter: drop-shadow(0 0 10px #cd7f32) drop-shadow(0 0 20px #cd7f32);
+    }
+    
+    /* Disable complex animations on low-end devices */
+    .ranking-title {
+        animation: none;
+        background: #fff;
+        -webkit-text-fill-color: #fff;
+    }
+    
+    .ranking-title::before {
+        display: none;
+    }
+}
+
+/* Smart TV specific optimizations */
+.smart-tv-optimized {
+    /* Force hardware acceleration where available */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    
+    /* Optimize rendering */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    
+    /* Reduce repaints */
+    will-change: transform, opacity;
+}
+
+/* Low performance mode overrides */
+.performance-low .spaceship {
+    transition: transform 0.3s ease, opacity 0.3s ease !important;
+    animation: none !important;
+}
+
+.performance-low .spaceship-image {
+    filter: none !important;
+}
+
+.performance-low .ranking-title {
+    animation: none !important;
+    background: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+.performance-low .loading-spinner {
+    animation: spin 2s linear infinite !important;
+}
+
+.performance-low .loading-spinner::before {
+    display: none !important;
+}
+
+/* Medium performance mode optimizations */
+.performance-medium .spaceship {
+    transition: transform 0.5s ease, opacity 0.5s ease !important;
+}
+
+.performance-medium .spaceship.rank-1 .spaceship-image {
+    filter: drop-shadow(0 0 15px #ffd700) !important;
+}
+
+.performance-medium .spaceship.rank-2 .spaceship-image {
+    filter: drop-shadow(0 0 12px #c0c0c0) !important;
+}
+
+.performance-medium .spaceship.rank-3 .spaceship-image {
+    filter: drop-shadow(0 0 10px #cd7f32) !important;
+}
+
+/* Memory optimization classes */
+.memory-optimized {
+    /* Reduce memory usage */
+    image-rendering: optimizeSpeed;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: optimize-contrast;
+    
+    /* Disable expensive effects */
+    text-shadow: none;
+    box-shadow: none;
+}
+
+/* Fallback styles for unsupported features */
+.no-flexbox .ranking-view {
+    display: block !important;
+}
+
+.no-flexbox .ranking-container {
+    position: relative !important;
+    height: calc(100vh - 120px) !important;
+}
+
+.no-transforms .spaceship {
+    position: relative !important;
+    display: inline-block !important;
+    margin: 10px !important;
+}
+
+.no-transitions .spaceship,
+.no-transitions .view,
+.no-transitions .loading-indicator {
+    transition: none !important;
+}
+
+.no-animations .spaceship,
+.no-animations .ranking-title,
+.no-animations .loading-spinner {
+    animation: none !important;
+}
+
+/* Smart TV browser specific fixes */
+@supports not (display: flex) {
+    .ranking-view {
+        display: block;
+        text-align: center;
+    }
+    
+    .ranking-container {
+        display: block;
+        text-align: left;
+    }
+}
+
+@supports not (transform: translateZ(0)) {
+    .spaceship {
+        position: relative;
+        display: inline-block;
+        vertical-align: top;
+        margin: 5px;
+    }
+}
+
+/* Landscape orientation optimization */
+@media screen and (orientation: landscape) {
+    .ranking-container {
+        height: calc(100vh - 120px);
+    }
+    
+    .spaceship {
+        max-width: 200px;
+    }
+}
+
+/* Portrait orientation (rare for TVs but good for testing) */
+@media screen and (orientation: portrait) {
+    .ranking-title {
+        font-size: 2.5rem;
+    }
+    
+    .ranking-container {
+        height: calc(100vh - 100px);
+    }
+    
+    .spaceship-image {
+        width: 70px;
+        height: 70px;
+    }
+}
+
+/* Print styles (for documentation/debugging) */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+    
+    .view:not(.active) {
+        display: none;
+    }
+    
+    .spaceship-image {
+        filter: none;
+    }
+}

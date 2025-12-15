@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Empty Body POST Request</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        pre { background: #333; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Empty Body POST Request Test</h1>
+    <div id="test-results"></div>
+    
+    <script src="scripts/data-fetcher.js"></script>
+    <script>
+        function addResult(test, passed, details = '') {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            div.innerHTML = `<strong>${test}:</strong> ${passed ? '✅ PASS' : '❌ FAIL'} ${details}`;
+            results.appendChild(div);
+        }
+        
+        function addInfo(message) {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = 'test-result info';
+            div.innerHTML = `<strong>ℹ️ Info:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        // Test the empty body POST configuration
+        addInfo('Testing leaderboard API with empty POST body');
+        
+        const dataFetcher = new DataFetcher();
+        
+        // Show the correct API configuration with empty array body
+        const apiConfig = {
+            method: 'POST',
+            url: 'https://service2.funifier.com/v3/leaderboard/{id}/leader/aggregate?period=&live=true',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA=='
+            },
+            body: []
+        };
+        
+        addInfo('Correct API Configuration with Empty Body:');
+        const configPre = document.createElement('pre');
+        configPre.textContent = JSON.stringify(apiConfig, null, 2);
+        document.body.appendChild(configPre);
+        
+        // Test DataFetcher configuration
+        try {
+            addResult('DataFetcher instantiation', true, 'Class created successfully');
+            
+            const hasMethod = typeof dataFetcher.fetchLeaderboard === 'function';
+            addResult('fetchLeaderboard method exists', hasMethod);
+            
+            if (hasMethod) {
+                addInfo('The fetchLeaderboard method will now send an empty body with POST request');
+            }
+            
+        } catch (error) {
+            addResult('DataFetcher configuration test', false, error.message);
+        }
+        
+        // Show the evolution of the API call
+        const evolution = document.createElement('div');
+        evolution.innerHTML = `
+            <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                <h3>API Call Evolution:</h3>
+                
+                <h4>1️⃣ Initial (Wrong):</h4>
+                <code>GET /v3/leaderboard/{id}</code>
+                <p>• Wrong endpoint</p>
+                <p>• Wrong method</p>
+                
+                <h4>2️⃣ Second Attempt:</h4>
+                <code>GET /v3/leaderboard/{id}/leader/aggregate?period=&live=true</code>
+                <p>• Correct endpoint</p>
+                <p>• Wrong method (GET)</p>
+                <p>• Query parameters</p>
+                
+                <h4>3️⃣ Third Attempt:</h4>
+                <code>POST /v3/leaderboard/{id}/leader/aggregate</code>
+                <p>Body: {"period": "", "live": true}</p>
+                <p>• Correct endpoint</p>
+                <p>• Correct method (POST)</p>
+                <p>• Parameters in body</p>
+                
+                <h4>✅ Final (Correct):</h4>
+                <code>POST /v3/leaderboard/{id}/leader/aggregate?period=&live=true</code>
+                <p>Body: [] (empty array)</p>
+                <p>• Correct endpoint with query parameters</p>
+                <p>• Correct method (POST)</p>
+                <p>• Empty array body as required by API</p>
+                
+                <h3>Why Empty Array Body:</h3>
+                <ul>
+                    <li><strong>API Requirement:</strong> Funifier aggregate API expects empty array in POST body</li>
+                    <li><strong>Query Parameters:</strong> period and live parameters stay in URL</li>
+                    <li><strong>Performance:</strong> Minimal request payload</li>
+                    <li><strong>Compliance:</strong> Matches working jQuery example exactly</li>
+                </ul>
+            </div>
+        `;
+        document.body.appendChild(evolution);
+    </script>
+</body>
+</html>

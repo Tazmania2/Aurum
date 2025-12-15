@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Spaceship Debug</title>
+    
+    <!-- Same CSP as main app -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://vercel.live;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' https://client2.funifier.com https://s3.amazonaws.com https://httpbin.org data: blob:;
+        connect-src 'self' https://service2.funifier.com https://httpbin.org https://vercel.live;
+        frame-src 'self' https://lookerstudio.google.com https://*.google.com;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'none';
+        frame-ancestors 'none';
+    ">
+    
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .log { margin: 1px 0; padding: 2px 6px; background: #333; border-radius: 2px; font-family: monospace; font-size: 10px; }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .info { background: #1976d2; }
+        .warning { background: #f57c00; }
+        .network { background: #9c27b0; color: white; }
+        .datafetcher { background: #ff5722; }
+        .app { background: #607d8b; }
+        #logs { max-height: 600px; overflow-y: auto; border: 1px solid #555; padding: 10px; margin: 10px 0; }
+        button { padding: 8px 16px; margin: 5px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .status.success { background: #2e7d32; }
+        .status.error { background: #c62828; }
+        .status.warning { background: #f57c00; }
+    </style>
+</head>
+<body>
+    <h1>Final Spaceship Debug Test</h1>
+    <p>This will run the exact same flow as the main app and show detailed logs.</p>
+    
+    <button onclick="runFullTest()">🚀 Run Full Test</button>
+    <button onclick="clearLogs()">Clear</button>
+    
+    <div id="status"></div>
+    <div id="logs"></div>
+    
+    <!-- Load scripts in exact same order as main app -->
+    <script src="scripts/smart-tv-compat.js"></script>
+    <script src="scripts/smart-tv-simulator.js"></script>
+    <script src="scripts/data-fetcher.js"></script>
+    <script src="scripts/ranking-renderer.js"></script>
+    <script src="scripts/view-controller.js"></script>
+    <script src="scripts/looker-manager.js"></script>
+    <script src="scripts/cycle-manager.js"></script>
+    <script src="scripts/app.js"></script>
+    
+    <script>
+        let networkRequests = [];
+        let testResults = {};
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('status').innerHTML = '';
+            networkRequests = [];
+            testResults = {};
+        }
+        
+        // Enhanced console monitoring
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        console.log = function(...args) {
+            const message = args.join(' ');
+            if (message.includes('[DataFetcher]')) {
+                log(message.replace('[DataFetcher]', ''), 'datafetcher');
+            } else if (message.includes('🚀') && (message.includes('spaceship') || message.includes('assets'))) {
+                log(message, 'app');
+            }
+            originalConsoleLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            const message = args.join(' ');
+            log(`ERROR: ${message}`, 'error');
+            originalConsoleError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            const message = args.join(' ');
+            log(`WARN: ${message}`, 'warning');
+            originalConsoleWarn.apply(console, args);
+        };
+        
+        // Network monitoring
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const url = args[0];
+            const options = args[1] || {};
+            const method = options.method || 'GET';
+            
+            const requestInfo = {
+                url: url,
+                method: method,
+                timestamp: Date.now(),
+                headers: options.headers || {}
+            };
+            
+            networkRequests.push(requestInfo);
+            log(`🌐 ${method} ${url}`, 'network');
+            
+            if (url.includes('position_config__c')) {
+                log(`🎯 SPACESHIP API REQUEST DETECTED!`, 'success');
+                testResults.spaceshipRequestMade = true;
+            }
+            
+            return originalFetch.apply(this, args).then(response => {
+                const responseInfo = {
+                    ...requestInfo,
+                    status: response.status,
+                    statusText: response.statusText,
+                    ok: response.ok,
+                    responseTime: Date.now() - requestInfo.timestamp
+                };
+                
+                log(`📡 ${response.status} ${response.statusText} (${responseInfo.responseTime}ms)`, response.ok ? 'success' : 'error');
+                
+                if (url.includes('position_config__c')) {
+                    testResults.spaceshipResponseReceived = response.ok;
+                    if (response.ok) {
+                        log(`🎯 SPACESHIP API RESPONSE SUCCESS!`, 'success');
+                    } else {
+                        log(`🎯 SPACESHIP API RESPONSE FAILED!`, 'error');
+                    }
+                }
+                
+                return response;
+            }).catch(error => {
+                log(`❌ NETWORK ERROR: ${error.message}`, 'error');
+                
+                if (url.includes('position_config__c')) {
+                    testResults.spaceshipRequestFailed = true;
+                    log(`🎯 SPACESHIP API REQUEST FAILED!`, 'error');
+                }
+                
+                throw error;
+            });
+        };
+        
+        // CSP violation monitoring
+        document.addEventListener('securitypolicyviolation', (e) => {
+            log(`🚨 CSP VIOLATION: ${e.violatedDirective} - ${e.blockedURI}`, 'error');
+        });
+        
+        async function runFullTest() {
+            clearLogs();
+            updateStatus('🚀 Starting full spaceship test...', 'info');
+            
+            try {
+                // Step 1: Verify all classes are available
+                log('📋 Step 1: Checking required classes...', 'info');
+                const requiredClasses = ['SmartTVCompat', 'DataFetcher', 'RankingRenderer', 'ViewController', 'LookerManager', 'CycleManager', 'App'];
+                let allClassesAvailable = true;
+                
+                requiredClasses.forEach(className => {
+                    if (typeof window[className] !== 'undefined') {
+                        log(`✅ ${className} available`, 'success');
+                    } else {
+                        log(`❌ ${className} NOT available`, 'error');
+                        allClassesAvailable = false;
+                    }
+                });
+                
+                if (!allClassesAvailable) {
+                    throw new Error('Required classes not available');
+                }
+                
+                // Step 2: Create App instance
+                log('📋 Step 2: Creating App instance...', 'info');
+                const app = new App();
+                log('✅ App instance created successfully', 'success');
+                
+                // Step 3: Initialize components (like real app does)
+                log('📋 Step 3: Initializing components...', 'info');
+                app.smartTVCompat = new SmartTVCompat();
+                app.viewController = new ViewController();
+                app.dataFetcher = new DataFetcher();
+                log('✅ Components initialized', 'success');
+                
+                // Step 4: Test spaceship loading (the critical part)
+                log('📋 Step 4: Loading spaceship assets...', 'info');
+                updateStatus('🚀 Loading spaceship assets...', 'warning');
+                
+                await app.loadSpaceshipAssets();
+                
+                log('✅ loadSpaceshipAssets() completed', 'success');
+                
+                // Step 5: Verify results
+                log('📋 Step 5: Verifying results...', 'info');
+                const assets = app.appState.getSpaceshipAssets();
+                
+                if (assets && typeof assets === 'object') {
+                    const assetKeys = Object.keys(assets);
+                    log(`✅ Assets loaded: ${assetKeys.join(', ')}`, 'success');
+                    
+                    // Check if we got real API data or fallback
+                    let hasRealData = false;
+                    let hasFallbackData = false;
+                    
+                    assetKeys.forEach(key => {
+                        const ranking = assets[key];
+                        if (ranking && ranking.ships) {
+                            const ships = Object.values(ranking.ships);
+                            if (ships.some(ship => ship.image && ship.image.startsWith('http'))) {
+                                hasRealData = true;
+                            }
+                            if (ships.some(ship => ship.fallback)) {
+                                hasFallbackData = true;
+                            }
+                        }
+                    });
+                    
+                    if (hasRealData) {
+                        log('🎯 SUCCESS: Real spaceship data loaded from API!', 'success');
+                        updateStatus('✅ SUCCESS: Real spaceship data loaded from API!', 'success');
+                    } else if (hasFallbackData) {
+                        log('🔄 Using fallback data (API may have failed)', 'warning');
+                        updateStatus('⚠️ Using fallback data (API may have failed)', 'warning');
+                    } else {
+                        log('❌ No valid spaceship data found', 'error');
+                        updateStatus('❌ No valid spaceship data found', 'error');
+                    }
+                    
+                } else {
+                    log('❌ No assets found in AppState', 'error');
+                    updateStatus('❌ No assets found in AppState', 'error');
+                }
+                
+                // Step 6: Network analysis
+                log('📋 Step 6: Network analysis...', 'info');
+                const spaceshipRequests = networkRequests.filter(req => req.url.includes('position_config__c'));
+                
+                if (spaceshipRequests.length > 0) {
+                    log(`✅ Found ${spaceshipRequests.length} spaceship API request(s)`, 'success');
+                    spaceshipRequests.forEach((req, i) => {
+                        log(`  Request ${i+1}: ${req.method} ${req.url}`, 'info');
+                    });
+                } else {
+                    log('❌ NO spaceship API requests found in network log', 'error');
+                    log('❌ This means the fetchSpaceshipAssets method is not making the network call', 'error');
+                }
+                
+                // Final summary
+                log('📋 Final Summary:', 'info');
+                log(`- Network requests made: ${networkRequests.length}`, 'info');
+                log(`- Spaceship requests: ${spaceshipRequests.length}`, 'info');
+                log(`- Assets in AppState: ${assets ? Object.keys(assets).length : 0}`, 'info');
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error');
+                log(`❌ Error stack: ${error.stack}`, 'error');
+                updateStatus(`❌ Test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        log('🎯 Ready to run comprehensive spaceship test', 'info');
+        log('👆 Click "Run Full Test" to see exactly what happens during spaceship loading', 'info');
+    </script>
+</body>
+</html>

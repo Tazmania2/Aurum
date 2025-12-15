@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Fixes Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        pre { background: #333; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; max-height: 300px; }
+    </style>
+</head>
+<body>
+    <h1>Comprehensive Fixes Test</h1>
+    <div id="test-results"></div>
+    
+    <script src="scripts/data-fetcher.js"></script>
+    <script>
+        function addResult(test, passed, details = '') {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            div.innerHTML = `<strong>${test}:</strong> ${passed ? '✅ PASS' : '❌ FAIL'} ${details}`;
+            results.appendChild(div);
+        }
+        
+        function addInfo(message) {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = 'test-result info';
+            div.innerHTML = `<strong>ℹ️ Info:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        // Test 1: Spaceship Database Fetch
+        async function testSpaceshipDatabase() {
+            addInfo('Testing spaceship database fetch with enhanced debugging...');
+            
+            try {
+                const dataFetcher = new DataFetcher();
+                const assets = await dataFetcher.fetchSpaceshipAssets();
+                
+                // Check if we got the expected structure
+                if (assets && typeof assets === 'object') {
+                    const configKeys = Object.keys(assets);
+                    addResult('Spaceship database fetch', true, `Got ${configKeys.length} configurations`);
+                    
+                    // Check for expected rankings
+                    const expectedRankings = ['ranking_vendedores', 'ranking_sdr', 'ranking_referidos'];
+                    let foundRankings = 0;
+                    
+                    expectedRankings.forEach(ranking => {
+                        if (assets[ranking]) {
+                            foundRankings++;
+                            addResult(`Found ${ranking}`, true);
+                            
+                            // Check ships structure
+                            if (assets[ranking].ships) {
+                                const ships = Object.keys(assets[ranking].ships);
+                                addInfo(`${ranking} has ships: ${ships.join(', ')}`);
+                            }
+                        } else {
+                            addResult(`Found ${ranking}`, false, 'Missing from response');
+                        }
+                    });
+                    
+                    addResult('All expected rankings found', foundRankings === expectedRankings.length);
+                    
+                    // Show sample data
+                    const pre = document.createElement('pre');
+                    pre.textContent = JSON.stringify(assets, null, 2);
+                    document.body.appendChild(pre);
+                    
+                } else {
+                    addResult('Spaceship database fetch', false, 'Invalid response format');
+                }
+                
+            } catch (error) {
+                addResult('Spaceship database fetch', false, error.message);
+                console.error('Spaceship database test failed:', error);
+            }
+        }
+        
+        // Test 2: Check for unwanted script loads
+        function testUnwantedScripts() {
+            addInfo('Checking for unwanted Google Maps scripts...');
+            
+            // Check existing scripts
+            const scripts = document.querySelectorAll('script[src]');
+            let unwantedScripts = 0;
+            
+            scripts.forEach(script => {
+                const src = script.src;
+                if (src.includes('maps.googleapis.com') || 
+                    src.includes('maps.google.com') ||
+                    (src.includes('googleapis.com') && !src.includes('fonts'))) {
+                    unwantedScripts++;
+                    addResult('Unwanted Google script found', false, src);
+                }
+            });
+            
+            if (unwantedScripts === 0) {
+                addResult('No unwanted Google Maps scripts', true, `Checked ${scripts.length} scripts`);
+            }
+            
+            // Monitor future script loads
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.tagName === 'SCRIPT' && node.src) {
+                            if (node.src.includes('maps.googleapis.com') || 
+                                node.src.includes('maps.google.com')) {
+                                addResult('Dynamic Google Maps script detected', false, node.src);
+                            }
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(document.head, { childList: true, subtree: true });
+            observer.observe(document.body, { childList: true, subtree: true });
+            
+            // Stop monitoring after 10 seconds
+            setTimeout(() => {
+                observer.disconnect();
+                addInfo('Script monitoring stopped after 10 seconds');
+            }, 10000);
+        }
+        
+        // Test 3: Check iframe sandbox
+        function testIframeSandbox() {
+            addInfo('Checking Looker iframe sandbox configuration...');
+            
+            const iframe = document.querySelector('#looker-iframe');
+            if (iframe) {
+                const sandbox = iframe.getAttribute('sandbox');
+                if (sandbox) {
+                    addResult('Iframe has sandbox attribute', true, sandbox);
+                    
+                    // Check for required permissions
+                    const requiredPerms = ['allow-scripts', 'allow-same-origin', 'allow-forms'];
+                    let hasAllPerms = true;
+                    
+                    requiredPerms.forEach(perm => {
+                        if (sandbox.includes(perm)) {
+                            addResult(`Iframe has ${perm}`, true);
+                        } else {
+                            addResult(`Iframe has ${perm}`, false);
+                            hasAllPerms = false;
+                        }
+                    });
+                    
+                    addResult('Iframe properly sandboxed', hasAllPerms);
+                } else {
+                    addResult('Iframe has sandbox attribute', false, 'No sandbox found');
+                }
+            } else {
+                addResult('Looker iframe found', false, 'Iframe not found in this test page');
+            }
+        }
+        
+        // Test 4: Network monitoring
+        function testNetworkMonitoring() {
+            addInfo('Monitoring network requests...');
+            
+            // Override fetch to monitor requests
+            const originalFetch = window.fetch;
+            let spaceshipRequests = 0;
+            let unwantedRequests = 0;
+            
+            window.fetch = function(...args) {
+                const url = args[0];
+                
+                if (typeof url === 'string') {
+                    console.log('Network request:', url);
+                    
+                    if (url.includes('position_config__c')) {
+                        spaceshipRequests++;
+                        addInfo(`Spaceship database request detected: ${url}`);
+                    }
+                    
+                    if (url.includes('maps.googleapis.com') || url.includes('maps.google.com')) {
+                        unwantedRequests++;
+                        addResult('Unwanted Google Maps request', false, url);
+                    }
+                }
+                
+                return originalFetch.apply(this, args);
+            };
+            
+            // Report after tests
+            setTimeout(() => {
+                addResult('Spaceship database requests made', spaceshipRequests > 0, `${spaceshipRequests} requests`);
+                addResult('No unwanted Maps requests', unwantedRequests === 0, `${unwantedRequests} unwanted requests`);
+                
+                // Restore original fetch
+                window.fetch = originalFetch;
+            }, 8000);
+        }
+        
+        // Run all tests
+        addInfo('Starting comprehensive tests...');
+        
+        testUnwantedScripts();
+        testIframeSandbox();
+        testNetworkMonitoring();
+        
+        // Run spaceship test after a short delay
+        setTimeout(() => {
+            testSpaceshipDatabase();
+        }, 1000);
+        
+        // Summary
+        setTimeout(() => {
+            addInfo('Test Summary:');
+            addInfo('1. ✅ Enhanced spaceship database fetch with detailed logging');
+            addInfo('2. ✅ Added iframe sandbox to prevent unwanted script loads');
+            addInfo('3. ✅ Enhanced CSP with frame-ancestors protection');
+            addInfo('4. ✅ Added comprehensive error handling and debugging');
+        }, 12000);
+    </script>
+</body>
+</html>

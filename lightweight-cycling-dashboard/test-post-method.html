@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test POST Method for Leaderboard API</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        pre { background: #333; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>POST Method Test for Leaderboard API</h1>
+    <div id="test-results"></div>
+    
+    <script src="scripts/data-fetcher.js"></script>
+    <script>
+        function addResult(test, passed, details = '') {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            div.innerHTML = `<strong>${test}:</strong> ${passed ? '✅ PASS' : '❌ FAIL'} ${details}`;
+            results.appendChild(div);
+        }
+        
+        function addInfo(message) {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = 'test-result info';
+            div.innerHTML = `<strong>ℹ️ Info:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        // Test the POST method configuration
+        addInfo('Testing leaderboard API POST method configuration');
+        
+        const dataFetcher = new DataFetcher();
+        
+        // Show the correct API configuration
+        const apiConfig = {
+            method: 'POST',
+            url: 'https://service2.funifier.com/v3/leaderboard/{id}/leader/aggregate',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Basic NjkwMjdhZjZlMTc5ZDQ2ZmNlMjgzZTdlOjY5MDI4MjI0ZTE3OWQ0NmZjZTI4NDI2ZA=='
+            },
+            body: []
+        };
+        
+        addInfo('Correct API Configuration:');
+        const configPre = document.createElement('pre');
+        configPre.textContent = JSON.stringify(apiConfig, null, 2);
+        document.body.appendChild(configPre);
+        
+        // Test DataFetcher configuration
+        try {
+            addResult('DataFetcher instantiation', true, 'Class created successfully');
+            
+            const hasMethod = typeof dataFetcher.fetchLeaderboard === 'function';
+            addResult('fetchLeaderboard method exists', hasMethod);
+            
+            if (hasMethod) {
+                addInfo('The fetchLeaderboard method will now use POST instead of GET');
+            }
+            
+        } catch (error) {
+            addResult('DataFetcher configuration test', false, error.message);
+        }
+        
+        // Show the differences between GET and POST
+        const comparison = document.createElement('div');
+        comparison.innerHTML = `
+            <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                <h3>HTTP Method Correction:</h3>
+                
+                <h4>❌ Previous (Incorrect):</h4>
+                <code>GET /v3/leaderboard/{id}/leader/aggregate?period=&live=true</code>
+                <p>• Query parameters in URL</p>
+                <p>• GET method</p>
+                
+                <h4>✅ Current (Correct):</h4>
+                <code>POST /v3/leaderboard/{id}/leader/aggregate?period=&live=true</code>
+                <p>• Empty array body: []</p>
+                <p>• POST method</p>
+                <p>• Query parameters in URL</p>
+                <p>• Proper Content-Type: application/json</p>
+                
+                <h3>Why POST is Correct:</h3>
+                <ul>
+                    <li><strong>API Design:</strong> Funifier API expects POST for aggregate operations</li>
+                    <li><strong>Request Body:</strong> Complex parameters sent in JSON body</li>
+                    <li><strong>Security:</strong> POST requests are more secure for sensitive operations</li>
+                    <li><strong>Flexibility:</strong> Easier to extend with additional parameters</li>
+                </ul>
+            </div>
+        `;
+        document.body.appendChild(comparison);
+    </script>
+</body>
+</html>

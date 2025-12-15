@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Step by Step</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .log { margin: 5px 0; padding: 5px; background: #333; border-radius: 3px; font-family: monospace; font-size: 12px; }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .info { background: #1976d2; }
+        .warning { background: #f57c00; }
+        button { padding: 10px 20px; margin: 5px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #logs { max-height: 400px; overflow-y: auto; border: 1px solid #555; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Debug Step by Step</h1>
+    <p>This will test each step of the spaceship loading process individually.</p>
+    
+    <button onclick="step1()">Step 1: Load DataFetcher</button>
+    <button onclick="step2()">Step 2: Create Instance</button>
+    <button onclick="step3()">Step 3: Check Method</button>
+    <button onclick="step4()">Step 4: Call Method</button>
+    <button onclick="step5()">Step 5: Test App Flow</button>
+    <button onclick="clearLogs()">Clear</button>
+    
+    <div id="logs"></div>
+    
+    <script>
+        let dataFetcher = null;
+        let app = null;
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        // Monitor network requests
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const url = args[0];
+            const options = args[1] || {};
+            log(`🌐 NETWORK: ${options.method || 'GET'} ${url}`, 'info');
+            
+            return originalFetch.apply(this, args).then(response => {
+                log(`📡 RESPONSE: ${response.status} for ${url}`, response.ok ? 'success' : 'error');
+                return response;
+            }).catch(error => {
+                log(`❌ NETWORK ERROR: ${error.message}`, 'error');
+                throw error;
+            });
+        };
+        
+        async function step1() {
+            log('📦 Step 1: Loading DataFetcher script...', 'info');
+            
+            try {
+                if (typeof DataFetcher === 'undefined') {
+                    await loadScript('scripts/data-fetcher.js');
+                    log('✅ DataFetcher script loaded', 'success');
+                } else {
+                    log('✅ DataFetcher already available', 'success');
+                }
+                
+                log(`📊 DataFetcher type: ${typeof DataFetcher}`, 'info');
+                
+            } catch (error) {
+                log(`❌ Failed to load DataFetcher: ${error.message}`, 'error');
+            }
+        }
+        
+        async function step2() {
+            log('🔧 Step 2: Creating DataFetcher instance...', 'info');
+            
+            try {
+                if (typeof DataFetcher === 'undefined') {
+                    log('❌ DataFetcher not loaded, run Step 1 first', 'error');
+                    return;
+                }
+                
+                dataFetcher = new DataFetcher();
+                log('✅ DataFetcher instance created', 'success');
+                log(`📊 Instance type: ${typeof dataFetcher}`, 'info');
+                log(`📊 Instance properties: ${Object.keys(dataFetcher).join(', ')}`, 'info');
+                
+            } catch (error) {
+                log(`❌ Failed to create DataFetcher: ${error.message}`, 'error');
+            }
+        }
+        
+        async function step3() {
+            log('🔍 Step 3: Checking fetchSpaceshipAssets method...', 'info');
+            
+            try {
+                if (!dataFetcher) {
+                    log('❌ DataFetcher not created, run Step 2 first', 'error');
+                    return;
+                }
+                
+                if (typeof dataFetcher.fetchSpaceshipAssets === 'function') {
+                    log('✅ fetchSpaceshipAssets method exists', 'success');
+                    log(`📊 Method: ${dataFetcher.fetchSpaceshipAssets.toString().substring(0, 200)}...`, 'info');
+                } else {
+                    log('❌ fetchSpaceshipAssets method NOT found', 'error');
+                    log(`📊 Available methods: ${Object.getOwnPropertyNames(Object.getPrototypeOf(dataFetcher)).join(', ')}`, 'info');
+                }
+                
+            } catch (error) {
+                log(`❌ Error checking method: ${error.message}`, 'error');
+            }
+        }
+        
+        async function step4() {
+            log('🚀 Step 4: Calling fetchSpaceshipAssets method...', 'info');
+            
+            try {
+                if (!dataFetcher) {
+                    log('❌ DataFetcher not created, run Step 2 first', 'error');
+                    return;
+                }
+                
+                if (typeof dataFetcher.fetchSpaceshipAssets !== 'function') {
+                    log('❌ fetchSpaceshipAssets method not available, run Step 3 first', 'error');
+                    return;
+                }
+                
+                log('🌐 About to call fetchSpaceshipAssets()...', 'info');
+                const assets = await dataFetcher.fetchSpaceshipAssets();
+                
+                log('✅ fetchSpaceshipAssets() completed', 'success');
+                log(`📊 Result type: ${typeof assets}`, 'info');
+                
+                if (assets && typeof assets === 'object') {
+                    log(`📊 Result keys: ${Object.keys(assets).join(', ')}`, 'info');
+                    log(`📊 Result preview: ${JSON.stringify(assets).substring(0, 300)}...`, 'info');
+                } else {
+                    log(`📊 Result value: ${assets}`, 'info');
+                }
+                
+            } catch (error) {
+                log(`❌ fetchSpaceshipAssets failed: ${error.message}`, 'error');
+                log(`❌ Error stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        async function step5() {
+            log('🎯 Step 5: Testing full App flow...', 'info');
+            
+            try {
+                // Load all required scripts
+                const scripts = [
+                    'scripts/smart-tv-compat.js',
+                    'scripts/data-fetcher.js',
+                    'scripts/ranking-renderer.js',
+                    'scripts/view-controller.js',
+                    'scripts/looker-manager.js',
+                    'scripts/cycle-manager.js',
+                    'scripts/app.js'
+                ];
+                
+                for (const script of scripts) {
+                    if (!document.querySelector(`script[src="${script}"]`)) {
+                        log(`📦 Loading ${script}...`, 'info');
+                        await loadScript(script);
+                    }
+                }
+                
+                log('🚀 Creating App instance...', 'info');
+                app = new App();
+                
+                log('🔧 Calling loadSpaceshipAssets directly...', 'info');
+                await app.loadSpaceshipAssets();
+                
+                log('✅ App loadSpaceshipAssets completed', 'success');
+                
+                const assets = app.appState.getSpaceshipAssets();
+                log(`📊 Assets in AppState: ${Object.keys(assets).join(', ')}`, 'info');
+                
+            } catch (error) {
+                log(`❌ App flow failed: ${error.message}`, 'error');
+                log(`❌ Error stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load ${src}`));
+                document.head.appendChild(script);
+            });
+        }
+        
+        log('🎯 Ready to debug. Click buttons in order: Step 1 → Step 2 → Step 3 → Step 4 → Step 5', 'info');
+    </script>
+</body>
+</html>

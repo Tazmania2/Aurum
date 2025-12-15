@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug App Initialization</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .log { margin: 5px 0; padding: 5px; background: #333; border-radius: 3px; font-family: monospace; font-size: 12px; }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .info { background: #1976d2; }
+        .warning { background: #f57c00; }
+        #logs { max-height: 600px; overflow-y: auto; border: 1px solid #555; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Debug App Initialization</h1>
+    <p>This will show exactly what happens during app initialization and spaceship loading.</p>
+    
+    <div id="logs"></div>
+    
+    <!-- Load scripts in the same order as the main app -->
+    <script src="scripts/smart-tv-compat.js"></script>
+    <script src="scripts/smart-tv-simulator.js"></script>
+    <script src="scripts/data-fetcher.js"></script>
+    <script src="scripts/ranking-renderer.js"></script>
+    <script src="scripts/view-controller.js"></script>
+    <script src="scripts/looker-manager.js"></script>
+    <script src="scripts/cycle-manager.js"></script>
+    <script src="scripts/app.js"></script>
+    
+    <script>
+        // Enhanced logging
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(`[DEBUG] ${message}`);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        // Override console methods to capture all logs
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        console.log = function(...args) {
+            const message = args.join(' ');
+            if (message.includes('🚀') || message.includes('spaceship') || message.includes('DataFetcher')) {
+                log(`CONSOLE: ${message}`, 'info');
+            }
+            originalConsoleLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            const message = args.join(' ');
+            log(`ERROR: ${message}`, 'error');
+            originalConsoleError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            const message = args.join(' ');
+            log(`WARN: ${message}`, 'warning');
+            originalConsoleWarn.apply(console, args);
+        };
+        
+        // Monitor network requests
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            const url = args[0];
+            const options = args[1] || {};
+            log(`🌐 FETCH: ${options.method || 'GET'} ${url}`, 'info');
+            
+            return originalFetch.apply(this, args).then(response => {
+                log(`📡 RESPONSE: ${response.status} ${response.statusText} for ${url}`, response.ok ? 'success' : 'error');
+                return response;
+            }).catch(error => {
+                log(`❌ FETCH ERROR: ${error.message} for ${url}`, 'error');
+                throw error;
+            });
+        };
+        
+        // Wait for DOM to be ready and then initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🎯 DOM loaded, starting debug initialization...', 'info');
+            
+            // Check if all required classes are available
+            const requiredClasses = ['SmartTVCompat', 'DataFetcher', 'RankingRenderer', 'ViewController', 'LookerManager', 'CycleManager', 'App'];
+            
+            requiredClasses.forEach(className => {
+                if (typeof window[className] !== 'undefined') {
+                    log(`✅ ${className} is available`, 'success');
+                } else {
+                    log(`❌ ${className} is NOT available`, 'error');
+                }
+            });
+            
+            // Try to create and initialize the app
+            try {
+                log('🚀 Creating App instance...', 'info');
+                const app = new App();
+                log('✅ App instance created successfully', 'success');
+                
+                // Check if DataFetcher was created
+                if (app.dataFetcher) {
+                    log('✅ App has dataFetcher property', 'success');
+                } else {
+                    log('❌ App does NOT have dataFetcher property', 'error');
+                }
+                
+                // Try to call loadSpaceshipAssets directly
+                log('🚀 Attempting to call loadSpaceshipAssets directly...', 'info');
+                
+                if (typeof app.loadSpaceshipAssets === 'function') {
+                    log('✅ loadSpaceshipAssets method exists', 'success');
+                    
+                    app.loadSpaceshipAssets().then(() => {
+                        log('✅ loadSpaceshipAssets completed successfully', 'success');
+                        
+                        const assets = app.appState.getSpaceshipAssets();
+                        log(`📊 Assets loaded: ${JSON.stringify(assets).length} characters`, 'info');
+                        log(`📊 Asset keys: ${Object.keys(assets).join(', ')}`, 'info');
+                        
+                    }).catch(error => {
+                        log(`❌ loadSpaceshipAssets failed: ${error.message}`, 'error');
+                        log(`❌ Error stack: ${error.stack}`, 'error');
+                    });
+                    
+                } else {
+                    log('❌ loadSpaceshipAssets method does NOT exist', 'error');
+                }
+                
+                // Make app globally available
+                window.debugApp = app;
+                log('🔧 App made available as window.debugApp', 'info');
+                
+            } catch (error) {
+                log(`❌ Failed to create App: ${error.message}`, 'error');
+                log(`❌ Error stack: ${error.stack}`, 'error');
+            }
+        });
+        
+        log('🎯 Debug script loaded, waiting for DOM...', 'info');
+    </script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Spaceship Rendering</title>
+    
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://vercel.live;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' https://client2.funifier.com https://s3.amazonaws.com https://httpbin.org data: blob:;
+        connect-src 'self' https://service2.funifier.com https://httpbin.org https://vercel.live;
+        frame-src 'self' https://lookerstudio.google.com https://*.google.com;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'none';
+        frame-ancestors 'none';
+    ">
+    
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .log { margin: 1px 0; padding: 2px 6px; background: #333; border-radius: 2px; font-family: monospace; font-size: 10px; }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .info { background: #1976d2; }
+        .warning { background: #f57c00; }
+        .renderer { background: #9c27b0; }
+        #logs { max-height: 400px; overflow-y: auto; border: 1px solid #555; padding: 10px; margin: 10px 0; }
+        button { padding: 8px 16px; margin: 5px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        #test-container { width: 800px; height: 400px; border: 2px solid #555; margin: 20px 0; position: relative; background: #2a2a2a; }
+        .spaceship { position: absolute; transition: all 0.8s ease; }
+        .spaceship-image { width: 60px; height: 60px; }
+        .player-info { text-align: center; margin-top: 5px; font-size: 12px; }
+        .player-name { font-weight: bold; }
+        .player-score { color: #ffd700; }
+    </style>
+</head>
+<body>
+    <h1>Debug Spaceship Rendering</h1>
+    <p>This will test the complete flow from API fetch to spaceship rendering.</p>
+    
+    <button onclick="testFullFlow()">🚀 Test Full Flow</button>
+    <button onclick="testWithMockData()">🧪 Test With Mock Data</button>
+    <button onclick="clearLogs()">Clear</button>
+    
+    <div id="logs"></div>
+    
+    <h3>Test Container:</h3>
+    <div id="test-container"></div>
+    
+    <!-- Load scripts -->
+    <script src="scripts/smart-tv-compat.js"></script>
+    <script src="scripts/data-fetcher.js"></script>
+    <script src="scripts/ranking-renderer.js"></script>
+    <script src="scripts/view-controller.js"></script>
+    <script src="scripts/looker-manager.js"></script>
+    <script src="scripts/cycle-manager.js"></script>
+    <script src="scripts/app.js"></script>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('test-container').innerHTML = '';
+        }
+        
+        // Mock player data for testing
+        const mockPlayerData = [
+            { _id: 'player1', name: 'Alice', total: 1500, position: 1 },
+            { _id: 'player2', name: 'Bob', total: 1200, position: 2 },
+            { _id: 'player3', name: 'Charlie', total: 900, position: 3 }
+        ];
+        
+        async function testFullFlow() {
+            clearLogs();
+            log('🚀 Testing full flow: API → Assets → Rendering', 'info');
+            
+            try {
+                // Step 1: Fetch spaceship assets
+                log('📡 Step 1: Fetching spaceship assets...', 'info');
+                const dataFetcher = new DataFetcher();
+                const spaceshipAssets = await dataFetcher.fetchSpaceshipAssets();
+                
+                log('✅ Assets fetched successfully', 'success');
+                log(`📊 Asset keys: ${Object.keys(spaceshipAssets).join(', ')}`, 'info');
+                
+                // Log detailed asset structure
+                Object.keys(spaceshipAssets).forEach(configId => {
+                    const config = spaceshipAssets[configId];
+                    log(`📋 ${configId}:`, 'info');
+                    if (config.ships) {
+                        Object.keys(config.ships).forEach(position => {
+                            const ship = config.ships[position];
+                            log(`  ${position}: image=${ship.image ? 'YES' : 'NO'}, fallback=${ship.fallback}`, 'info');
+                        });
+                    }
+                });
+                
+                // Step 2: Create RankingRenderer with assets
+                log('🎨 Step 2: Creating RankingRenderer with assets...', 'info');
+                const rankingRenderer = new RankingRenderer(spaceshipAssets);
+                log('✅ RankingRenderer created', 'success');
+                
+                // Step 3: Test rendering
+                log('🖼️ Step 3: Rendering spaceships...', 'info');
+                const success = rankingRenderer.renderRanking(
+                    mockPlayerData, 
+                    'test-container', 
+                    'Test Ranking',
+                    null,
+                    'ranking_vendedores' // Use specific config
+                );
+                
+                if (success) {
+                    log('✅ Rendering completed successfully', 'success');
+                    
+                    // Check what was actually rendered
+                    const container = document.getElementById('test-container');
+                    const spaceships = container.querySelectorAll('.spaceship');
+                    log(`📊 Rendered ${spaceships.length} spaceships`, 'info');
+                    
+                    spaceships.forEach((spaceship, i) => {
+                        const img = spaceship.querySelector('img');
+                        const cssSpaceship = spaceship.querySelector('.css-spaceship');
+                        
+                        if (img) {
+                            log(`  Spaceship ${i+1}: IMG src=${img.src}`, 'renderer');
+                        } else if (cssSpaceship) {
+                            log(`  Spaceship ${i+1}: CSS fallback=${cssSpaceship.textContent}`, 'renderer');
+                        } else {
+                            log(`  Spaceship ${i+1}: Unknown type`, 'warning');
+                        }
+                    });
+                    
+                } else {
+                    log('❌ Rendering failed', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error');
+                log(`❌ Stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        async function testWithMockData() {
+            clearLogs();
+            log('🧪 Testing with mock spaceship data', 'info');
+            
+            // Create mock spaceship assets that match the expected structure
+            const mockSpaceshipAssets = {
+                'ranking_vendedores': {
+                    ships: {
+                        'first': { 
+                            image: 'https://s3.amazonaws.com/funifier/games/682a0e6f2327f74f3a3e0089/images/683673a201f2815f43f8bfb0_original_nave1.png', 
+                            position: 'first', 
+                            fallback: '🥇',
+                            cssColor: '#FFD700'
+                        },
+                        'second': { 
+                            image: 'https://s3.amazonaws.com/funifier/games/682a0e6f2327f74f3a3e0089/images/6837143c01f2815f43f8d236_original_nave9.png', 
+                            position: 'second', 
+                            fallback: '🥈',
+                            cssColor: '#C0C0C0'
+                        },
+                        'third': { 
+                            image: 'https://s3.amazonaws.com/funifier/games/682a0e6f2327f74f3a3e0089/images/683673bd01f2815f43f8bfc1_original_nave3.png', 
+                            position: 'third', 
+                            fallback: '🥉',
+                            cssColor: '#CD7F32'
+                        }
+                    },
+                    fontColor: '#ffffff',
+                    font: 'Roboto'
+                }
+            };
+            
+            log('📊 Mock assets created', 'info');
+            log(`📋 Mock structure: ${JSON.stringify(mockSpaceshipAssets, null, 2).substring(0, 300)}...`, 'info');
+            
+            try {
+                // Create RankingRenderer with mock assets
+                const rankingRenderer = new RankingRenderer(mockSpaceshipAssets);
+                log('✅ RankingRenderer created with mock data', 'success');
+                
+                // Test rendering
+                const success = rankingRenderer.renderRanking(
+                    mockPlayerData, 
+                    'test-container', 
+                    'Mock Test Ranking',
+                    null,
+                    'ranking_vendedores'
+                );
+                
+                if (success) {
+                    log('✅ Mock rendering completed', 'success');
+                    
+                    // Analyze what was rendered
+                    const container = document.getElementById('test-container');
+                    const spaceships = container.querySelectorAll('.spaceship');
+                    
+                    spaceships.forEach((spaceship, i) => {
+                        const img = spaceship.querySelector('img');
+                        const cssSpaceship = spaceship.querySelector('.css-spaceship');
+                        
+                        if (img) {
+                            log(`  Mock Spaceship ${i+1}: IMG loading...`, 'renderer');
+                            
+                            img.onload = () => {
+                                log(`  ✅ Mock Spaceship ${i+1}: IMG loaded successfully`, 'success');
+                            };
+                            
+                            img.onerror = () => {
+                                log(`  ❌ Mock Spaceship ${i+1}: IMG failed to load`, 'error');
+                            };
+                            
+                        } else if (cssSpaceship) {
+                            log(`  Mock Spaceship ${i+1}: CSS fallback used`, 'renderer');
+                        }
+                    });
+                    
+                } else {
+                    log('❌ Mock rendering failed', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Mock test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        log('🎯 Ready to test spaceship rendering', 'info');
+    </script>
+</body>
+</html>

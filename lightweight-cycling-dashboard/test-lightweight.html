@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lightweight Spaceship Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-container { display: flex; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
+        .spaceship-demo { text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Lightweight Spaceship System Test</h1>
+    <p>This test shows the lightweight CSS fallback spaceships (no external files needed):</p>
+    
+    <div class="test-container" id="demo-container"></div>
+    
+    <script src="scripts/data-fetcher.js"></script>
+    <script src="scripts/ranking-renderer.js"></script>
+    <script>
+        // Test the lightweight spaceship system
+        const container = document.getElementById('demo-container');
+        
+        // Create a mock ranking renderer
+        const mockAssets = [
+            { car: 'gold', image: null, fallback: '🥇', cssColor: '#FFD700' },
+            { car: 'silver', image: null, fallback: '🥈', cssColor: '#C0C0C0' },
+            { car: 'bronze', image: null, fallback: '🥉', cssColor: '#CD7F32' },
+            { car: 'red', image: null, fallback: '🚀', cssColor: '#FF0000' },
+            { car: 'yellow', image: null, fallback: '⭐', cssColor: '#FFFF00' },
+            { car: 'green', image: null, fallback: '🌟', cssColor: '#00FF00' }
+        ];
+        
+        const renderer = new RankingRenderer(mockAssets, { animationDuration: 1000 });
+        
+        // Create demo spaceships
+        mockAssets.forEach((asset, index) => {
+            const demo = document.createElement('div');
+            demo.className = 'spaceship-demo';
+            
+            const spaceship = renderer.createCSSSpaceship(asset, index + 1);
+            
+            demo.innerHTML = `<h3>${asset.car}</h3>`;
+            demo.appendChild(spaceship);
+            demo.innerHTML += `<p>Fallback: ${asset.fallback}</p>`;
+            
+            container.appendChild(demo);
+        });
+        
+        // Show file size savings
+        const savings = document.createElement('div');
+        savings.innerHTML = `
+            <h2>File Size Savings:</h2>
+            <p>✅ Removed 6 SVG files (~2-3KB each = ~12-18KB saved)</p>
+            <p>✅ Using pure CSS + emoji fallbacks (0KB additional)</p>
+            <p>✅ Lightweight system perfect for Smart TV browsers</p>
+        `;
+        savings.style.marginTop = '30px';
+        savings.style.padding = '20px';
+        savings.style.background = 'rgba(0,255,0,0.1)';
+        savings.style.borderRadius = '8px';
+        document.body.appendChild(savings);
+    </script>
+</body>
+</html>

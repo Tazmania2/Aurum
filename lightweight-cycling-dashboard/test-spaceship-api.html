@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Spaceship API</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .spaceship-preview { display: inline-block; margin: 5px; }
+        .spaceship-preview img { width: 50px; height: 50px; }
+    </style>
+</head>
+<body>
+    <h1>Spaceship API Test</h1>
+    <div id="test-results"></div>
+    <div id="spaceship-preview"></div>
+    
+    <script src="scripts/data-fetcher.js"></script>
+    <script>
+        async function testSpaceshipAPI() {
+            const results = document.getElementById('test-results');
+            const preview = document.getElementById('spaceship-preview');
+            
+            function addResult(test, passed, details = '') {
+                const div = document.createElement('div');
+                div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+                div.innerHTML = `<strong>${test}:</strong> ${passed ? '✅ PASS' : '❌ FAIL'} ${details}`;
+                results.appendChild(div);
+            }
+            
+            try {
+                const dataFetcher = new DataFetcher();
+                addResult('DataFetcher instantiation', true);
+                
+                // Test spaceship assets fetch
+                console.log('Fetching spaceship assets...');
+                const assets = await dataFetcher.fetchSpaceshipAssets();
+                
+                addResult('Spaceship assets fetch', assets && assets.length > 0, `(${assets.length} assets)`);
+                
+                if (assets && assets.length > 0) {
+                    // Display asset details
+                    assets.forEach(asset => {
+                        addResult(`Asset: ${asset.car}`, !!asset.image, asset.image);
+                        
+                        // Create preview
+                        const previewDiv = document.createElement('div');
+                        previewDiv.className = 'spaceship-preview';
+                        previewDiv.innerHTML = `
+                            <div>${asset.car}</div>
+                            <img src="${asset.image}" alt="${asset.car}" 
+                                 onerror="this.style.display='none'; this.nextSibling.style.display='block';">
+                            <div style="display:none; font-size: 30px;">${asset.fallback}</div>
+                        `;
+                        preview.appendChild(previewDiv);
+                    });
+                }
+                
+            } catch (error) {
+                addResult('Spaceship API test', false, error.message);
+                console.error('Test failed:', error);
+            }
+        }
+        
+        // Run test when page loads
+        testSpaceshipAPI();
+    </script>
+</body>
+</html>

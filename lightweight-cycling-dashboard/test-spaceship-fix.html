@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Spaceship Fix</title>
+    
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://vercel.live;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' https://client2.funifier.com https://s3.amazonaws.com https://httpbin.org data: blob:;
+        connect-src 'self' https://service2.funifier.com https://httpbin.org https://vercel.live;
+        frame-src 'self' https://lookerstudio.google.com https://*.google.com;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'none';
+        frame-ancestors 'none';
+    ">
+    
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .log { margin: 1px 0; padding: 2px 6px; background: #333; border-radius: 2px; font-family: monospace; font-size: 10px; }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .info { background: #1976d2; }
+        .warning { background: #f57c00; }
+        .fix { background: #4caf50; color: white; }
+        #logs { max-height: 400px; overflow-y: auto; border: 1px solid #555; padding: 10px; margin: 10px 0; }
+        button { padding: 8px 16px; margin: 5px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        #test-container { width: 800px; height: 400px; border: 2px solid #555; margin: 20px 0; position: relative; background: #2a2a2a; }
+        .spaceship { position: absolute; transition: all 0.8s ease; }
+        .spaceship-image { width: 60px; height: 60px; }
+        .player-info { text-align: center; margin-top: 5px; font-size: 12px; }
+        .player-name { font-weight: bold; }
+        .player-score { color: #ffd700; }
+    </style>
+</head>
+<body>
+    <h1>Test Spaceship Fix</h1>
+    <p>This will test if the spaceship assets are now properly passed to RankingRenderer.</p>
+    
+    <button onclick="testFix()">🔧 Test Fix</button>
+    <button onclick="clearLogs()">Clear</button>
+    
+    <div id="logs"></div>
+    
+    <h3>Test Container:</h3>
+    <div id="test-container"></div>
+    
+    <!-- Load scripts -->
+    <script src="scripts/smart-tv-compat.js"></script>
+    <script src="scripts/data-fetcher.js"></script>
+    <script src="scripts/ranking-renderer.js"></script>
+    <script src="scripts/view-controller.js"></script>
+    <script src="scripts/looker-manager.js"></script>
+    <script src="scripts/cycle-manager.js"></script>
+    <script src="scripts/app.js"></script>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('test-container').innerHTML = '';
+        }
+        
+        // Mock player data
+        const mockPlayerData = [
+            { _id: 'player1', name: 'Alice', total: 1500, position: 1 },
+            { _id: 'player2', name: 'Bob', total: 1200, position: 2 },
+            { _id: 'player3', name: 'Charlie', total: 900, position: 3 }
+        ];
+        
+        async function testFix() {
+            clearLogs();
+            log('🔧 Testing spaceship asset fix...', 'fix');
+            
+            try {
+                // Step 1: Create App and test AppState
+                log('📋 Step 1: Testing AppState with object assets...', 'info');
+                const app = new App();
+                
+                // Test with object format (what DataFetcher returns)
+                const testAssets = {
+                    'ranking_vendedores': {
+                        ships: {
+                            'first': { image: 'https://example.com/gold.png', position: 'first', fallback: '🥇' },
+                            'second': { image: 'https://example.com/silver.png', position: 'second', fallback: '🥈' },
+                            'third': { image: 'https://example.com/bronze.png', position: 'third', fallback: '🥉' }
+                        }
+                    }
+                };
+                
+                log('🔧 Setting test assets in AppState...', 'fix');
+                app.appState.setSpaceshipAssets(testAssets);
+                
+                const retrievedAssets = app.appState.getSpaceshipAssets();
+                log('✅ Assets retrieved from AppState', 'success');
+                log(`📊 Retrieved type: ${typeof retrievedAssets}`, 'info');
+                log(`📊 Retrieved keys: ${Object.keys(retrievedAssets).join(', ')}`, 'info');
+                
+                if (retrievedAssets.ranking_vendedores && retrievedAssets.ranking_vendedores.ships) {
+                    log('✅ Object structure preserved correctly', 'success');
+                } else {
+                    log('❌ Object structure not preserved', 'error');
+                    return;
+                }
+                
+                // Step 2: Test RankingRenderer with object assets
+                log('📋 Step 2: Testing RankingRenderer with object assets...', 'info');
+                const rankingRenderer = new RankingRenderer(retrievedAssets);
+                
+                const success = rankingRenderer.renderRanking(
+                    mockPlayerData,
+                    'test-container',
+                    'Test Ranking',
+                    null,
+                    'ranking_vendedores'
+                );
+                
+                if (success) {
+                    log('✅ RankingRenderer accepted object assets', 'success');
+                    
+                    // Check what was rendered
+                    const container = document.getElementById('test-container');
+                    const spaceships = container.querySelectorAll('.spaceship');
+                    log(`📊 Rendered ${spaceships.length} spaceships`, 'info');
+                    
+                    let realImagesCount = 0;
+                    let cssSpaceshipsCount = 0;
+                    
+                    spaceships.forEach((spaceship, i) => {
+                        const img = spaceship.querySelector('img');
+                        const cssSpaceship = spaceship.querySelector('.css-spaceship');
+                        
+                        if (img) {
+                            realImagesCount++;
+                            log(`  Spaceship ${i+1}: Real IMG (${img.src})`, 'success');
+                        } else if (cssSpaceship) {
+                            cssSpaceshipsCount++;
+                            log(`  Spaceship ${i+1}: CSS fallback (${cssSpaceship.textContent})`, 'warning');
+                        }
+                    });
+                    
+                    log(`🎯 RESULT: ${realImagesCount} real images, ${cssSpaceshipsCount} CSS fallbacks`, 'fix');
+                    
+                    if (realImagesCount > 0) {
+                        log('🎉 SUCCESS: Real spaceship images are being used!', 'success');
+                    } else {
+                        log('⚠️ Only CSS fallbacks used (images may be loading or failed)', 'warning');
+                    }
+                    
+                } else {
+                    log('❌ RankingRenderer failed to render', 'error');
+                }
+                
+                // Step 3: Test with real API data
+                log('📋 Step 3: Testing with real API data...', 'info');
+                const dataFetcher = new DataFetcher();
+                const realAssets = await dataFetcher.fetchSpaceshipAssets();
+                
+                log('✅ Real assets fetched', 'success');
+                log(`📊 Real assets type: ${typeof realAssets}`, 'info');
+                log(`📊 Real assets keys: ${Object.keys(realAssets).join(', ')}`, 'info');
+                
+                // Test setting real assets
+                app.appState.setSpaceshipAssets(realAssets);
+                const retrievedRealAssets = app.appState.getSpaceshipAssets();
+                
+                if (Object.keys(retrievedRealAssets).length > 0) {
+                    log('✅ Real assets stored and retrieved successfully', 'success');
+                    log('🎉 FIX CONFIRMED: Spaceship assets now work correctly!', 'fix');
+                } else {
+                    log('❌ Real assets not stored correctly', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, 'error');
+                log(`❌ Stack: ${error.stack}`, 'error');
+            }
+        }
+        
+        log('🔧 Ready to test the spaceship asset fix', 'fix');
+    </script>
+</body>
+</html>

@@ -2,14 +2,30 @@
   "version": 2,
   "builds": [
     {
-      "src": "index.html",
+      "src": "lightweight-cycling-dashboard/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "index-redirect.html",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
+      "src": "^/$",
+      "dest": "/index-redirect.html"
+    },
+    {
+      "src": "^/lightweight-cycling-dashboard/?$",
+      "dest": "/lightweight-cycling-dashboard/index.html"
+    },
+    {
+      "src": "^/lightweight-cycling-dashboard/(.*)$",
+      "dest": "/lightweight-cycling-dashboard/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/lightweight-cycling-dashboard/$1"
     }
   ]
 }

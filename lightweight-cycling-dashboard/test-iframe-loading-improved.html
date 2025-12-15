@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Improved Iframe Loading Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <style>
+        .test-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px;
+            z-index: 1000;
+            border-bottom: 2px solid #4ade80;
+        }
+        .test-header h1 {
+            color: white;
+            margin: 0 0 10px 0;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+        .test-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .test-controls button {
+            padding: 8px 16px;
+            background: #4ade80;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .test-controls button:hover {
+            background: #22c55e;
+        }
+        .test-controls button:disabled {
+            background: #6b7280;
+            color: white;
+            cursor: not-allowed;
+        }
+        .main-container {
+            margin-top: 80px;
+            height: calc(100vh - 80px);
+        }
+        .status-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            max-width: 400px;
+            border: 1px solid #4ade80;
+        }
+        .status-panel h3 {
+            margin: 0 0 10px 0;
+            color: #4ade80;
+        }
+        .status-item {
+            margin: 5px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        .status-loading {
+            color: #fbbf24;
+        }
+        .status-success {
+            color: #4ade80;
+        }
+        .status-error {
+            color: #ef4444;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #4ade80;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .iframe-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 10;
+        }
+        .iframe-overlay.hidden {
+            display: none;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #4ade80;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>🔄 Improved Iframe Loading Detection Test</h1>
+        <div class="test-controls">
+            <button onclick="testLookerLoading()" id="test-btn">📊 Test Looker Loading</button>
+            <button onclick="testGoogleLoading()" id="google-btn">🌐 Test Google Loading</button>
+            <button onclick="simulateCycling()" id="cycle-btn">🔄 Simulate Cycling</button>
+            <button onclick="clearTest()" id="clear-btn">🗑️ Clear</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="view active looker-view" id="looker-view">
+            <h1 class="ranking-title">Iframe Loading Test</h1>
+            <div class="iframe-container">
+                <iframe id="looker-iframe" style="width: 100%; height: 100%; border: none;"></iframe>
+                <div class="iframe-overlay" id="iframe-overlay">
+                    <div class="loading-spinner"></div>
+                    <div style="color: white; text-align: center;">
+                        <div id="loading-message">Preparing to load iframe...</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-panel" id="status-panel">
+        <h3>📊 Loading Status</h3>
+        <div id="status-content">
+            <div class="status-item">Ready to test iframe loading detection...</div>
+        </div>
+    </div>
+
+    <script>
+        let currentTest = null;
+        let testStartTime = null;
+
+        // Simulate the improved iframe loading detection from app.js
+        async function waitForIframeLoad(maxWaitTime = 45000) {
+            return new Promise((resolve) => {
+                const iframe = document.getElementById('looker-iframe');
+                
+                if (!iframe) {
+                    console.error('Iframe not found');
+                    resolve(false);
+                    return;
+                }
+                
+                let loadTimeout;
+                let checkInterval;
+                let contentCheckInterval;
+                let hasResolved = false;
+                let iframeLoaded = false;
+                let contentRenderingStarted = false;
+                
+                const resolveOnce = (success) => {
+                    if (hasResolved) return;
+                    hasResolved = true;
+                    
+                    if (loadTimeout) clearTimeout(loadTimeout);
+                    if (checkInterval) clearInterval(checkInterval);
+                    if (contentCheckInterval) clearInterval(contentCheckInterval);
+                    
+                    resolve(success);
+                };
+                
+                // Update progress and status
+                const updateProgress = (percent, message) => {
+                    document.getElementById('progress-fill').style.width = percent + '%';
+                    document.getElementById('loading-message').textContent = message;
+                    updateStatus(message, 'loading');
+                };
+                
+                // Set maximum wait time
+                loadTimeout = setTimeout(() => {
+                    console.warn(`⏰ Iframe load timeout after ${maxWaitTime}ms`);
+                    updateStatus(`❌ Timeout after ${maxWaitTime/1000}s`, 'error');
+                    resolveOnce(false);
+                }, maxWaitTime);
+                
+                // Method 1: Wait for iframe load event first
+                const onLoad = () => {
+                    console.log('📊 Iframe load event fired - now waiting for content rendering...');
+                    iframeLoaded = true;
+                    updateProgress(30, 'Iframe loaded, waiting for content...');
+                    
+                    // Start checking for content rendering
+                    startContentRenderingCheck();
+                };
+                
+                const onError = () => {
+                    console.warn('📊 Iframe error event fired');
+                    updateStatus('❌ Iframe failed to load', 'error');
+                    resolveOnce(false);
+                };
+                
+                iframe.addEventListener('load', onLoad, { once: true });
+                iframe.addEventListener('error', onError, { once: true });
+                
+                // Method 2: Check for iframe src stability
+                let lastSrc = iframe.src;
+                let stableCount = 0;
+                const requiredStableChecks = 3;
+                
+                updateProgress(10, 'Monitoring iframe loading...');
+                
+                checkInterval = setInterval(() => {
+                    try {
+                        const currentSrc = iframe.src;
+                        
+                        if (currentSrc === lastSrc && currentSrc) {
+                            stableCount++;
+                            updateProgress(15 + (stableCount * 5), `Iframe stable (${stableCount}/${requiredStableChecks})`);
+                            
+                            if (stableCount >= requiredStableChecks && !iframeLoaded) {
+                                console.log('📊 Iframe appears to be loaded (src stable) - now waiting for content...');
+                                iframeLoaded = true;
+                                updateProgress(30, 'Iframe stable, waiting for content...');
+                                startContentRenderingCheck();
+                            }
+                        } else {
+                            stableCount = 0;
+                            lastSrc = currentSrc;
+                        }
+                        
+                    } catch (error) {
+                        console.warn('Error checking iframe status:', error);
+                    }
+                }, 1000);
+                
+                // Method 3: Enhanced content rendering detection
+                function startContentRenderingCheck() {
+                    if (contentRenderingStarted) return;
+                    contentRenderingStarted = true;
+                    
+                    console.log('📊 Starting content rendering detection...');
+                    updateProgress(35, 'Detecting content rendering...');
+                    
+                    let contentCheckCount = 0;
+                    let consecutiveReadyChecks = 0;
+                    const maxContentChecks = 30;
+                    const requiredConsecutiveChecks = 3;
+                    
+                    contentCheckInterval = setInterval(() => {
+                        contentCheckCount++;
+                        
+                        try {
+                            let contentReady = false;
+                            let readyReason = '';
+                            
+                            // Method A: Timing-based detection
+                            if (iframe.src && iframe.src === lastSrc) {
+                                if (contentCheckCount >= 5) {
+                                    contentReady = true;
+                                    readyReason = `content stable for ${contentCheckCount} seconds`;
+                                }
+                            }
+                            
+                            // Method B: Extended stability check
+                            if (contentCheckCount >= 10 && iframe.src === lastSrc) {
+                                contentReady = true;
+                                readyReason = `extended stability check (${contentCheckCount}s)`;
+                            }
+                            
+                            // Method C: Try to access iframe document
+                            try {
+                                if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+                                    const body = iframe.contentDocument.body;
+                                    if (body && body.children.length > 0) {
+                                        contentReady = true;
+                                        readyReason = 'iframe document has content';
+                                    }
+                                }
+                            } catch (crossOriginError) {
+                                // Expected for cross-origin iframes
+                            }
+                            
+                            const progressPercent = 35 + (contentCheckCount / maxContentChecks) * 60;
+                            
+                            if (contentReady) {
+                                consecutiveReadyChecks++;
+                                updateProgress(Math.min(95, progressPercent), 
+                                    `Content ready (${consecutiveReadyChecks}/${requiredConsecutiveChecks}): ${readyReason}`);
+                                
+                                if (consecutiveReadyChecks >= requiredConsecutiveChecks) {
+                                    console.log('📊 Content fully rendered and ready!');
+                                    updateProgress(100, '✅ Content fully loaded and ready!');
+                                    updateStatus('✅ Iframe and content fully loaded!', 'success');
+                                    
+                                    setTimeout(() => {
+                                        document.getElementById('iframe-overlay').classList.add('hidden');
+                                    }, 1000);
+                                    
+                                    resolveOnce(true);
+                                    return;
+                                }
+                            } else {
+                                consecutiveReadyChecks = 0;
+                                updateProgress(progressPercent, `Waiting for content... (${contentCheckCount}/${maxContentChecks})`);
+                            }
+                            
+                            if (contentCheckCount >= maxContentChecks) {
+                                console.warn('📊 Content rendering timeout - assuming ready');
+                                updateProgress(100, '⚠️ Content timeout - assuming ready');
+                                updateStatus('⚠️ Content timeout but continuing', 'success');
+                                
+                                setTimeout(() => {
+                                    document.getElementById('iframe-overlay').classList.add('hidden');
+                                }, 1000);
+                                
+                                resolveOnce(true);
+                            }
+                            
+                        } catch (error) {
+                            console.warn('Error checking content rendering:', error);
+                            consecutiveReadyChecks = 0;
+                        }
+                    }, 1000);
+                }
+                
+                console.log(`📊 Started waiting for iframe load and content rendering (max ${maxWaitTime}ms)...`);
+            });
+        }
+
+        // Test Looker loading (simulated)
+        async function testLookerLoading() {
+            if (currentTest) return;
+            
+            currentTest = 'looker';
+            testStartTime = Date.now();
+            
+            // Reset UI
+            document.getElementById('iframe-overlay').classList.remove('hidden');
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('loading-message').textContent = 'Starting Looker test...';
+            
+            // Disable buttons
+            setButtonsEnabled(false);
+            
+            updateStatus('🚀 Starting Looker loading test...', 'loading');
+            
+            // Simulate Looker URL (use a real one for actual testing)
+            const iframe = document.getElementById('looker-iframe');
+            iframe.src = 'https://lookerstudio.google.com/embed/reporting/sample-dashboard';
+            
+            try {
+                const success = await waitForIframeLoad(45000);
+                const duration = Date.now() - testStartTime;
+                
+                if (success) {
+                    updateStatus(`✅ Looker loaded successfully in ${duration}ms`, 'success');
+                } else {
+                    updateStatus(`❌ Looker failed to load within timeout`, 'error');
+                }
+                
+            } catch (error) {
+                updateStatus(`❌ Error during loading: ${error.message}`, 'error');
+            } finally {
+                currentTest = null;
+                setButtonsEnabled(true);
+            }
+        }
+
+        // Test Google loading (faster reference)
+        async function testGoogleLoading() {
+            if (currentTest) return;
+            
+            currentTest = 'google';
+            testStartTime = Date.now();
+            
+            // Reset UI
+            document.getElementById('iframe-overlay').classList.remove('hidden');
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('loading-message').textContent = 'Starting Google test...';
+            
+            setButtonsEnabled(false);
+            updateStatus('🚀 Starting Google loading test...', 'loading');
+            
+            const iframe = document.getElementById('looker-iframe');
+            iframe.src = 'https://www.google.com/search?q=test&igu=1';
+            
+            try {
+                const success = await waitForIframeLoad(30000);
+                const duration = Date.now() - testStartTime;
+                
+                if (success) {
+                    updateStatus(`✅ Google loaded successfully in ${duration}ms`, 'success');
+                } else {
+                    updateStatus(`❌ Google failed to load within timeout`, 'error');
+                }
+                
+            } catch (error) {
+                updateStatus(`❌ Error during loading: ${error.message}`, 'error');
+            } finally {
+                currentTest = null;
+                setButtonsEnabled(true);
+            }
+        }
+
+        // Simulate cycling behavior
+        async function simulateCycling() {
+            updateStatus('🔄 Simulating cycling behavior...', 'loading');
+            
+            // Test multiple loads in sequence
+            for (let i = 0; i < 3; i++) {
+                updateStatus(`🔄 Cycle ${i + 1}/3 - Loading content...`, 'loading');
+                await testLookerLoading();
+                
+                if (i < 2) {
+                    updateStatus(`⏸️ Waiting 5 seconds before next cycle...`, 'loading');
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                }
+            }
+            
+            updateStatus('✅ Cycling simulation complete', 'success');
+        }
+
+        // Clear test
+        function clearTest() {
+            const iframe = document.getElementById('looker-iframe');
+            iframe.src = '';
+            
+            document.getElementById('iframe-overlay').classList.remove('hidden');
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('loading-message').textContent = 'Test cleared';
+            
+            updateStatus('🗑️ Test cleared', 'success');
+            currentTest = null;
+            setButtonsEnabled(true);
+        }
+
+        // Update status panel
+        function updateStatus(message, type = '') {
+            const content = document.getElementById('status-content');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'success' ? 'status-success' : 
+                             type === 'loading' ? 'status-loading' : 
+                             type === 'error' ? 'status-error' : '';
+            
+            const statusItem = document.createElement('div');
+            statusItem.className = `status-item ${colorClass}`;
+            statusItem.innerHTML = `[${timestamp}] ${message}`;
+            
+            content.appendChild(statusItem);
+            
+            // Keep only last 10 status items
+            while (content.children.length > 10) {
+                content.removeChild(content.firstChild);
+            }
+            
+            // Scroll to bottom
+            content.scrollTop = content.scrollHeight;
+        }
+
+        // Enable/disable buttons
+        function setButtonsEnabled(enabled) {
+            const buttons = document.querySelectorAll('.test-controls button');
+            buttons.forEach(button => {
+                button.disabled = !enabled;
+            });
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🔄 Improved iframe loading test initialized');
+            updateStatus('Ready to test improved iframe loading detection', 'success');
+        });
+    </script>
+</body>
+</html>

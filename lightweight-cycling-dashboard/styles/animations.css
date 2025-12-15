@@ -136,27 +136,27 @@
 }
 
 .spaceship:hover .spaceship-image {
-    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.6)) 
-            drop-shadow(0 0 25px rgba(83, 52, 131, 0.4))
-            drop-shadow(0 0 35px rgba(255, 255, 255, 0.2));
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6)) 
+            drop-shadow(0 0 12.5px rgba(83, 52, 131, 0.4))
+            drop-shadow(0 0 17.5px rgba(255, 255, 255, 0.2));
 }
 
 .spaceship:hover .player-info {
     transform: scale(1.05);
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }
 
 /* Special hover effects for top 3 */
 .spaceship.rank-1:hover .spaceship-image {
-    filter: drop-shadow(0 0 15px #ffd700) drop-shadow(0 0 30px #ffd700) drop-shadow(0 0 45px rgba(255, 215, 0, 0.3));
+    filter: drop-shadow(0 0 7.5px #ffd700) drop-shadow(0 0 15px #ffd700) drop-shadow(0 0 22.5px rgba(255, 215, 0, 0.3));
 }
 
 .spaceship.rank-2:hover .spaceship-image {
-    filter: drop-shadow(0 0 12px #c0c0c0) drop-shadow(0 0 25px #c0c0c0) drop-shadow(0 0 35px rgba(192, 192, 192, 0.3));
+    filter: drop-shadow(0 0 6px #c0c0c0) drop-shadow(0 0 12.5px #c0c0c0) drop-shadow(0 0 17.5px rgba(192, 192, 192, 0.3));
 }
 
 .spaceship.rank-3:hover .spaceship-image {
-    filter: drop-shadow(0 0 10px #cd7f32) drop-shadow(0 0 20px #cd7f32) drop-shadow(0 0 30px rgba(205, 127, 50, 0.3));
+    filter: drop-shadow(0 0 5px #cd7f32) drop-shadow(0 0 10px #cd7f32) drop-shadow(0 0 15px rgba(205, 127, 50, 0.3));
 }
 
 /* Enhanced ranking position animations */
@@ -182,37 +182,37 @@
 
 @keyframes goldGlow {
     0% {
-        filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 20px #ffd700) drop-shadow(0 0 30px rgba(255, 215, 0, 0.2));
+        filter: drop-shadow(0 0 5px #ffd700) drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 15px rgba(255, 215, 0, 0.2));
     }
     100% {
-        filter: drop-shadow(0 0 18px #ffd700) drop-shadow(0 0 35px #ffd700) drop-shadow(0 0 50px rgba(255, 215, 0, 0.3));
+        filter: drop-shadow(0 0 9px #ffd700) drop-shadow(0 0 17.5px #ffd700) drop-shadow(0 0 25px rgba(255, 215, 0, 0.3));
     }
 }
 
 @keyframes silverGlow {
     0% {
-        filter: drop-shadow(0 0 9px #c0c0c0) drop-shadow(0 0 18px #c0c0c0) drop-shadow(0 0 25px rgba(192, 192, 192, 0.2));
+        filter: drop-shadow(0 0 4.5px #c0c0c0) drop-shadow(0 0 9px #c0c0c0) drop-shadow(0 0 12.5px rgba(192, 192, 192, 0.2));
     }
     100% {
-        filter: drop-shadow(0 0 15px #c0c0c0) drop-shadow(0 0 30px #c0c0c0) drop-shadow(0 0 40px rgba(192, 192, 192, 0.3));
+        filter: drop-shadow(0 0 7.5px #c0c0c0) drop-shadow(0 0 15px #c0c0c0) drop-shadow(0 0 20px rgba(192, 192, 192, 0.3));
     }
 }
 
 @keyframes bronzeGlow {
     0% {
-        filter: drop-shadow(0 0 8px #cd7f32) drop-shadow(0 0 15px #cd7f32) drop-shadow(0 0 22px rgba(205, 127, 50, 0.2));
+        filter: drop-shadow(0 0 4px #cd7f32) drop-shadow(0 0 7.5px #cd7f32) drop-shadow(0 0 11px rgba(205, 127, 50, 0.2));
     }
     100% {
-        filter: drop-shadow(0 0 12px #cd7f32) drop-shadow(0 0 25px #cd7f32) drop-shadow(0 0 35px rgba(205, 127, 50, 0.3));
+        filter: drop-shadow(0 0 6px #cd7f32) drop-shadow(0 0 12.5px #cd7f32) drop-shadow(0 0 17.5px rgba(205, 127, 50, 0.3));
     }
 }
 
 @keyframes subtleGlow {
     0% {
-        filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.15)) drop-shadow(0 0 10px rgba(83, 52, 131, 0.2));
+        filter: drop-shadow(0 0 2.5px rgba(255, 255, 255, 0.15)) drop-shadow(0 0 5px rgba(83, 52, 131, 0.2));
     }
     100% {
-        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2)) drop-shadow(0 0 15px rgba(83, 52, 131, 0.3));
+        filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2)) drop-shadow(0 0 7.5px rgba(83, 52, 131, 0.3));
     }
 }
 

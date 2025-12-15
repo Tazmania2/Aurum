@@ -645,8 +645,8 @@ class App {
         }
     }
     
-    // Wait for iframe to load completely
-    async waitForIframeLoad(maxWaitTime = 25000) {
+    // Wait for iframe to load completely AND for Looker content to render
+    async waitForIframeLoad(maxWaitTime = 45000) { // Increased timeout for Looker content rendering
         return new Promise((resolve) => {
             const iframe = document.getElementById('looker-iframe');
             
@@ -658,7 +658,10 @@ class App {
             
             let loadTimeout;
             let checkInterval;
+            let contentCheckInterval;
             let hasResolved = false;
+            let iframeLoaded = false;
+            let contentRenderingStarted = false;
             
             const resolveOnce = (success) => {
                 if (hasResolved) return;
@@ -666,6 +669,7 @@ class App {
                 
                 if (loadTimeout) clearTimeout(loadTimeout);
                 if (checkInterval) clearInterval(checkInterval);
+                if (contentCheckInterval) clearInterval(contentCheckInterval);
                 
                 resolve(success);
             };
@@ -676,10 +680,14 @@ class App {
                 resolveOnce(false);
             }, maxWaitTime);
             
-            // Method 1: Try to use iframe load event (may not work for cross-origin)
+            // Method 1: Wait for iframe load event first
             const onLoad = () => {
-                console.log('📊 Iframe load event fired');
-                resolveOnce(true);
+                console.log('📊 Iframe load event fired - now waiting for content rendering...');
+                iframeLoaded = true;
+                
+                // Don't resolve immediately - wait for content to render
+                // Start checking for Looker content rendering
+                startContentRenderingCheck();
             };
             
             const onError = () => {
@@ -690,10 +698,10 @@ class App {
             iframe.addEventListener('load', onLoad, { once: true });
             iframe.addEventListener('error', onError, { once: true });
             
-            // Method 2: Check for iframe content changes (fallback for cross-origin)
+            // Method 2: Check for iframe src stability (basic loading detection)
             let lastSrc = iframe.src;
             let stableCount = 0;
-            const requiredStableChecks = 5; // Need 5 stable checks to consider loaded (more reliable)
+            const requiredStableChecks = 3; // Reduced since we have better content detection
             
             console.log(`📊 Starting iframe monitoring - initial src: ${lastSrc.substring(0, 100)}...`);
             
@@ -706,23 +714,14 @@ class App {
                         stableCount++;
                         console.log(`📊 Iframe src stable (${stableCount}/${requiredStableChecks}): ${currentSrc.substring(0, 100)}...`);
                         
-                        if (stableCount >= requiredStableChecks) {
-                            console.log('📊 Iframe appears to be loaded (src stable)');
-                            resolveOnce(true);
+                        if (stableCount >= requiredStableChecks && !iframeLoaded) {
+                            console.log('📊 Iframe appears to be loaded (src stable) - now waiting for content...');
+                            iframeLoaded = true;
+                            startContentRenderingCheck();
                         }
                     } else {
                         stableCount = 0;
                         lastSrc = currentSrc;
-                    }
-                    
-                    // Additional check: try to access iframe properties (may fail for cross-origin)
-                    try {
-                        if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
-                            console.log('📊 Iframe content document ready');
-                            resolveOnce(true);
-                        }
-                    } catch (crossOriginError) {
-                        // Expected for cross-origin iframes, continue with other methods
                     }
                     
                 } catch (error) {
@@ -730,7 +729,84 @@ class App {
                 }
             }, 1000); // Check every second
             
-            console.log(`📊 Started waiting for iframe load (max ${maxWaitTime}ms)...`);
+            // Method 3: Enhanced content rendering detection
+            function startContentRenderingCheck() {
+                if (contentRenderingStarted) return;
+                contentRenderingStarted = true;
+                
+                console.log('📊 Starting Looker content rendering detection...');
+                
+                let contentCheckCount = 0;
+                let consecutiveReadyChecks = 0;
+                const maxContentChecks = 30; // 30 seconds max for content rendering
+                const requiredConsecutiveChecks = 3; // Need 3 consecutive "ready" checks
+                
+                contentCheckInterval = setInterval(() => {
+                    contentCheckCount++;
+                    
+                    try {
+                        // Multiple methods to detect if Looker content is ready
+                        let contentReady = false;
+                        let readyReason = '';
+                        
+                        // Method A: Check if iframe has finished loading and is stable
+                        if (iframe.src && iframe.src === lastSrc) {
+                            // Method B: Use a combination of timing and stability
+                            // Looker typically takes 5-15 seconds after iframe load to render content
+                            if (contentCheckCount >= 5) { // At least 5 seconds after iframe load
+                                contentReady = true;
+                                readyReason = `content stable for ${contentCheckCount} seconds`;
+                            }
+                        }
+                        
+                        // Method C: Try to detect if iframe is "busy" loading (heuristic)
+                        // If we've been checking for a while and iframe is stable, assume ready
+                        if (contentCheckCount >= 10 && iframe.src === lastSrc) {
+                            contentReady = true;
+                            readyReason = `extended stability check (${contentCheckCount}s)`;
+                        }
+                        
+                        // Method D: Try to access iframe document (may fail for cross-origin)
+                        try {
+                            if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+                                const body = iframe.contentDocument.body;
+                                if (body && body.children.length > 0) {
+                                    contentReady = true;
+                                    readyReason = 'iframe document has content';
+                                }
+                            }
+                        } catch (crossOriginError) {
+                            // Expected for cross-origin iframes, continue with other methods
+                        }
+                        
+                        if (contentReady) {
+                            consecutiveReadyChecks++;
+                            console.log(`📊 Looker content appears ready (${consecutiveReadyChecks}/${requiredConsecutiveChecks}): ${readyReason}`);
+                            
+                            if (consecutiveReadyChecks >= requiredConsecutiveChecks) {
+                                console.log('📊 Looker content fully rendered and ready!');
+                                resolveOnce(true);
+                                return;
+                            }
+                        } else {
+                            consecutiveReadyChecks = 0;
+                            console.log(`📊 Waiting for Looker content... (${contentCheckCount}/${maxContentChecks})`);
+                        }
+                        
+                        // Timeout for content rendering
+                        if (contentCheckCount >= maxContentChecks) {
+                            console.warn('📊 Content rendering timeout - assuming ready');
+                            resolveOnce(true);
+                        }
+                        
+                    } catch (error) {
+                        console.warn('Error checking content rendering:', error);
+                        consecutiveReadyChecks = 0;
+                    }
+                }, 1000); // Check every second
+            }
+            
+            console.log(`📊 Started waiting for iframe load and content rendering (max ${maxWaitTime}ms)...`);
         });
     }
     

@@ -63,7 +63,7 @@ html, body {
     font-weight: 900;
     text-align: center;
     margin-bottom: 30px;
-    text-shadow: 0 0 20px rgba(83, 52, 131, 0.8), 0 0 40px rgba(83, 52, 131, 0.4), 0 0 60px rgba(255, 255, 255, 0.2);
+    text-shadow: 0 0 10px rgba(83, 52, 131, 0.8), 0 0 20px rgba(83, 52, 131, 0.4), 0 0 30px rgba(255, 255, 255, 0.2);
     color: #fff;
     background: linear-gradient(45deg, #fff, #ffd700, #fff);
     background-size: 200% 200%;
@@ -116,7 +116,7 @@ html, body {
     width: 160px;
     height: 160px;
     object-fit: contain;
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+    filter: drop-shadow(0 0 2.5px rgba(255, 255, 255, 0.2));
 }
 
 .player-info {
@@ -127,7 +127,7 @@ html, body {
     border-radius: 12px;
     border: 2px solid rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 7.5px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease;
 }
 
@@ -151,20 +151,20 @@ html, body {
 .spaceship.rank-1 .spaceship-image {
     width: 190px;
     height: 190px;
-    filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 20px #ffd700) drop-shadow(0 0 30px rgba(255, 215, 0, 0.2));
+    filter: drop-shadow(0 0 5px #ffd700) drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 15px rgba(255, 215, 0, 0.2));
 }
 
 .spaceship.rank-1 .player-info {
     border: 2px solid #ffd700;
     background: rgba(0, 0, 0, 0.9);
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), 0 4px 15px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4), 0 2px 7.5px rgba(0, 0, 0, 0.7);
     padding: 12px 18px;
 }
 
 .spaceship.rank-1 .player-name {
     color: #ffd700;
     font-weight: 900;
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
 }
 
 .spaceship.rank-1 .player-score {
@@ -179,20 +179,20 @@ html, body {
 .spaceship.rank-2 .spaceship-image {
     width: 176px;
     height: 176px;
-    filter: drop-shadow(0 0 9px #c0c0c0) drop-shadow(0 0 18px #c0c0c0) drop-shadow(0 0 25px rgba(192, 192, 192, 0.2));
+    filter: drop-shadow(0 0 4.5px #c0c0c0) drop-shadow(0 0 9px #c0c0c0) drop-shadow(0 0 12.5px rgba(192, 192, 192, 0.2));
 }
 
 .spaceship.rank-2 .player-info {
     border: 2px solid #c0c0c0;
     background: rgba(0, 0, 0, 0.9);
-    box-shadow: 0 0 15px rgba(192, 192, 192, 0.4), 0 4px 15px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 7.5px rgba(192, 192, 192, 0.4), 0 2px 7.5px rgba(0, 0, 0, 0.7);
     padding: 12px 18px;
 }
 
 .spaceship.rank-2 .player-name {
     color: #c0c0c0;
     font-weight: 800;
-    text-shadow: 0 0 8px rgba(192, 192, 192, 0.6);
+    text-shadow: 0 0 4px rgba(192, 192, 192, 0.6);
 }
 
 .spaceship.rank-3 {
@@ -202,31 +202,31 @@ html, body {
 .spaceship.rank-3 .spaceship-image {
     width: 170px;
     height: 170px;
-    filter: drop-shadow(0 0 8px #cd7f32) drop-shadow(0 0 15px #cd7f32) drop-shadow(0 0 22px rgba(205, 127, 50, 0.2));
+    filter: drop-shadow(0 0 4px #cd7f32) drop-shadow(0 0 7.5px #cd7f32) drop-shadow(0 0 11px rgba(205, 127, 50, 0.2));
 }
 
 .spaceship.rank-3 .player-info {
     border: 2px solid #cd7f32;
     background: rgba(0, 0, 0, 0.9);
-    box-shadow: 0 0 12px rgba(205, 127, 50, 0.4), 0 4px 15px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 6px rgba(205, 127, 50, 0.4), 0 2px 7.5px rgba(0, 0, 0, 0.7);
     padding: 12px 18px;
 }
 
 .spaceship.rank-3 .player-name {
     color: #cd7f32;
     font-weight: 700;
-    text-shadow: 0 0 6px rgba(205, 127, 50, 0.6);
+    text-shadow: 0 0 3px rgba(205, 127, 50, 0.6);
 }
 
 /* Other positions styling */
 .spaceship.rank-other .spaceship-image {
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.15)) drop-shadow(0 0 10px rgba(83, 52, 131, 0.2));
+    filter: drop-shadow(0 0 2.5px rgba(255, 255, 255, 0.15)) drop-shadow(0 0 5px rgba(83, 52, 131, 0.2));
 }
 
 .spaceship.rank-other .player-info {
     border: 2px solid rgba(255, 255, 255, 0.3);
     background: rgba(0, 0, 0, 0.9);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 2px 7.5px rgba(0, 0, 0, 0.7);
     padding: 12px 18px;
 }
 

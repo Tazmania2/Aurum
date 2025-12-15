@@ -292,55 +292,55 @@ class RankingRenderer {
         containerHeight = containerHeight || 600;
         
         // SPACE RACE POSITIONING: X-axis determines position (1st place = rightmost)
-        // TRIPLED margins as requested (180px → 540px, 80px → 240px)
-        const baseMargin = 540; // Tripled from 180
+        // Remove left margin, keep right margin for safety
+        const rightMargin = 540; // Keep right margin for safety
         const spaceshipSize = position === 1 ? 190 : position === 2 ? 176 : position === 3 ? 170 : 160;
-        const dynamicMargin = Math.max(baseMargin, spaceshipSize / 2 + 240); // Tripled buffer from 80 to 240
+        const dynamicRightMargin = Math.max(rightMargin, spaceshipSize / 2 + 240);
         
-        const raceWidth = containerWidth - (dynamicMargin * 2);
+        const raceWidth = containerWidth - dynamicRightMargin; // Only subtract right margin
         
         // Position 1 (1st place) should be rightmost, higher positions move left
         // Invert the position calculation: lower position number = further right
         const normalizedPosition = (position - 1) / Math.max(totalPlayers - 1, 1);
-        const x = dynamicMargin + raceWidth * (1 - normalizedPosition); // Invert: 1st place = rightmost
+        const x = raceWidth * (1 - normalizedPosition); // Start from left edge (0), no left margin
         
-        // Y position: Better centering for first player, with variation for others
-        const centerY = containerHeight / 2;
+        // Y position: Better centering for first player, with variation for others (reduced by 20%)
+        const centerY = (containerHeight / 2) * 0.8; // Reduce Y by 20%
         
         if (position === 1) {
-            // First player: perfectly centered on Y-axis
+            // First player: perfectly centered on Y-axis (reduced by 20%)
             const y = centerY;
             
-            // Ensure first player stays within safe bounds
+            // Ensure first player stays within safe bounds (remove top margin)
             const playerInfoHeight = 100;
-            const safeTopMargin = Math.max(360, spaceshipSize / 2 + 120); // Tripled margins (120 → 360)
-            const safeBottomMargin = Math.max(540, spaceshipSize / 2 + playerInfoHeight + 120); // Tripled (180 → 540)
+            const safeTopMargin = Math.max(0, spaceshipSize / 2); // Remove top margin, just keep spaceship visible
+            const safeBottomMargin = Math.max(540, spaceshipSize / 2 + playerInfoHeight + 120); // Keep bottom margin
             
             const safeY = Math.max(safeTopMargin, Math.min(containerHeight - safeBottomMargin, y));
             
-            // Ensure X position keeps spaceship fully visible with tripled buffer
-            const horizontalBuffer = 120; // Tripled from 40
-            const safeX = Math.max(spaceshipSize / 2 + horizontalBuffer, Math.min(x, containerWidth - spaceshipSize / 2 - horizontalBuffer));
+            // Ensure X position keeps spaceship fully visible (remove left buffer, keep right)
+            const rightBuffer = 120; // Keep right buffer
+            const safeX = Math.max(spaceshipSize / 2, Math.min(x, containerWidth - spaceshipSize / 2 - rightBuffer)); // No left buffer
             
             return { 
                 x: safeX, 
                 y: safeY 
             };
         } else {
-            // Other players: add some variation but keep reasonable
-            const yVariation = Math.min(50, containerHeight * 0.12); // Keep variation reasonable
+            // Other players: add some variation but keep reasonable (reduced by 20%)
+            const yVariation = Math.min(50, containerHeight * 0.12) * 0.8; // Reduce variation by 20%
             const yOffset = (Math.sin(position * 2.5) * yVariation) + (Math.cos(position * 1.7) * yVariation * 0.5);
             
-            // Calculate safe Y bounds with tripled margins
+            // Calculate safe Y bounds (remove top margin, keep bottom)
             const playerInfoHeight = 100;
-            const safeTopMargin = Math.max(360, spaceshipSize / 2 + 120); // Tripled margins
-            const safeBottomMargin = Math.max(540, spaceshipSize / 2 + playerInfoHeight + 120); // Tripled margins
+            const safeTopMargin = Math.max(0, spaceshipSize / 2); // Remove top margin, just keep spaceship visible
+            const safeBottomMargin = Math.max(540, spaceshipSize / 2 + playerInfoHeight + 120); // Keep bottom margin
             
             const y = Math.max(safeTopMargin, Math.min(containerHeight - safeBottomMargin, centerY + yOffset));
             
-            // Ensure X position keeps spaceship fully visible with tripled buffer
-            const horizontalBuffer = 120; // Tripled from 40
-            const safeX = Math.max(spaceshipSize / 2 + horizontalBuffer, Math.min(x, containerWidth - spaceshipSize / 2 - horizontalBuffer));
+            // Ensure X position keeps spaceship fully visible (remove left buffer, keep right)
+            const rightBuffer = 120; // Keep right buffer
+            const safeX = Math.max(spaceshipSize / 2, Math.min(x, containerWidth - spaceshipSize / 2 - rightBuffer)); // No left buffer
             
             return { 
                 x: safeX, 

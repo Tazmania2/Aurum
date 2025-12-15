@@ -17,13 +17,24 @@ class CycleManager {
             return;
         }
         
-        console.log(`Starting view cycling with ${this.intervalMs}ms interval`);
+        console.log(`🚀 Starting view cycling with ${this.intervalMs}ms interval`);
         this.isRunning = true;
         
-        // Start the interval
+        // Start the interval with enhanced error handling
         this.intervalId = setInterval(() => {
-            this.nextView();
+            try {
+                console.log(`⏰ Interval triggered - about to call nextView()`);
+                this.nextView();
+                console.log(`✅ nextView() completed successfully`);
+            } catch (error) {
+                console.error('❌ Critical error in cycle interval:', error);
+                console.error('❌ Error stack:', error.stack);
+                // Don't stop cycling - log error and continue
+                console.log('🔄 Continuing cycle despite interval error');
+            }
         }, this.intervalMs);
+        
+        console.log(`🚀 Cycle manager started with interval ID: ${this.intervalId}`);
     }
     
     stop() {
@@ -42,6 +53,7 @@ class CycleManager {
     
     nextView() {
         if (!this.isRunning) {
+            console.log('Cycle manager not running, skipping view change');
             return;
         }
         
@@ -49,7 +61,8 @@ class CycleManager {
         this.currentIndex = (this.currentIndex + 1) % this.views.length;
         const nextView = this.views[this.currentIndex];
         
-        console.log(`Cycling to view ${this.currentIndex}: ${nextView.id}`);
+        console.log(`🔄 Cycling to view ${this.currentIndex}: ${nextView.id} (${nextView.type})`);
+        console.log(`🔄 Cycle manager status: running=${this.isRunning}, interval=${this.intervalMs}ms`);
         
         // Update app state
         if (this.appState) {
@@ -60,14 +73,20 @@ class CycleManager {
         if (this.onViewChangeCallback && typeof this.onViewChangeCallback === 'function') {
             try {
                 // Use Promise.resolve to handle both sync and async callbacks
+                // Don't await - let it run asynchronously to prevent blocking the cycle
                 Promise.resolve(this.onViewChangeCallback(nextView))
+                    .then(() => {
+                        console.log(`View change callback completed for ${nextView.id}`);
+                    })
                     .catch(error => {
                         console.error('Error in view change callback:', error);
+                        console.error('Error details:', error.message, error.stack);
                         // Continue cycling despite callback errors
                         console.log('Continuing view cycling despite callback error');
                     });
             } catch (error) {
                 console.error('Synchronous error in view change callback:', error);
+                console.error('Error details:', error.message, error.stack);
                 // Continue cycling despite callback errors
                 console.log('Continuing view cycling despite synchronous callback error');
             }

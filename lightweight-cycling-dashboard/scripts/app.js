@@ -416,6 +416,9 @@ class App {
         // Start automatic cycling - implements Requirements 1.2, 1.3, 1.5
         this.cycleManager.start();
         
+        // Add cycling watchdog to prevent getting stuck
+        this.startCyclingWatchdog();
+        
         console.log('Application started successfully');
     }
     
@@ -509,6 +512,13 @@ class App {
             this.animationFrameId = null;
         }
         
+        // Clear watchdog timer
+        if (this.watchdogTimer) {
+            clearInterval(this.watchdogTimer);
+            this.watchdogTimer = null;
+            console.log('Watchdog timer cleared');
+        }
+        
         console.log('All timers and animation frames cleared');
     }
     
@@ -594,26 +604,33 @@ class App {
             const refreshSuccess = this.refreshLookerIframe();
             
             if (!refreshSuccess) {
-                throw new Error('Failed to refresh Looker iframe');
+                console.warn('Failed to refresh Looker iframe, showing error state');
+                this.showLookerError(viewConfig, new Error('Failed to refresh Looker iframe'));
+                return; // Don't throw - allow cycling to continue
             }
             
-            // Wait a moment for iframe to start loading
-            await this.delay(500);
+            // Don't wait for iframe loading - let it load asynchronously
+            // This prevents blocking the view cycling
+            console.log('Looker iframe refresh initiated, continuing cycle');
             
-            // Check if iframe loaded successfully (basic check)
-            const iframe = document.getElementById('looker-iframe');
-            if (!iframe || !iframe.src) {
-                throw new Error('Looker iframe not properly configured');
-            }
+            // Optional: Check iframe configuration without blocking
+            setTimeout(() => {
+                const iframe = document.getElementById('looker-iframe');
+                if (!iframe || !iframe.src) {
+                    console.warn('Looker iframe not properly configured after refresh');
+                    this.showLookerError(viewConfig, new Error('Looker iframe not properly configured'));
+                }
+            }, 1000);
             
-            console.log('Looker view loaded successfully');
+            console.log('Looker view load initiated successfully');
             
         } catch (error) {
             console.error('Failed to load Looker view:', error);
             
-            // Show fallback content for Looker errors
+            // Show fallback content for Looker errors but don't throw
             this.showLookerError(viewConfig, error);
-            throw error; // Re-throw to be handled by onViewChange
+            console.log('Continuing cycle despite Looker error');
+            // Don't re-throw - allow cycling to continue
         }
     }
     
@@ -899,6 +916,82 @@ class App {
     handleBeforeUnload() {
         console.log('Page unloading, cleaning up resources...');
         this.cleanup();
+    }
+    
+    // Cycling watchdog to prevent getting stuck
+    startCyclingWatchdog() {
+        let lastViewIndex = -1;
+        let stuckCount = 0;
+        const maxStuckCount = 3;
+        const watchdogInterval = Math.max(this.cycleInterval * 1.5, 10000); // 1.5x cycle time or 10s minimum
+        
+        this.watchdogTimer = setInterval(() => {
+            if (!this.appState || !this.cycleManager) {
+                return;
+            }
+            
+            const currentIndex = this.appState.currentViewIndex;
+            const isRunning = this.cycleManager.isRunning;
+            
+            console.log(`🐕 Watchdog check: view=${currentIndex}, running=${isRunning}, stuck=${stuckCount}`);
+            
+            if (isRunning && currentIndex === lastViewIndex) {
+                stuckCount++;
+                console.warn(`⚠️ Cycling may be stuck (count: ${stuckCount}/${maxStuckCount})`);
+                
+                if (stuckCount >= maxStuckCount) {
+                    console.error('🚨 Cycling is stuck! Attempting recovery...');
+                    this.recoverStuckCycling();
+                    stuckCount = 0;
+                }
+            } else {
+                stuckCount = 0;
+            }
+            
+            lastViewIndex = currentIndex;
+        }, watchdogInterval);
+        
+        console.log(`🐕 Cycling watchdog started (${watchdogInterval}ms interval)`);
+    }
+    
+    // Recover from stuck cycling
+    recoverStuckCycling() {
+        try {
+            console.log('🔧 Attempting to recover stuck cycling...');
+            
+            // Stop current cycling
+            if (this.cycleManager) {
+                this.cycleManager.stop();
+            }
+            
+            // Force move to next view
+            const nextIndex = (this.appState.currentViewIndex + 1) % this.appState.views.length;
+            this.appState.setCurrentViewIndex(nextIndex);
+            const nextView = this.appState.getCurrentView();
+            
+            console.log(`🔧 Forcing view change to: ${nextView.id}`);
+            
+            // Manually trigger view change
+            this.onViewChange(nextView).catch(error => {
+                console.error('Error in recovery view change:', error);
+            });
+            
+            // Restart cycling after a delay
+            setTimeout(() => {
+                if (this.cycleManager) {
+                    console.log('🔧 Restarting cycling after recovery');
+                    this.cycleManager.start();
+                }
+            }, 2000);
+            
+        } catch (error) {
+            console.error('🚨 Failed to recover stuck cycling:', error);
+            // Last resort: reload the page
+            setTimeout(() => {
+                console.error('🚨 Reloading page as last resort...');
+                window.location.reload();
+            }, 5000);
+        }
     }
 }
 

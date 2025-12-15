@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycling Fix Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .view {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 2rem;
+        }
+        .view.active {
+            display: flex;
+        }
+        #looker-view {
+            background: #2d1b69;
+        }
+        #ranking-1 {
+            background: #4a2c8f;
+        }
+        #ranking-2 {
+            background: #6b46c1;
+        }
+        #ranking-3 {
+            background: #8b5cf6;
+        }
+        iframe {
+            width: 80%;
+            height: 60%;
+            border: 2px solid white;
+            background: white;
+        }
+        .debug-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .debug-panel h3 {
+            margin: 0 0 10px 0;
+            color: #4ade80;
+        }
+        .debug-panel div {
+            margin: 5px 0;
+        }
+        .status-running {
+            color: #4ade80;
+        }
+        .status-error {
+            color: #ef4444;
+        }
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        .controls button {
+            margin: 5px;
+            padding: 10px 15px;
+            background: #4ade80;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #22c55e;
+        }
+    </style>
+</head>
+<body>
+    <!-- Debug Panel -->
+    <div class="debug-panel">
+        <h3>🔍 Cycling Debug</h3>
+        <div>Status: <span id="cycle-status" class="status-running">Starting...</span></div>
+        <div>Current View: <span id="current-view">-</span></div>
+        <div>View Index: <span id="view-index">-</span></div>
+        <div>Interval: <span id="interval-time">-</span></div>
+        <div>Last Update: <span id="last-update">-</span></div>
+        <div>Errors: <span id="error-count">0</span></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button onclick="testCycling()">🔄 Test Cycle</button>
+        <button onclick="stopCycling()">⏹️ Stop</button>
+        <button onclick="startCycling()">▶️ Start</button>
+        <button onclick="nextView()">⏭️ Next</button>
+    </div>
+
+    <!-- Views -->
+    <div id="looker-view" class="view active">
+        <h1>📊 BI Dashboard (Looker)</h1>
+        <iframe id="looker-iframe" src="https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF"></iframe>
+        <p>This view should not block cycling</p>
+    </div>
+
+    <div id="ranking-1" class="view">
+        <h1>🏆 Ranking 1 - Vendedores</h1>
+        <div>Simulated ranking data loading...</div>
+    </div>
+
+    <div id="ranking-2" class="view">
+        <h1>🏆 Ranking 2 - Indicações</h1>
+        <div>Simulated ranking data loading...</div>
+    </div>
+
+    <div id="ranking-3" class="view">
+        <h1>🏆 Ranking 3 - SDRs</h1>
+        <div>Simulated ranking data loading...</div>
+    </div>
+
+    <!-- Load Scripts -->
+    <script src="scripts/cycle-manager.js"></script>
+    <script>
+        // Test application state
+        class TestAppState {
+            constructor() {
+                this.currentViewIndex = 0;
+                this.views = [
+                    { id: 'looker-view', type: 'looker' },
+                    { id: 'ranking-1', type: 'ranking' },
+                    { id: 'ranking-2', type: 'ranking' },
+                    { id: 'ranking-3', type: 'ranking' }
+                ];
+            }
+            
+            setCurrentViewIndex(index) {
+                this.currentViewIndex = index;
+                updateDebugPanel();
+            }
+            
+            getCurrentView() {
+                return this.views[this.currentViewIndex];
+            }
+        }
+
+        // Test view controller
+        class TestViewController {
+            hideAllViews() {
+                document.querySelectorAll('.view').forEach(view => {
+                    view.classList.remove('active');
+                });
+            }
+            
+            showView(viewId) {
+                const view = document.getElementById(viewId);
+                if (view) {
+                    view.classList.add('active');
+                    console.log(`✅ Showing view: ${viewId}`);
+                }
+            }
+        }
+
+        // Initialize test components
+        const appState = new TestAppState();
+        const viewController = new TestViewController();
+        let cycleManager = null;
+        let errorCount = 0;
+
+        // View change callback with error simulation
+        async function onViewChange(viewConfig) {
+            try {
+                console.log(`🔄 View change to: ${viewConfig.id} (${viewConfig.type})`);
+                
+                // Hide all views
+                viewController.hideAllViews();
+                
+                // Simulate different loading behaviors
+                if (viewConfig.type === 'looker') {
+                    console.log('📊 Loading Looker view...');
+                    // Simulate potential iframe issues without blocking
+                    setTimeout(() => {
+                        console.log('📊 Looker iframe loaded (simulated)');
+                    }, 500);
+                } else if (viewConfig.type === 'ranking') {
+                    console.log('🏆 Loading ranking view...');
+                    // Simulate API call
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    console.log('🏆 Ranking data loaded (simulated)');
+                }
+                
+                // Show the view
+                viewController.showView(viewConfig.id);
+                
+                updateDebugPanel();
+                
+            } catch (error) {
+                console.error('❌ Error in view change:', error);
+                errorCount++;
+                updateDebugPanel();
+                
+                // Still show the view to maintain cycling
+                viewController.showView(viewConfig.id);
+            }
+        }
+
+        // Update debug panel
+        function updateDebugPanel() {
+            const currentView = appState.getCurrentView();
+            document.getElementById('current-view').textContent = currentView.id;
+            document.getElementById('view-index').textContent = appState.currentViewIndex;
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+            document.getElementById('error-count').textContent = errorCount;
+            
+            if (cycleManager) {
+                document.getElementById('cycle-status').textContent = cycleManager.isRunning ? 'Running' : 'Stopped';
+                document.getElementById('cycle-status').className = cycleManager.isRunning ? 'status-running' : 'status-error';
+                document.getElementById('interval-time').textContent = cycleManager.intervalMs + 'ms';
+            }
+        }
+
+        // Control functions
+        function testCycling() {
+            console.log('🧪 Starting cycling test...');
+            startCycling();
+        }
+
+        function startCycling() {
+            if (cycleManager) {
+                cycleManager.stop();
+            }
+            
+            cycleManager = new CycleManager(
+                appState.views,
+                5000, // 5 second intervals for testing
+                onViewChange,
+                appState
+            );
+            
+            cycleManager.start();
+            updateDebugPanel();
+            console.log('▶️ Cycling started');
+        }
+
+        function stopCycling() {
+            if (cycleManager) {
+                cycleManager.stop();
+                updateDebugPanel();
+                console.log('⏹️ Cycling stopped');
+            }
+        }
+
+        function nextView() {
+            if (cycleManager) {
+                cycleManager.nextView();
+                console.log('⏭️ Manual next view');
+            }
+        }
+
+        // Auto-start test
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Test page loaded, starting cycling test in 2 seconds...');
+            setTimeout(() => {
+                testCycling();
+            }, 2000);
+        });
+
+        // Monitor for stuck cycling
+        let lastViewIndex = -1;
+        let stuckCount = 0;
+        
+        setInterval(() => {
+            if (cycleManager && cycleManager.isRunning) {
+                const currentIndex = appState.currentViewIndex;
+                if (currentIndex === lastViewIndex) {
+                    stuckCount++;
+                    if (stuckCount > 3) {
+                        console.warn('⚠️ Cycling appears stuck, attempting restart...');
+                        startCycling();
+                        stuckCount = 0;
+                    }
+                } else {
+                    stuckCount = 0;
+                }
+                lastViewIndex = currentIndex;
+            }
+        }, 6000); // Check every 6 seconds
+    </script>
+</body>
+</html>

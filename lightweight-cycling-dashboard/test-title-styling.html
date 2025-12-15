@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Title Styling Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #1a0b2e 0%, #2d1b69 25%, #4a2c8f 50%, #6b46c1 75%, #8b5cf6 100%);
+            min-height: 100vh;
+            font-family: 'Orbitron', Arial, sans-serif;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .title-demo {
+            margin: 60px 0;
+            text-align: center;
+        }
+        .demo-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 40px 0;
+        }
+        .demo-section {
+            padding: 30px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .demo-section h3 {
+            color: #4ade80;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .old-title {
+            font-size: 3rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(83, 52, 131, 0.8), 0 0 40px rgba(83, 52, 131, 0.4), 0 0 60px rgba(255, 255, 255, 0.2);
+            color: #fff;
+            background: linear-gradient(45deg, #fff, #ffd700, #fff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleShimmer 3s ease-in-out infinite;
+            position: relative;
+        }
+        .old-title::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            background-size: 200% 200%;
+            animation: titleGlow 2s ease-in-out infinite alternate;
+            z-index: -1;
+            border-radius: 10px;
+        }
+        .controls {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .controls button {
+            margin: 10px;
+            padding: 12px 24px;
+            background: #4ade80;
+            color: black;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .controls button:hover {
+            background: #22c55e;
+        }
+        .info-panel {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4ade80;
+        }
+        .info-panel h4 {
+            color: #4ade80;
+            margin: 0 0 10px 0;
+        }
+        .info-panel p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="color: white; text-align: center; margin-bottom: 40px;">🎨 Title Styling Test</h1>
+        
+        <div class="info-panel">
+            <h4>✅ Changes Made</h4>
+            <p><strong>Titles Updated:</strong> "Leaderboard 1/2/3" → "Vendedores/Referidos/SDRs"</p>
+            <p><strong>Background Removed:</strong> White box background behind titles eliminated</p>
+            <p><strong>Clean Look:</strong> Titles now have gradient text effect without background box</p>
+        </div>
+
+        <div class="before-after">
+            <div class="demo-section">
+                <h3>❌ Before (with white box)</h3>
+                <div class="old-title">Leaderboard 1</div>
+                <p style="color: rgba(255, 255, 255, 0.7); text-align: center;">
+                    Had distracting white background box
+                </p>
+            </div>
+            
+            <div class="demo-section">
+                <h3>✅ After (clean gradient)</h3>
+                <div class="ranking-title">Vendedores</div>
+                <p style="color: rgba(255, 255, 255, 0.7); text-align: center;">
+                    Clean gradient text without background
+                </p>
+            </div>
+        </div>
+
+        <div class="title-demo">
+            <div class="demo-description">All Three Updated Titles:</div>
+            
+            <div class="ranking-title" style="margin: 40px 0;">Vendedores</div>
+            <div class="ranking-title" style="margin: 40px 0;">Referidos</div>
+            <div class="ranking-title" style="margin: 40px 0;">SDRs</div>
+        </div>
+
+        <div class="controls">
+            <button onclick="testAnimation()">🎬 Test Animation</button>
+            <button onclick="togglePerformanceMode()">⚡ Toggle Performance Mode</button>
+            <button onclick="showComparison()">👀 Show Comparison</button>
+        </div>
+
+        <div class="info-panel">
+            <h4>🔧 Technical Details</h4>
+            <p><strong>Removed:</strong> .ranking-title::before pseudo-element that created white background</p>
+            <p><strong>Kept:</strong> Gradient text effect with gold shimmer animation</p>
+            <p><strong>Updated:</strong> HTML titles in index.html to proper Portuguese names</p>
+            <p><strong>Performance:</strong> Maintained low-performance mode compatibility</p>
+        </div>
+    </div>
+
+    <script>
+        let performanceMode = 'normal';
+        
+        function testAnimation() {
+            const titles = document.querySelectorAll('.ranking-title');
+            titles.forEach(title => {
+                title.style.animation = 'none';
+                setTimeout(() => {
+                    title.style.animation = 'titleShimmer 3s ease-in-out infinite';
+                }, 100);
+            });
+            console.log('Animation restarted');
+        }
+        
+        function togglePerformanceMode() {
+            const body = document.body;
+            
+            if (performanceMode === 'normal') {
+                body.classList.add('performance-low');
+                performanceMode = 'low';
+                console.log('Switched to low performance mode');
+            } else {
+                body.classList.remove('performance-low');
+                performanceMode = 'normal';
+                console.log('Switched to normal performance mode');
+            }
+        }
+        
+        function showComparison() {
+            const beforeAfter = document.querySelector('.before-after');
+            beforeAfter.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Log current styling
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🎨 Title styling test loaded');
+            console.log('✅ Titles updated: Vendedores, Referidos, SDRs');
+            console.log('✅ White background removed from titles');
+            console.log('✅ Clean gradient text effect maintained');
+        });
+    </script>
+</body>
+</html>

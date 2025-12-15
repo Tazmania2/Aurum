@@ -646,7 +646,7 @@ class App {
     }
     
     // Wait for iframe to load completely
-    async waitForIframeLoad(maxWaitTime = 15000) {
+    async waitForIframeLoad(maxWaitTime = 25000) {
         return new Promise((resolve) => {
             const iframe = document.getElementById('looker-iframe');
             
@@ -693,7 +693,9 @@ class App {
             // Method 2: Check for iframe content changes (fallback for cross-origin)
             let lastSrc = iframe.src;
             let stableCount = 0;
-            const requiredStableChecks = 3; // Need 3 stable checks to consider loaded
+            const requiredStableChecks = 5; // Need 5 stable checks to consider loaded (more reliable)
+            
+            console.log(`📊 Starting iframe monitoring - initial src: ${lastSrc.substring(0, 100)}...`);
             
             checkInterval = setInterval(() => {
                 try {

@@ -8,23 +8,23 @@
     }
     
     .spaceship-image {
-        width: 100px;
-        height: 100px;
+        width: 200px;
+        height: 200px;
     }
     
     .spaceship.rank-1 .spaceship-image {
-        width: 115px;
-        height: 115px;
+        width: 230px;
+        height: 230px;
     }
     
     .spaceship.rank-2 .spaceship-image {
-        width: 108px;
-        height: 108px;
+        width: 216px;
+        height: 216px;
     }
     
     .spaceship.rank-3 .spaceship-image {
-        width: 105px;
-        height: 105px;
+        width: 210px;
+        height: 210px;
     }
     
     .player-name {
@@ -48,8 +48,8 @@
     }
     
     .spaceship-image {
-        width: 150px;
-        height: 150px;
+        width: 300px;
+        height: 300px;
     }
     
     .player-info {
@@ -210,12 +210,10 @@
     /* Disable complex animations on low-end devices */
     .ranking-title {
         animation: none;
-        background: #fff;
-        -webkit-text-fill-color: #fff;
-    }
-    
-    .ranking-title::before {
-        display: none;
+        background: linear-gradient(45deg, #fff, #ffd700, #fff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 }
 
@@ -245,8 +243,10 @@
 
 .performance-low .ranking-title {
     animation: none !important;
-    background: #fff !important;
-    -webkit-text-fill-color: #fff !important;
+    background: linear-gradient(45deg, #fff, #ffd700, #fff) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
 }
 
 .performance-low .loading-spinner {

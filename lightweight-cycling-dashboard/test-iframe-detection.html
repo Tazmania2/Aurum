@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iframe Load Detection Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .iframe-container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #4ade80;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .debug-panel {
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .debug-panel h3 {
+            margin: 0 0 15px 0;
+            color: #4ade80;
+        }
+        .debug-item {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+        .status-loading {
+            color: #fbbf24;
+        }
+        .status-success {
+            color: #4ade80;
+        }
+        .status-error {
+            color: #ef4444;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        .controls button {
+            margin: 5px;
+            padding: 10px 15px;
+            background: #4ade80;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #22c55e;
+        }
+        .log {
+            background: rgba(0,0,0,0.9);
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 20px 0;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        .log-info { color: #60a5fa; }
+        .log-success { color: #4ade80; }
+        .log-warning { color: #fbbf24; }
+        .log-error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 Iframe Load Detection Test</h1>
+        <p>This test verifies that the iframe load detection system works correctly with the Looker Studio dashboard.</p>
+
+        <div class="debug-panel">
+            <h3>📊 Detection Status</h3>
+            <div class="debug-item">
+                <strong>Status:</strong> <span id="detection-status" class="status-loading">Initializing...</span>
+            </div>
+            <div class="debug-item">
+                <strong>Method Used:</strong> <span id="detection-method">-</span>
+            </div>
+            <div class="debug-item">
+                <strong>Load Time:</strong> <span id="load-time">-</span>
+            </div>
+            <div class="debug-item">
+                <strong>Stable Checks:</strong> <span id="stable-checks">0/5</span>
+            </div>
+            <div class="debug-item">
+                <strong>Current Src:</strong> <span id="current-src">-</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="startTest()">🚀 Start Test</button>
+            <button onclick="reloadIframe()">🔄 Reload Iframe</button>
+            <button onclick="clearLog()">🗑️ Clear Log</button>
+            <button onclick="testWithTimestamp()">⏰ Test with Timestamp</button>
+        </div>
+
+        <div class="iframe-container">
+            <iframe id="test-iframe" src="about:blank"></iframe>
+        </div>
+
+        <div class="log" id="log-container">
+            <div class="log-entry log-info">📋 Test log will appear here...</div>
+        </div>
+    </div>
+
+    <script>
+        let testStartTime = 0;
+        let stableCheckCount = 0;
+
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function updateStatus(status, className = 'status-loading') {
+            document.getElementById('detection-status').textContent = status;
+            document.getElementById('detection-status').className = className;
+        }
+
+        function updateDebugInfo(method, loadTime, stableChecks, currentSrc) {
+            if (method) document.getElementById('detection-method').textContent = method;
+            if (loadTime) document.getElementById('load-time').textContent = loadTime;
+            if (stableChecks !== undefined) document.getElementById('stable-checks').textContent = `${stableChecks}/5`;
+            if (currentSrc) {
+                const shortSrc = currentSrc.length > 80 ? currentSrc.substring(0, 80) + '...' : currentSrc;
+                document.getElementById('current-src').textContent = shortSrc;
+            }
+        }
+
+        async function waitForIframeLoad(iframe, maxWaitTime = 25000) {
+            return new Promise((resolve) => {
+                let loadTimeout;
+                let checkInterval;
+                let hasResolved = false;
+                
+                const resolveOnce = (success, method) => {
+                    if (hasResolved) return;
+                    hasResolved = true;
+                    
+                    if (loadTimeout) clearTimeout(loadTimeout);
+                    if (checkInterval) clearInterval(checkInterval);
+                    
+                    const loadTime = Date.now() - testStartTime;
+                    updateDebugInfo(method, `${loadTime}ms`);
+                    
+                    resolve({ success, method, loadTime });
+                };
+                
+                // Set maximum wait time
+                loadTimeout = setTimeout(() => {
+                    log(`⏰ Iframe load timeout after ${maxWaitTime}ms`, 'warning');
+                    updateStatus('Timeout', 'status-error');
+                    resolveOnce(false, 'timeout');
+                }, maxWaitTime);
+                
+                // Method 1: Standard iframe load event
+                const onLoad = () => {
+                    log('📊 Iframe load event fired', 'success');
+                    updateStatus('Loaded (load event)', 'status-success');
+                    resolveOnce(true, 'load-event');
+                };
+                
+                const onError = () => {
+                    log('📊 Iframe error event fired', 'error');
+                    updateStatus('Error (error event)', 'status-error');
+                    resolveOnce(false, 'error-event');
+                };
+                
+                iframe.addEventListener('load', onLoad, { once: true });
+                iframe.addEventListener('error', onError, { once: true });
+                
+                // Method 2: URL stability check (for cross-origin)
+                let lastSrc = iframe.src;
+                let stableCount = 0;
+                const requiredStableChecks = 5;
+                
+                log(`📊 Starting iframe monitoring - initial src: ${lastSrc.substring(0, 100)}...`, 'info');
+                
+                checkInterval = setInterval(() => {
+                    try {
+                        const currentSrc = iframe.src;
+                        
+                        // Update debug info
+                        updateDebugInfo(null, null, stableCount, currentSrc);
+                        
+                        // Check if src has stabilized
+                        if (currentSrc === lastSrc && currentSrc && currentSrc !== 'about:blank') {
+                            stableCount++;
+                            log(`📊 Iframe src stable (${stableCount}/${requiredStableChecks}): ${currentSrc.substring(0, 60)}...`, 'info');
+                            
+                            if (stableCount >= requiredStableChecks) {
+                                log('📊 Iframe appears to be loaded (src stable)', 'success');
+                                updateStatus('Loaded (src stable)', 'status-success');
+                                resolveOnce(true, 'src-stable');
+                            }
+                        } else {
+                            if (stableCount > 0) {
+                                log(`📊 Iframe src changed, resetting stable count`, 'info');
+                            }
+                            stableCount = 0;
+                            lastSrc = currentSrc;
+                        }
+                        
+                        // Method 3: Content document check (when accessible)
+                        try {
+                            if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+                                log('📊 Iframe content document ready', 'success');
+                                updateStatus('Loaded (content ready)', 'status-success');
+                                resolveOnce(true, 'content-ready');
+                            }
+                        } catch (crossOriginError) {
+                            // Expected for cross-origin iframes
+                        }
+                        
+                    } catch (error) {
+                        log(`❌ Error checking iframe status: ${error.message}`, 'error');
+                    }
+                }, 1000); // Check every second
+                
+                log(`📊 Started waiting for iframe load (max ${maxWaitTime}ms)...`, 'info');
+            });
+        }
+
+        async function startTest() {
+            log('🚀 Starting iframe load detection test...', 'info');
+            updateStatus('Loading...', 'status-loading');
+            updateDebugInfo('', '', 0, '');
+            
+            const iframe = document.getElementById('test-iframe');
+            testStartTime = Date.now();
+            
+            // Load the Looker Studio dashboard
+            const lookerUrl = 'https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF';
+            iframe.src = lookerUrl;
+            
+            log(`📊 Loading iframe with URL: ${lookerUrl}`, 'info');
+            
+            try {
+                const result = await waitForIframeLoad(iframe);
+                
+                if (result.success) {
+                    log(`✅ Iframe loaded successfully using ${result.method} in ${result.loadTime}ms`, 'success');
+                } else {
+                    log(`❌ Iframe failed to load using ${result.method} after ${result.loadTime}ms`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Test failed with error: ${error.message}`, 'error');
+                updateStatus('Test Failed', 'status-error');
+            }
+        }
+
+        function reloadIframe() {
+            log('🔄 Reloading iframe...', 'info');
+            const iframe = document.getElementById('test-iframe');
+            const currentSrc = iframe.src;
+            
+            if (currentSrc && currentSrc !== 'about:blank') {
+                // Add timestamp to force reload
+                const separator = currentSrc.includes('?') ? '&' : '?';
+                iframe.src = currentSrc + separator + 't=' + Date.now();
+                log(`🔄 Iframe reloaded with timestamp`, 'info');
+            } else {
+                startTest();
+            }
+        }
+
+        function testWithTimestamp() {
+            log('⏰ Testing with timestamp parameter...', 'info');
+            const iframe = document.getElementById('test-iframe');
+            const baseUrl = 'https://lookerstudio.google.com/embed/reporting/601fc253-c576-410f-b3fb-437d9f892ae3/page/8QlXF';
+            const timestampUrl = baseUrl + '?t=' + Date.now();
+            
+            updateStatus('Loading with timestamp...', 'status-loading');
+            testStartTime = Date.now();
+            iframe.src = timestampUrl;
+            
+            waitForIframeLoad(iframe).then(result => {
+                if (result.success) {
+                    log(`✅ Timestamp test successful using ${result.method} in ${result.loadTime}ms`, 'success');
+                } else {
+                    log(`❌ Timestamp test failed using ${result.method} after ${result.loadTime}ms`, 'error');
+                }
+            });
+        }
+
+        function clearLog() {
+            document.getElementById('log-container').innerHTML = '<div class="log-entry log-info">📋 Log cleared...</div>';
+        }
+
+        // Auto-start test when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            log('🌟 Iframe detection test page loaded', 'info');
+            setTimeout(() => {
+                log('🚀 Auto-starting test in 2 seconds...', 'info');
+                setTimeout(startTest, 2000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

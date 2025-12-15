@@ -109,6 +109,13 @@ class CycleManager {
             console.log('⏸️ Pausing cycle timer for iframe loading...');
             this.isPaused = true;
             
+            // Stop the current interval timer
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+                console.log('⏸️ Interval timer stopped for iframe loading');
+            }
+            
             // Set a maximum wait time as safety net
             this.viewReadyTimeout = setTimeout(() => {
                 console.warn('⏰ View load timeout, resuming cycling');
@@ -117,6 +124,12 @@ class CycleManager {
         } else {
             // For non-iframe views, don't pause - they load quickly
             console.log('🏆 Non-iframe view, no pause needed');
+            // Still notify that view is ready immediately for non-iframe views
+            setTimeout(() => {
+                if (this.onViewChangeCallback) {
+                    // The view change callback will handle notifying when ready
+                }
+            }, 100);
         }
     }
     

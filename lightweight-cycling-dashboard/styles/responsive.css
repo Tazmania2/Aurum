@@ -210,12 +210,10 @@
     /* Disable complex animations on low-end devices */
     .ranking-title {
         animation: none;
-        background: #fff;
-        -webkit-text-fill-color: #fff;
-    }
-    
-    .ranking-title::before {
-        display: none;
+        background: linear-gradient(45deg, #fff, #ffd700, #fff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 }
 
@@ -245,8 +243,10 @@
 
 .performance-low .ranking-title {
     animation: none !important;
-    background: #fff !important;
-    -webkit-text-fill-color: #fff !important;
+    background: linear-gradient(45deg, #fff, #ffd700, #fff) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
 }
 
 .performance-low .loading-spinner {

@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Positioning Test - No Spillover</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <style>
+        .test-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px;
+            z-index: 1000;
+            border-bottom: 2px solid #4ade80;
+        }
+        .test-overlay h1 {
+            color: white;
+            margin: 0 0 10px 0;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+        .test-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .test-controls button {
+            padding: 6px 12px;
+            background: #4ade80;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .test-controls button:hover {
+            background: #22c55e;
+        }
+        .test-controls button.active {
+            background: #ef4444;
+            color: white;
+        }
+        .main-container {
+            margin-top: 100px;
+            height: calc(100vh - 100px);
+        }
+        .viewport-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px solid rgba(255, 0, 0, 0.8);
+            pointer-events: none;
+            z-index: 999;
+        }
+        .viewport-indicator::before {
+            content: 'VIEWPORT BOUNDARY';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: rgba(255, 0, 0, 0.8);
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .safe-margins {
+            position: absolute;
+            top: 120px;
+            left: 180px;
+            right: 180px;
+            bottom: 180px;
+            border: 2px dashed rgba(0, 255, 0, 0.6);
+            pointer-events: none;
+        }
+        .safe-margins::before {
+            content: 'SAFE ZONE (180px margins)';
+            position: absolute;
+            top: -25px;
+            left: 10px;
+            color: rgba(0, 255, 0, 0.8);
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .results-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            max-width: 300px;
+            border: 1px solid #4ade80;
+        }
+        .results-panel h3 {
+            margin: 0 0 10px 0;
+            color: #4ade80;
+        }
+        .result-item {
+            margin: 5px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .status-ok {
+            color: #4ade80;
+        }
+        .status-warning {
+            color: #fbbf24;
+        }
+        .status-error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-overlay">
+        <h1>🎯 Final Positioning Test - No Content Spillover</h1>
+        <div class="test-controls">
+            <button onclick="runFullTest()">🚀 Full Test (8 Players)</button>
+            <button onclick="testLargeSpaceships()">👑 Large Ships Test</button>
+            <button onclick="testEdgeCases()">⚠️ Edge Cases</button>
+            <button onclick="toggleViewportBounds()" id="viewport-btn">📐 Show Viewport</button>
+            <button onclick="toggleSafeZone()" id="safe-btn">🛡️ Show Safe Zone</button>
+            <button onclick="clearAll()">🗑️ Clear</button>
+            <button onclick="analyzeAll()">📊 Analyze</button>
+        </div>
+    </div>
+
+    <div class="viewport-indicator" id="viewport-indicator" style="display: none;"></div>
+
+    <div class="main-container">
+        <div class="view active ranking-view" id="test-view">
+            <h1 class="ranking-title">Final Positioning Test</h1>
+            <div class="ranking-container" id="test-container">
+                <div class="safe-margins" id="safe-margins" style="display: none;"></div>
+                <!-- Spaceships will be positioned here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="results-panel" id="results-panel">
+        <h3>📊 Test Results</h3>
+        <div id="results-content">
+            <div class="result-item">Ready to test...</div>
+        </div>
+    </div>
+
+    <script src="scripts/ranking-renderer.js"></script>
+    <script>
+        let renderer;
+        let testResults = [];
+
+        // Initialize the renderer
+        function initRenderer() {
+            // Mock spaceship assets for testing
+            const mockAssets = {
+                ranking_vendedores: {
+                    ships: {
+                        first: { image: null, fallback: '🥇', cssColor: '#FFD700' },
+                        second: { image: null, fallback: '🥈', cssColor: '#C0C0C0' },
+                        third: { image: null, fallback: '🥉', cssColor: '#CD7F32' }
+                    }
+                }
+            };
+            
+            renderer = new RankingRenderer(mockAssets, {
+                maxSpaceships: 12,
+                animationDuration: 500,
+                useComplexAnimations: true
+            });
+            
+            console.log('🎯 Renderer initialized for positioning test');
+        }
+
+        // Generate test player data
+        function generateTestPlayers(count) {
+            const players = [];
+            const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack', 'Kate', 'Liam'];
+            
+            for (let i = 0; i < count; i++) {
+                players.push({
+                    playerId: `player_${i + 1}`,
+                    name: names[i] || `Player ${i + 1}`,
+                    score: 1000 - (i * 100) + Math.random() * 50
+                });
+            }
+            
+            return players;
+        }
+
+        // Run full positioning test
+        function runFullTest() {
+            clearAll();
+            const players = generateTestPlayers(8);
+            
+            console.log('🚀 Running full positioning test with 8 players');
+            updateResults('Running full test with 8 players...', 'status-warning');
+            
+            setTimeout(() => {
+                const success = renderer.renderRanking(players, 'test-container', 'Test Ranking', null, 'ranking_vendedores');
+                
+                if (success) {
+                    setTimeout(() => {
+                        analyzePositioning('Full Test (8 Players)');
+                    }, 1000);
+                } else {
+                    updateResults('❌ Rendering failed', 'status-error');
+                }
+            }, 100);
+        }
+
+        // Test with large spaceships (positions 1-3)
+        function testLargeSpaceships() {
+            clearAll();
+            const players = generateTestPlayers(3);
+            
+            console.log('👑 Testing large spaceships (top 3 positions)');
+            updateResults('Testing large spaceships...', 'status-warning');
+            
+            setTimeout(() => {
+                const success = renderer.renderRanking(players, 'test-container', 'Large Ships Test', null, 'ranking_vendedores');
+                
+                if (success) {
+                    setTimeout(() => {
+                        analyzePositioning('Large Ships Test');
+                    }, 1000);
+                } else {
+                    updateResults('❌ Rendering failed', 'status-error');
+                }
+            }, 100);
+        }
+
+        // Test edge cases
+        function testEdgeCases() {
+            clearAll();
+            const players = generateTestPlayers(12); // Maximum players
+            
+            console.log('⚠️ Testing edge cases with maximum players');
+            updateResults('Testing edge cases (12 players)...', 'status-warning');
+            
+            setTimeout(() => {
+                const success = renderer.renderRanking(players, 'test-container', 'Edge Cases Test', null, 'ranking_vendedores');
+                
+                if (success) {
+                    setTimeout(() => {
+                        analyzePositioning('Edge Cases (12 Players)');
+                    }, 1000);
+                } else {
+                    updateResults('❌ Rendering failed', 'status-error');
+                }
+            }, 100);
+        }
+
+        // Analyze positioning for spillover
+        function analyzePositioning(testName) {
+            const container = document.getElementById('test-container');
+            const spaceships = container.querySelectorAll('.spaceship');
+            const containerRect = container.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            let results = {
+                testName: testName,
+                totalSpaceships: spaceships.length,
+                containerClipped: 0,
+                viewportClipped: 0,
+                safeZoneViolations: 0,
+                details: []
+            };
+            
+            spaceships.forEach((spaceship, index) => {
+                const rect = spaceship.getBoundingClientRect();
+                const position = spaceship.getAttribute('data-position');
+                
+                // Check container clipping
+                const containerClipped = rect.left < containerRect.left || 
+                                       rect.right > containerRect.right || 
+                                       rect.top < containerRect.top || 
+                                       rect.bottom > containerRect.bottom;
+                
+                // Check viewport clipping (the critical issue)
+                const viewportClipped = rect.left < 0 || 
+                                      rect.right > viewportWidth || 
+                                      rect.top < 0 || 
+                                      rect.bottom > viewportHeight;
+                
+                // Check safe zone violations (should be within 180px margins)
+                const safeZoneViolation = rect.left < 180 || 
+                                        rect.right > (viewportWidth - 180) || 
+                                        rect.top < 120 || 
+                                        rect.bottom > (viewportHeight - 180);
+                
+                if (containerClipped) results.containerClipped++;
+                if (viewportClipped) results.viewportClipped++;
+                if (safeZoneViolation) results.safeZoneViolations++;
+                
+                results.details.push({
+                    position: position,
+                    containerClipped: containerClipped,
+                    viewportClipped: viewportClipped,
+                    safeZoneViolation: safeZoneViolation,
+                    bounds: {
+                        left: Math.round(rect.left),
+                        top: Math.round(rect.top),
+                        right: Math.round(rect.right),
+                        bottom: Math.round(rect.bottom)
+                    }
+                });
+            });
+            
+            displayResults(results);
+            testResults.push(results);
+            
+            console.log('📊 Analysis complete:', results);
+        }
+
+        // Display analysis results
+        function displayResults(results) {
+            const content = document.getElementById('results-content');
+            const overallStatus = results.viewportClipped === 0 ? 'status-ok' : 'status-error';
+            
+            let html = `
+                <div class="result-item">
+                    <strong>${results.testName}</strong>
+                </div>
+                <div class="result-item">
+                    Spaceships: ${results.totalSpaceships}
+                </div>
+                <div class="result-item ${results.viewportClipped === 0 ? 'status-ok' : 'status-error'}">
+                    Viewport Clipped: ${results.viewportClipped}/${results.totalSpaceships}
+                </div>
+                <div class="result-item ${results.safeZoneViolations === 0 ? 'status-ok' : 'status-warning'}">
+                    Safe Zone Violations: ${results.safeZoneViolations}/${results.totalSpaceships}
+                </div>
+            `;
+            
+            if (results.viewportClipped === 0) {
+                html += '<div class="result-item status-ok">✅ NO SPILLOVER DETECTED!</div>';
+            } else {
+                html += '<div class="result-item status-error">❌ Content spilling out!</div>';
+            }
+            
+            content.innerHTML = html;
+        }
+
+        // Toggle viewport boundary indicator
+        function toggleViewportBounds() {
+            const indicator = document.getElementById('viewport-indicator');
+            const btn = document.getElementById('viewport-btn');
+            
+            if (indicator.style.display === 'none') {
+                indicator.style.display = 'block';
+                btn.classList.add('active');
+                btn.textContent = '📐 Hide Viewport';
+            } else {
+                indicator.style.display = 'none';
+                btn.classList.remove('active');
+                btn.textContent = '📐 Show Viewport';
+            }
+        }
+
+        // Toggle safe zone indicator
+        function toggleSafeZone() {
+            const safeZone = document.getElementById('safe-margins');
+            const btn = document.getElementById('safe-btn');
+            
+            if (safeZone.style.display === 'none') {
+                safeZone.style.display = 'block';
+                btn.classList.add('active');
+                btn.textContent = '🛡️ Hide Safe Zone';
+            } else {
+                safeZone.style.display = 'none';
+                btn.classList.remove('active');
+                btn.textContent = '🛡️ Show Safe Zone';
+            }
+        }
+
+        // Clear all spaceships
+        function clearAll() {
+            const container = document.getElementById('test-container');
+            const spaceships = container.querySelectorAll('.spaceship');
+            spaceships.forEach(spaceship => spaceship.remove());
+            
+            updateResults('Cleared all spaceships', 'status-ok');
+        }
+
+        // Analyze all current spaceships
+        function analyzeAll() {
+            const spaceships = document.querySelectorAll('.spaceship');
+            if (spaceships.length === 0) {
+                updateResults('No spaceships to analyze', 'status-warning');
+                return;
+            }
+            
+            analyzePositioning(`Manual Analysis (${spaceships.length} ships)`);
+        }
+
+        // Update results display
+        function updateResults(message, statusClass = '') {
+            const content = document.getElementById('results-content');
+            content.innerHTML = `<div class="result-item ${statusClass}">${message}</div>`;
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Final positioning test loaded');
+            initRenderer();
+            
+            // Run initial test after a short delay
+            setTimeout(() => {
+                console.log('🚀 Running initial positioning test...');
+                runFullTest();
+            }, 1000);
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            console.log('📱 Window resized, re-analyzing positions');
+            if (document.querySelectorAll('.spaceship').length > 0) {
+                setTimeout(() => analyzeAll(), 500);
+            }
+        });
+    </script>
+</body>
+</html>

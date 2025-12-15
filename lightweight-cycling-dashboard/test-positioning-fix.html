@@ -100,10 +100,10 @@
         }
         .safe-zone {
             position: absolute;
-            top: 80px;
-            left: 120px;
-            right: 120px;
-            bottom: 120px;
+            top: 120px;
+            left: 180px;
+            right: 180px;
+            bottom: 180px;
             border: 1px dashed rgba(0, 255, 0, 0.5);
             pointer-events: none;
         }
@@ -151,15 +151,15 @@
         let spaceshipCount = 0;
         let showBounds = true;
 
-        // Simulate the positioning algorithm from ranking-renderer.js
+        // Simulate the positioning algorithm from ranking-renderer.js (UPDATED MARGINS)
         function calculatePosition(position, totalPlayers, container) {
             const containerWidth = container.offsetWidth || 800;
             const containerHeight = container.offsetHeight || 600;
             
-            // Dynamic margins based on spaceship sizes (larger for bigger ships)
-            const baseMargin = 120;
+            // UPDATED: Generous margins to prevent any spillover (especially for large spaceships)
+            const baseMargin = 180; // Increased from 120
             const spaceshipSize = position === 1 ? 190 : position === 2 ? 176 : position === 3 ? 170 : 160;
-            const dynamicMargin = Math.max(baseMargin, spaceshipSize / 2 + 50);
+            const dynamicMargin = Math.max(baseMargin, spaceshipSize / 2 + 80); // Increased buffer from 50 to 80
             
             const raceWidth = containerWidth - (dynamicMargin * 2);
             
@@ -167,21 +167,22 @@
             const normalizedPosition = (position - 1) / Math.max(totalPlayers - 1, 1);
             const x = dynamicMargin + raceWidth * (1 - normalizedPosition);
             
-            // Y position with adaptive variation
+            // Y position: Add some randomness for "messy" space race feel, but keep it reasonable
             const centerY = containerHeight / 2;
-            const yVariation = Math.min(60, containerHeight * 0.15);
+            const yVariation = Math.min(50, containerHeight * 0.12); // Reduced variation to keep more centered
             
             const yOffset = (Math.sin(position * 2.5) * yVariation) + (Math.cos(position * 1.7) * yVariation * 0.5);
             
-            // Calculate safe Y bounds
-            const playerInfoHeight = 80;
-            const safeTopMargin = Math.max(80, spaceshipSize / 2 + 20);
-            const safeBottomMargin = Math.max(120, spaceshipSize / 2 + playerInfoHeight + 20);
+            // Calculate safe Y bounds considering spaceship size and player info
+            const playerInfoHeight = 100; // Increased from 80 to account for larger cards
+            const safeTopMargin = Math.max(120, spaceshipSize / 2 + 40); // Increased margins
+            const safeBottomMargin = Math.max(180, spaceshipSize / 2 + playerInfoHeight + 40); // Much larger bottom margin
             
             const y = Math.max(safeTopMargin, Math.min(containerHeight - safeBottomMargin, centerY + yOffset));
             
-            // Ensure X position keeps spaceship fully visible
-            const safeX = Math.max(spaceshipSize / 2 + 20, Math.min(x, containerWidth - spaceshipSize / 2 - 20));
+            // Ensure X position keeps spaceship fully visible with generous buffer
+            const horizontalBuffer = 40; // Increased from 20
+            const safeX = Math.max(spaceshipSize / 2 + horizontalBuffer, Math.min(x, containerWidth - spaceshipSize / 2 - horizontalBuffer));
             
             return { x: safeX, y: y, size: spaceshipSize };
         }

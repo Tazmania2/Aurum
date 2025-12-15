@@ -292,10 +292,10 @@ class RankingRenderer {
         containerHeight = containerHeight || 600;
         
         // SPACE RACE POSITIONING: X-axis determines position (1st place = rightmost)
-        // Dynamic margins based on spaceship sizes (larger for bigger ships)
-        const baseMargin = 120;
+        // Generous margins to prevent any spillover (especially for large spaceships)
+        const baseMargin = 180; // Increased from 120
         const spaceshipSize = position === 1 ? 190 : position === 2 ? 176 : position === 3 ? 170 : 160;
-        const dynamicMargin = Math.max(baseMargin, spaceshipSize / 2 + 50);
+        const dynamicMargin = Math.max(baseMargin, spaceshipSize / 2 + 80); // Increased buffer from 50 to 80
         
         const raceWidth = containerWidth - (dynamicMargin * 2);
         
@@ -306,20 +306,21 @@ class RankingRenderer {
         
         // Y position: Add some randomness for "messy" space race feel, but keep it reasonable
         const centerY = containerHeight / 2;
-        const yVariation = Math.min(60, containerHeight * 0.15); // Adaptive variation based on container height
+        const yVariation = Math.min(50, containerHeight * 0.12); // Reduced variation to keep more centered
         
         // Use position as seed for consistent but varied Y positions
         const yOffset = (Math.sin(position * 2.5) * yVariation) + (Math.cos(position * 1.7) * yVariation * 0.5);
         
         // Calculate safe Y bounds considering spaceship size and player info
-        const playerInfoHeight = 80; // Approximate height of player info card
-        const safeTopMargin = Math.max(80, spaceshipSize / 2 + 20);
-        const safeBottomMargin = Math.max(120, spaceshipSize / 2 + playerInfoHeight + 20);
+        const playerInfoHeight = 100; // Increased from 80 to account for larger cards
+        const safeTopMargin = Math.max(120, spaceshipSize / 2 + 40); // Increased margins
+        const safeBottomMargin = Math.max(180, spaceshipSize / 2 + playerInfoHeight + 40); // Much larger bottom margin
         
         const y = Math.max(safeTopMargin, Math.min(containerHeight - safeBottomMargin, centerY + yOffset));
         
-        // Ensure X position keeps spaceship fully visible
-        const safeX = Math.max(spaceshipSize / 2 + 20, Math.min(x, containerWidth - spaceshipSize / 2 - 20));
+        // Ensure X position keeps spaceship fully visible with generous buffer
+        const horizontalBuffer = 40; // Increased from 20
+        const safeX = Math.max(spaceshipSize / 2 + horizontalBuffer, Math.min(x, containerWidth - spaceshipSize / 2 - horizontalBuffer));
         
         return { 
             x: safeX, 

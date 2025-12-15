@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reduced Glow & Positioning Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <style>
+        .test-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px;
+            z-index: 1000;
+            border-bottom: 2px solid #4ade80;
+        }
+        .test-header h1 {
+            color: white;
+            margin: 0 0 10px 0;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+        .test-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .test-controls button {
+            padding: 8px 16px;
+            background: #4ade80;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .test-controls button:hover {
+            background: #22c55e;
+        }
+        .test-controls button.active {
+            background: #ef4444;
+            color: white;
+        }
+        .main-container {
+            margin-top: 80px;
+            height: calc(100vh - 80px);
+        }
+        .reference-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .center-line-y {
+            position: absolute;
+            top: 40%; /* 20% reduction from 50% */
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 0, 0.6);
+        }
+        .center-line-y::before {
+            content: 'CENTER Y (reduced 20%)';
+            position: absolute;
+            right: 10px;
+            top: -20px;
+            color: rgba(255, 255, 0, 0.8);
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .left-edge {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 2px;
+            background: rgba(0, 255, 0, 0.6);
+        }
+        .left-edge::before {
+            content: 'LEFT EDGE (no margin)';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: rotate(90deg);
+            color: rgba(0, 255, 0, 0.8);
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .right-margin {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 540px;
+            width: 2px;
+            background: rgba(255, 0, 0, 0.6);
+        }
+        .right-margin::before {
+            content: 'RIGHT MARGIN (540px)';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: rotate(-90deg);
+            color: rgba(255, 0, 0, 0.8);
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .info-panel {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            max-width: 300px;
+        }
+        .info-panel h3 {
+            margin: 0 0 10px 0;
+            color: #4ade80;
+        }
+        .comparison-mode {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            max-width: 250px;
+        }
+        .comparison-mode h3 {
+            margin: 0 0 10px 0;
+            color: #fbbf24;
+        }
+        .glow-comparison {
+            display: flex;
+            gap: 20px;
+            margin: 10px 0;
+        }
+        .glow-sample {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .glow-old {
+            filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 20px #ffd700);
+        }
+        .glow-new {
+            filter: drop-shadow(0 0 5px #ffd700) drop-shadow(0 0 10px #ffd700);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>✨ Reduced Glow & Positioning Test</h1>
+        <div class="test-controls">
+            <button onclick="testPositioning()">🚀 Test Positioning</button>
+            <button onclick="testGlowReduction()">✨ Test Glow</button>
+            <button onclick="toggleReferenceLines()" id="lines-btn">📐 Show Reference</button>
+            <button onclick="compareGlow()" id="compare-btn">🔍 Compare Glow</button>
+            <button onclick="clearAll()">🗑️ Clear</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="view active ranking-view" id="test-view">
+            <h1 class="ranking-title">Glow & Positioning Test</h1>
+            <div class="ranking-container" id="test-container">
+                <div class="reference-lines" id="reference-lines" style="display: none;">
+                    <div class="center-line-y"></div>
+                    <div class="left-edge"></div>
+                    <div class="right-margin"></div>
+                </div>
+                <!-- Spaceships will be positioned here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="info-panel">
+        <h3>📊 Test Results</h3>
+        <div id="info-content">
+            <div><strong>Changes Applied:</strong></div>
+            <div>• Glow reduced by 50%</div>
+            <div>• Y position reduced by 20%</div>
+            <div>• Left margin removed</div>
+            <div>• Top margin removed</div>
+            <div><br><strong>Status:</strong> Ready to test</div>
+        </div>
+    </div>
+
+    <div class="comparison-mode" id="comparison-mode" style="display: none;">
+        <h3>🔍 Glow Comparison</h3>
+        <div>Old Glow (100%):</div>
+        <div class="glow-comparison">
+            <div class="glow-sample glow-old" style="background: #333;">🥇</div>
+            <div style="font-size: 10px; align-self: center;">vs</div>
+            <div class="glow-sample glow-new" style="background: #333;">🥇</div>
+        </div>
+        <div>New Glow (50%)</div>
+        <button onclick="toggleComparison()" style="margin-top: 10px; padding: 4px 8px; background: #4ade80; border: none; border-radius: 2px;">Close</button>
+    </div>
+
+    <script src="scripts/ranking-renderer.js"></script>
+    <script>
+        let renderer;
+        let showReferenceLines = false;
+        let showComparison = false;
+
+        // Initialize the renderer
+        function initRenderer() {
+            const mockAssets = {
+                ranking_vendedores: {
+                    ships: {
+                        first: { image: null, fallback: '🥇', cssColor: '#FFD700' },
+                        second: { image: null, fallback: '🥈', cssColor: '#C0C0C0' },
+                        third: { image: null, fallback: '🥉', cssColor: '#CD7F32' }
+                    }
+                }
+            };
+            
+            renderer = new RankingRenderer(mockAssets, {
+                maxSpaceships: 12,
+                animationDuration: 500
+            });
+            
+            console.log('✨ Renderer initialized for glow and positioning test');
+        }
+
+        // Test positioning with new settings
+        function testPositioning() {
+            clearAll();
+            
+            const players = [];
+            const names = ['Champion', 'Runner-up', 'Third Place', 'Player 4', 'Player 5', 'Player 6'];
+            
+            for (let i = 0; i < 6; i++) {
+                players.push({
+                    playerId: `player_${i + 1}`,
+                    name: names[i],
+                    score: 1000 - (i * 150)
+                });
+            }
+            
+            console.log('🚀 Testing new positioning (Y reduced 20%, no left/top margins)');
+            updateInfo('Testing new positioning...', 'testing');
+            
+            setTimeout(() => {
+                const success = renderer.renderRanking(players, 'test-container', 'Positioning Test', null, 'ranking_vendedores');
+                
+                if (success) {
+                    setTimeout(() => {
+                        analyzePositioning();
+                    }, 1000);
+                } else {
+                    updateInfo('❌ Rendering failed', 'error');
+                }
+            }, 100);
+        }
+
+        // Test glow reduction
+        function testGlowReduction() {
+            clearAll();
+            
+            // Create just the top 3 to focus on glow effects
+            const topPlayers = [
+                { playerId: 'player_1', name: 'Gold Champion', score: 1000 },
+                { playerId: 'player_2', name: 'Silver Runner', score: 850 },
+                { playerId: 'player_3', name: 'Bronze Hero', score: 700 }
+            ];
+            
+            console.log('✨ Testing reduced glow effects (50% reduction)');
+            updateInfo('Testing reduced glow effects...', 'testing');
+            
+            setTimeout(() => {
+                const success = renderer.renderRanking(topPlayers, 'test-container', 'Glow Test', null, 'ranking_vendedores');
+                
+                if (success) {
+                    updateInfo('✅ Glow effects reduced by 50%', 'success');
+                    
+                    // Add hover instruction
+                    setTimeout(() => {
+                        updateInfo('✅ Glow reduced by 50%<br>💡 Hover over spaceships to see reduced hover effects', 'success');
+                    }, 2000);
+                } else {
+                    updateInfo('❌ Rendering failed', 'error');
+                }
+            }, 100);
+        }
+
+        // Analyze positioning
+        function analyzePositioning() {
+            const container = document.getElementById('test-container');
+            const spaceships = container.querySelectorAll('.spaceship');
+            const containerRect = container.getBoundingClientRect();
+            
+            let analysis = '<strong>Positioning Analysis:</strong><br>';
+            let issues = [];
+            
+            spaceships.forEach((spaceship, index) => {
+                const position = spaceship.getAttribute('data-position');
+                const rect = spaceship.getBoundingClientRect();
+                
+                // Check Y position (should be reduced by 20%)
+                const expectedCenterY = containerRect.height * 0.4; // 20% reduction from 50%
+                const actualCenterY = (rect.top + rect.bottom) / 2 - containerRect.top;
+                const yDifference = Math.abs(actualCenterY - expectedCenterY);
+                
+                // Check left positioning (should start from left edge)
+                const leftDistance = rect.left - containerRect.left;
+                
+                analysis += `P${position}: Y=${Math.round(actualCenterY)}px, Left=${Math.round(leftDistance)}px<br>`;
+                
+                if (position === '1') {
+                    if (yDifference > 50) {
+                        issues.push(`First player not well centered (Y offset: ${Math.round(yDifference)}px)`);
+                    }
+                }
+                
+                if (leftDistance < 0) {
+                    issues.push(`Player ${position} extends beyond left edge`);
+                }
+            });
+            
+            analysis += '<br><strong>Issues:</strong><br>';
+            if (issues.length === 0) {
+                analysis += '✅ No positioning issues detected';
+            } else {
+                issues.forEach(issue => {
+                    analysis += `⚠️ ${issue}<br>`;
+                });
+            }
+            
+            updateInfo(analysis, issues.length === 0 ? 'success' : 'warning');
+        }
+
+        // Toggle reference lines
+        function toggleReferenceLines() {
+            const lines = document.getElementById('reference-lines');
+            const btn = document.getElementById('lines-btn');
+            
+            showReferenceLines = !showReferenceLines;
+            lines.style.display = showReferenceLines ? 'block' : 'none';
+            btn.textContent = showReferenceLines ? '📐 Hide Reference' : '📐 Show Reference';
+            btn.classList.toggle('active', showReferenceLines);
+        }
+
+        // Compare glow effects
+        function compareGlow() {
+            toggleComparison();
+        }
+
+        function toggleComparison() {
+            const comparison = document.getElementById('comparison-mode');
+            const btn = document.getElementById('compare-btn');
+            
+            showComparison = !showComparison;
+            comparison.style.display = showComparison ? 'block' : 'none';
+            btn.classList.toggle('active', showComparison);
+        }
+
+        // Clear all spaceships
+        function clearAll() {
+            const container = document.getElementById('test-container');
+            const spaceships = container.querySelectorAll('.spaceship');
+            spaceships.forEach(spaceship => spaceship.remove());
+            
+            updateInfo('Cleared all spaceships', 'success');
+        }
+
+        // Update info panel
+        function updateInfo(message, type = '') {
+            const content = document.getElementById('info-content');
+            const colorClass = type === 'success' ? 'color: #4ade80' : 
+                             type === 'testing' ? 'color: #fbbf24' : 
+                             type === 'warning' ? 'color: #fbbf24' :
+                             type === 'error' ? 'color: #ef4444' : '';
+            
+            content.innerHTML = `<div style="${colorClass}">${message}</div>`;
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('✨ Glow and positioning test loaded');
+            initRenderer();
+            
+            // Run initial test after a short delay
+            setTimeout(() => {
+                console.log('🚀 Running initial positioning test...');
+                testPositioning();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

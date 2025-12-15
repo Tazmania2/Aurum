@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glow Intensity Reduction Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <style>
+        .test-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px;
+            z-index: 1000;
+            border-bottom: 2px solid #4ade80;
+        }
+        .test-header h1 {
+            color: white;
+            margin: 0 0 10px 0;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+        .test-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .test-controls button {
+            padding: 8px 16px;
+            background: #4ade80;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .test-controls button:hover {
+            background: #22c55e;
+        }
+        .test-controls button.active {
+            background: #ef4444;
+            color: white;
+        }
+        .main-container {
+            margin-top: 80px;
+            height: calc(100vh - 80px);
+        }
+        .comparison-panel {
+            position: fixed;
+            top: 100px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            max-width: 300px;
+            border: 1px solid #4ade80;
+        }
+        .comparison-panel h3 {
+            margin: 0 0 15px 0;
+            color: #4ade80;
+            text-align: center;
+        }
+        .glow-samples {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .glow-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        .glow-sample {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            background: #333;
+            position: relative;
+        }
+        .glow-label {
+            font-size: 10px;
+            text-align: center;
+            margin-top: 5px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        /* Original glow intensities (for comparison) */
+        .glow-original-gold {
+            filter: drop-shadow(0 0 5px #ffd700) drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 15px rgba(255, 215, 0, 0.2));
+        }
+        .glow-original-silver {
+            filter: drop-shadow(0 0 4.5px #c0c0c0) drop-shadow(0 0 9px #c0c0c0) drop-shadow(0 0 12.5px rgba(192, 192, 192, 0.2));
+        }
+        .glow-original-bronze {
+            filter: drop-shadow(0 0 4px #cd7f32) drop-shadow(0 0 7.5px #cd7f32) drop-shadow(0 0 11px rgba(205, 127, 50, 0.2));
+        }
+        
+        /* New reduced glow intensities */
+        .glow-reduced-gold {
+            filter: drop-shadow(0 0 5px #ffd700) drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 15px rgba(255, 215, 0, 0.1));
+        }
+        .glow-reduced-silver {
+            filter: drop-shadow(0 0 4.5px #c0c0c0) drop-shadow(0 0 9px #c0c0c0) drop-shadow(0 0 12.5px rgba(192, 192, 192, 0.1));
+        }
+        .glow-reduced-bronze {
+            filter: drop-shadow(0 0 4px #cd7f32) drop-shadow(0 0 7.5px #cd7f32) drop-shadow(0 0 11px rgba(205, 127, 50, 0.1));
+        }
+        
+        .vs-text {
+            font-weight: bold;
+            color: #fbbf24;
+            font-size: 14px;
+        }
+        
+        .info-panel {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            max-width: 300px;
+        }
+        .info-panel h3 {
+            margin: 0 0 10px 0;
+            color: #4ade80;
+        }
+        .alpha-values {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        .alpha-values h4 {
+            margin: 0 0 5px 0;
+            color: #fbbf24;
+            font-size: 11px;
+        }
+        .alpha-comparison {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            margin: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>💫 Glow Intensity Reduction Test (50% Transparency)</h1>
+        <div class="test-controls">
+            <button onclick="testSpaceships()">🚀 Test Spaceships</button>
+            <button onclick="toggleComparison()" id="compare-btn">🔍 Show Comparison</button>
+            <button onclick="testHoverEffects()">✨ Test Hover</button>
+            <button onclick="clearAll()">🗑️ Clear</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="view active ranking-view" id="test-view">
+            <h1 class="ranking-title">Glow Intensity Test</h1>
+            <div class="ranking-container" id="test-container">
+                <!-- Spaceships will be positioned here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="comparison-panel" id="comparison-panel" style="display: none;">
+        <h3>🔍 Glow Intensity Comparison</h3>
+        
+        <div class="glow-samples">
+            <div class="glow-row">
+                <div>
+                    <div class="glow-sample glow-original-gold">🥇</div>
+                    <div class="glow-label">Original<br>(0.2 alpha)</div>
+                </div>
+                <div class="vs-text">VS</div>
+                <div>
+                    <div class="glow-sample glow-reduced-gold">🥇</div>
+                    <div class="glow-label">Reduced<br>(0.1 alpha)</div>
+                </div>
+            </div>
+            
+            <div class="glow-row">
+                <div>
+                    <div class="glow-sample glow-original-silver">🥈</div>
+                    <div class="glow-label">Original<br>(0.2 alpha)</div>
+                </div>
+                <div class="vs-text">VS</div>
+                <div>
+                    <div class="glow-sample glow-reduced-silver">🥈</div>
+                    <div class="glow-label">Reduced<br>(0.1 alpha)</div>
+                </div>
+            </div>
+            
+            <div class="glow-row">
+                <div>
+                    <div class="glow-sample glow-original-bronze">🥉</div>
+                    <div class="glow-label">Original<br>(0.2 alpha)</div>
+                </div>
+                <div class="vs-text">VS</div>
+                <div>
+                    <div class="glow-sample glow-reduced-bronze">🥉</div>
+                    <div class="glow-label">Reduced<br>(0.1 alpha)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="info-panel">
+        <h3>📊 Glow Intensity Changes</h3>
+        <div id="info-content">
+            <div><strong>Alpha Transparency Reduced by 50%:</strong></div>
+            
+            <div class="alpha-values">
+                <h4>Gold Glow:</h4>
+                <div class="alpha-comparison">
+                    <span>Before:</span>
+                    <span>rgba(255, 215, 0, 0.2)</span>
+                </div>
+                <div class="alpha-comparison">
+                    <span>After:</span>
+                    <span>rgba(255, 215, 0, 0.1)</span>
+                </div>
+            </div>
+            
+            <div class="alpha-values">
+                <h4>Silver Glow:</h4>
+                <div class="alpha-comparison">
+                    <span>Before:</span>
+                    <span>rgba(192, 192, 192, 0.2)</span>
+                </div>
+                <div class="alpha-comparison">
+                    <span>After:</span>
+                    <span>rgba(192, 192, 192, 0.1)</span>
+                </div>
+            </div>
+            
+            <div class="alpha-values">
+                <h4>Bronze Glow:</h4>
+                <div class="alpha-comparison">
+                    <span>Before:</span>
+                    <span>rgba(205, 127, 50, 0.2)</span>
+                </div>
+                <div class="alpha-comparison">
+                    <span>After:</span>
+                    <span>rgba(205, 127, 50, 0.1)</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 10px; color: #4ade80;">
+                <strong>Result:</strong> 50% less intense glow effects
+            </div>
+        </div>
+    </div>
+
+    <script src="scripts/ranking-renderer.js"></script>
+    <script>
+        let renderer;
+        let showComparison = false;
+
+        // Initialize the renderer
+        function initRenderer() {
+            const mockAssets = {
+                ranking_vendedores: {
+                    ships: {
+                        first: { image: null, fallback: '🥇', cssColor: '#FFD700' },
+                        second: { image: null, fallback: '🥈', cssColor: '#C0C0C0' },
+                        third: { image: null, fallback: '🥉', cssColor: '#CD7F32' }
+                    }
+                }
+            };
+            
+            renderer = new RankingRenderer(mockAssets, {
+                maxSpaceships: 12,
+                animationDuration: 500
+            });
+            
+            console.log('💫 Renderer initialized for glow intensity test');
+        }
+
+        // Test spaceships with reduced glow intensity
+        function testSpaceships() {
+            clearAll();
+            
+            const players = [
+                { playerId: 'player_1', name: 'Gold Champion', score: 1000 },
+                { playerId: 'player_2', name: 'Silver Runner', score: 850 },
+                { playerId: 'player_3', name: 'Bronze Hero', score: 700 },
+                { playerId: 'player_4', name: 'Fourth Place', score: 550 },
+                { playerId: 'player_5', name: 'Fifth Place', score: 400 }
+            ];
+            
+            console.log('🚀 Testing spaceships with reduced glow intensity');
+            updateInfo('Testing reduced glow intensity...', 'testing');
+            
+            setTimeout(() => {
+                const success = renderer.renderRanking(players, 'test-container', 'Intensity Test', null, 'ranking_vendedores');
+                
+                if (success) {
+                    updateInfo('✅ Glow intensity reduced by 50%<br>💡 Notice the subtler, less overwhelming glow effects', 'success');
+                } else {
+                    updateInfo('❌ Rendering failed', 'error');
+                }
+            }, 100);
+        }
+
+        // Test hover effects
+        function testHoverEffects() {
+            if (document.querySelectorAll('.spaceship').length === 0) {
+                testSpaceships();
+                setTimeout(() => {
+                    updateInfo('✅ Spaceships rendered<br>🖱️ Hover over spaceships to see reduced hover glow effects', 'success');
+                }, 1000);
+            } else {
+                updateInfo('🖱️ Hover over spaceships to see reduced hover glow effects<br>💫 Hover effects also have 50% reduced intensity', 'success');
+            }
+        }
+
+        // Toggle comparison panel
+        function toggleComparison() {
+            const panel = document.getElementById('comparison-panel');
+            const btn = document.getElementById('compare-btn');
+            
+            showComparison = !showComparison;
+            panel.style.display = showComparison ? 'block' : 'none';
+            btn.textContent = showComparison ? '🔍 Hide Comparison' : '🔍 Show Comparison';
+            btn.classList.toggle('active', showComparison);
+        }
+
+        // Clear all spaceships
+        function clearAll() {
+            const container = document.getElementById('test-container');
+            const spaceships = container.querySelectorAll('.spaceship');
+            spaceships.forEach(spaceship => spaceship.remove());
+            
+            updateInfo('Cleared all spaceships', 'success');
+        }
+
+        // Update info panel
+        function updateInfo(message, type = '') {
+            const content = document.getElementById('info-content');
+            const colorClass = type === 'success' ? 'color: #4ade80' : 
+                             type === 'testing' ? 'color: #fbbf24' : 
+                             type === 'error' ? 'color: #ef4444' : '';
+            
+            // Keep the alpha values info and add the message
+            const alphaInfo = content.innerHTML;
+            const messageDiv = `<div style="${colorClass}; margin-bottom: 15px;">${message}</div>`;
+            
+            if (type) {
+                content.innerHTML = messageDiv + alphaInfo;
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('💫 Glow intensity test loaded');
+            initRenderer();
+            
+            // Run initial test after a short delay
+            setTimeout(() => {
+                console.log('🚀 Running initial glow intensity test...');
+                testSpaceships();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

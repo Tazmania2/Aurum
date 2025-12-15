@@ -72,15 +72,15 @@
         }
         .safe-margins {
             position: absolute;
-            top: 120px;
-            left: 180px;
-            right: 180px;
-            bottom: 180px;
+            top: 360px;
+            left: 540px;
+            right: 540px;
+            bottom: 540px;
             border: 2px dashed rgba(0, 255, 0, 0.6);
             pointer-events: none;
         }
         .safe-margins::before {
-            content: 'SAFE ZONE (180px margins)';
+            content: 'SAFE ZONE (540px margins - TRIPLED)';
             position: absolute;
             top: -25px;
             left: 10px;
@@ -295,11 +295,11 @@
                                       rect.top < 0 || 
                                       rect.bottom > viewportHeight;
                 
-                // Check safe zone violations (should be within 180px margins)
-                const safeZoneViolation = rect.left < 180 || 
-                                        rect.right > (viewportWidth - 180) || 
-                                        rect.top < 120 || 
-                                        rect.bottom > (viewportHeight - 180);
+                // Check safe zone violations (should be within 540px margins - TRIPLED)
+                const safeZoneViolation = rect.left < 540 || 
+                                        rect.right > (viewportWidth - 540) || 
+                                        rect.top < 360 || 
+                                        rect.bottom > (viewportHeight - 540);
                 
                 if (containerClipped) results.containerClipped++;
                 if (viewportClipped) results.viewportClipped++;

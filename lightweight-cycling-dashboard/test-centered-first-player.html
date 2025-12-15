@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centered First Player Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <style>
+        .test-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px;
+            z-index: 1000;
+            border-bottom: 2px solid #4ade80;
+        }
+        .test-header h1 {
+            color: white;
+            margin: 0 0 10px 0;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+        .test-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .test-controls button {
+            padding: 8px 16px;
+            background: #4ade80;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .test-controls button:hover {
+            background: #22c55e;
+        }
+        .main-container {
+            margin-top: 80px;
+            height: calc(100vh - 80px);
+        }
+        .center-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 0, 0.8);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .center-line::before {
+            content: 'CENTER LINE';
+            position: absolute;
+            right: 10px;
+            top: -20px;
+            color: rgba(255, 255, 0, 0.8);
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .margin-indicators {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+        .margin-left, .margin-right {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 540px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px dashed rgba(255, 0, 0, 0.5);
+        }
+        .margin-left {
+            left: 0;
+        }
+        .margin-right {
+            right: 0;
+        }
+        .margin-top, .margin-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px dashed rgba(255, 0, 0, 0.5);
+        }
+        .margin-top {
+            top: 0;
+            height: 360px;
+        }
+        .margin-bottom {
+            bottom: 0;
+            height: 540px;
+        }
+        .info-panel {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>🎯 Centered First Player Test (Tripled Margins)</h1>
+        <div class="test-controls">
+            <button onclick="testFirstPlayer()">👑 Test First Player</button>
+            <button onclick="testAllPlayers()">🚀 Test All Players</button>
+            <button onclick="toggleMargins()" id="margin-btn">📐 Show Margins</button>
+            <button onclick="clearAll()">🗑️ Clear</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="view active ranking-view" id="test-view">
+            <h1 class="ranking-title">First Player Centering Test</h1>
+            <div class="ranking-container" id="test-container">
+                <div class="center-line"></div>
+                <div class="margin-indicators" id="margin-indicators" style="display: none;">
+                    <div class="margin-left"></div>
+                    <div class="margin-right"></div>
+                    <div class="margin-top"></div>
+                    <div class="margin-bottom"></div>
+                </div>
+                <!-- Spaceships will be positioned here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="info-panel">
+        <strong>Test Info:</strong><br>
+        <div id="info-content">
+            Ready to test first player centering...<br>
+            <strong>Margins:</strong> 540px (tripled)<br>
+            <strong>First Player:</strong> Should be perfectly centered on Y-axis
+        </div>
+    </div>
+
+    <script src="scripts/ranking-renderer.js"></script>
+    <script>
+        let renderer;
+        let showMargins = false;
+
+        // Initialize the renderer
+        function initRenderer() {
+            const mockAssets = {
+                ranking_vendedores: {
+                    ships: {
+                        first: { image: null, fallback: '🥇', cssColor: '#FFD700' },
+                        second: { image: null, fallback: '🥈', cssColor: '#C0C0C0' },
+                        third: { image: null, fallback: '🥉', cssColor: '#CD7F32' }
+                    }
+                }
+            };
+            
+            renderer = new RankingRenderer(mockAssets, {
+                maxSpaceships: 12,
+                animationDuration: 500
+            });
+            
+            console.log('🎯 Renderer initialized for first player centering test');
+        }
+
+        // Test just the first player (should be perfectly centered)
+        function testFirstPlayer() {
+            clearAll();
+            
+            const firstPlayer = {
+                playerId: 'player_1',
+                name: 'Champion',
+                score: 1000
+            };
+            
+            console.log('👑 Testing first player centering');
+            updateInfo('Testing first player centering...', 'warning');
+            
+            setTimeout(() => {
+                const success = renderer.renderRanking([firstPlayer], 'test-container', 'First Player Test', null, 'ranking_vendedores');
+                
+                if (success) {
+                    setTimeout(() => {
+                        analyzeFirstPlayerPosition();
+                    }, 1000);
+                } else {
+                    updateInfo('❌ Rendering failed', 'error');
+                }
+            }, 100);
+        }
+
+        // Test all players to see positioning
+        function testAllPlayers() {
+            clearAll();
+            
+            const players = [];
+            const names = ['Champion', 'Runner-up', 'Third Place', 'Player 4', 'Player 5'];
+            
+            for (let i = 0; i < 5; i++) {
+                players.push({
+                    playerId: `player_${i + 1}`,
+                    name: names[i],
+                    score: 1000 - (i * 150)
+                });
+            }
+            
+            console.log('🚀 Testing all players positioning');
+            updateInfo('Testing all players positioning...', 'warning');
+            
+            setTimeout(() => {
+                const success = renderer.renderRanking(players, 'test-container', 'All Players Test', null, 'ranking_vendedores');
+                
+                if (success) {
+                    setTimeout(() => {
+                        analyzeAllPositions();
+                    }, 1000);
+                } else {
+                    updateInfo('❌ Rendering failed', 'error');
+                }
+            }, 100);
+        }
+
+        // Analyze first player position relative to center
+        function analyzeFirstPlayerPosition() {
+            const container = document.getElementById('test-container');
+            const firstPlayer = container.querySelector('.spaceship[data-position="1"]');
+            
+            if (!firstPlayer) {
+                updateInfo('❌ First player not found', 'error');
+                return;
+            }
+            
+            const containerRect = container.getBoundingClientRect();
+            const playerRect = firstPlayer.getBoundingClientRect();
+            const containerCenterY = containerRect.top + (containerRect.height / 2);
+            const playerCenterY = playerRect.top + (playerRect.height / 2);
+            
+            const yOffset = Math.abs(playerCenterY - containerCenterY);
+            const isWellCentered = yOffset < 10; // Within 10px of perfect center
+            
+            let info = `<strong>First Player Analysis:</strong><br>`;
+            info += `Container Center Y: ${Math.round(containerCenterY)}px<br>`;
+            info += `Player Center Y: ${Math.round(playerCenterY)}px<br>`;
+            info += `Y Offset: ${Math.round(yOffset)}px<br>`;
+            info += `<strong>Status:</strong> ${isWellCentered ? '✅ Well Centered' : '⚠️ Off Center'}<br>`;
+            info += `<strong>Margins:</strong> 540px (tripled)`;
+            
+            updateInfo(info, isWellCentered ? 'success' : 'warning');
+            
+            console.log('📊 First player analysis:', {
+                containerCenterY,
+                playerCenterY,
+                yOffset,
+                isWellCentered
+            });
+        }
+
+        // Analyze all player positions
+        function analyzeAllPositions() {
+            const container = document.getElementById('test-container');
+            const spaceships = container.querySelectorAll('.spaceship');
+            const containerRect = container.getBoundingClientRect();
+            const containerCenterY = containerRect.top + (containerRect.height / 2);
+            
+            let info = `<strong>All Players Analysis:</strong><br>`;
+            let firstPlayerCentered = false;
+            
+            spaceships.forEach((spaceship, index) => {
+                const position = spaceship.getAttribute('data-position');
+                const rect = spaceship.getBoundingClientRect();
+                const playerCenterY = rect.top + (rect.height / 2);
+                const yOffset = Math.abs(playerCenterY - containerCenterY);
+                
+                if (position === '1') {
+                    firstPlayerCentered = yOffset < 10;
+                    info += `P${position}: ${Math.round(yOffset)}px from center ${firstPlayerCentered ? '✅' : '⚠️'}<br>`;
+                } else {
+                    info += `P${position}: ${Math.round(yOffset)}px from center<br>`;
+                }
+            });
+            
+            info += `<strong>First Player:</strong> ${firstPlayerCentered ? 'Well Centered' : 'Off Center'}<br>`;
+            info += `<strong>Margins:</strong> 540px (tripled)`;
+            
+            updateInfo(info, firstPlayerCentered ? 'success' : 'warning');
+        }
+
+        // Toggle margin indicators
+        function toggleMargins() {
+            const indicators = document.getElementById('margin-indicators');
+            const btn = document.getElementById('margin-btn');
+            
+            showMargins = !showMargins;
+            indicators.style.display = showMargins ? 'block' : 'none';
+            btn.textContent = showMargins ? '📐 Hide Margins' : '📐 Show Margins';
+            btn.style.background = showMargins ? '#ef4444' : '#4ade80';
+            btn.style.color = showMargins ? 'white' : 'black';
+        }
+
+        // Clear all spaceships
+        function clearAll() {
+            const container = document.getElementById('test-container');
+            const spaceships = container.querySelectorAll('.spaceship');
+            spaceships.forEach(spaceship => spaceship.remove());
+            
+            updateInfo('Cleared all spaceships', 'success');
+        }
+
+        // Update info panel
+        function updateInfo(message, type = '') {
+            const content = document.getElementById('info-content');
+            const colorClass = type === 'success' ? 'color: #4ade80' : 
+                             type === 'warning' ? 'color: #fbbf24' : 
+                             type === 'error' ? 'color: #ef4444' : '';
+            
+            content.innerHTML = `<div style="${colorClass}">${message}</div>`;
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 First player centering test loaded');
+            initRenderer();
+            
+            // Run initial test after a short delay
+            setTimeout(() => {
+                console.log('👑 Running initial first player test...');
+                testFirstPlayer();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

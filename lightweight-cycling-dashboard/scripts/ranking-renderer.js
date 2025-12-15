@@ -292,24 +292,37 @@ class RankingRenderer {
         containerHeight = containerHeight || 600;
         
         // SPACE RACE POSITIONING: X-axis determines position (1st place = rightmost)
-        const margin = 100; // Margin from edges
-        const raceWidth = containerWidth - (margin * 2);
+        // Dynamic margins based on spaceship sizes (larger for bigger ships)
+        const baseMargin = 120;
+        const spaceshipSize = position === 1 ? 190 : position === 2 ? 176 : position === 3 ? 170 : 160;
+        const dynamicMargin = Math.max(baseMargin, spaceshipSize / 2 + 50);
+        
+        const raceWidth = containerWidth - (dynamicMargin * 2);
         
         // Position 1 (1st place) should be rightmost, higher positions move left
         // Invert the position calculation: lower position number = further right
         const normalizedPosition = (position - 1) / Math.max(totalPlayers - 1, 1);
-        const x = margin + raceWidth * (1 - normalizedPosition); // Invert: 1st place = rightmost
+        const x = dynamicMargin + raceWidth * (1 - normalizedPosition); // Invert: 1st place = rightmost
         
         // Y position: Add some randomness for "messy" space race feel, but keep it reasonable
         const centerY = containerHeight / 2;
-        const yVariation = 80; // Maximum variation from center
+        const yVariation = Math.min(60, containerHeight * 0.15); // Adaptive variation based on container height
         
         // Use position as seed for consistent but varied Y positions
         const yOffset = (Math.sin(position * 2.5) * yVariation) + (Math.cos(position * 1.7) * yVariation * 0.5);
-        const y = Math.max(50, Math.min(containerHeight - 150, centerY + yOffset));
+        
+        // Calculate safe Y bounds considering spaceship size and player info
+        const playerInfoHeight = 80; // Approximate height of player info card
+        const safeTopMargin = Math.max(80, spaceshipSize / 2 + 20);
+        const safeBottomMargin = Math.max(120, spaceshipSize / 2 + playerInfoHeight + 20);
+        
+        const y = Math.max(safeTopMargin, Math.min(containerHeight - safeBottomMargin, centerY + yOffset));
+        
+        // Ensure X position keeps spaceship fully visible
+        const safeX = Math.max(spaceshipSize / 2 + 20, Math.min(x, containerWidth - spaceshipSize / 2 - 20));
         
         return { 
-            x: Math.max(50, Math.min(x, containerWidth - 150)), 
+            x: safeX, 
             y: y 
         };
     }

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glow Reduction Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: linear-gradient(135deg, #1a0b2e 0%, #2d1b69 25%, #4a2c8f 50%, #6b46c1 75%, #8b5cf6 100%);
+            min-height: 100vh;
+            font-family: 'Orbitron', Arial, sans-serif;
+        }
+        .test-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 40px 0;
+        }
+        .demo-section {
+            padding: 30px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+        .demo-section h3 {
+            color: #4ade80;
+            margin-bottom: 30px;
+        }
+        .spaceship-demo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .spaceship-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        .spaceship-image-demo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #4a90e2, #7b68ee);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .rank-label {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        /* Old glow effects (intense) */
+        .old-glow .spaceship-image-demo.rank-1 {
+            filter: drop-shadow(0 0 20px #ffd700) drop-shadow(0 0 40px #ffd700) drop-shadow(0 0 60px rgba(255, 215, 0, 0.4));
+        }
+        .old-glow .spaceship-image-demo.rank-2 {
+            filter: drop-shadow(0 0 18px #c0c0c0) drop-shadow(0 0 35px #c0c0c0) drop-shadow(0 0 50px rgba(192, 192, 192, 0.3));
+        }
+        .old-glow .spaceship-image-demo.rank-3 {
+            filter: drop-shadow(0 0 15px #cd7f32) drop-shadow(0 0 30px #cd7f32) drop-shadow(0 0 45px rgba(205, 127, 50, 0.3));
+        }
+        .old-glow .spaceship-image-demo.rank-other {
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2)) drop-shadow(0 0 20px rgba(83, 52, 131, 0.3));
+        }
+        
+        /* New glow effects (subtle) */
+        .new-glow .spaceship-image-demo.rank-1 {
+            filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 20px #ffd700) drop-shadow(0 0 30px rgba(255, 215, 0, 0.2));
+        }
+        .new-glow .spaceship-image-demo.rank-2 {
+            filter: drop-shadow(0 0 9px #c0c0c0) drop-shadow(0 0 18px #c0c0c0) drop-shadow(0 0 25px rgba(192, 192, 192, 0.2));
+        }
+        .new-glow .spaceship-image-demo.rank-3 {
+            filter: drop-shadow(0 0 8px #cd7f32) drop-shadow(0 0 15px #cd7f32) drop-shadow(0 0 22px rgba(205, 127, 50, 0.2));
+        }
+        .new-glow .spaceship-image-demo.rank-other {
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.15)) drop-shadow(0 0 10px rgba(83, 52, 131, 0.2));
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .controls button {
+            margin: 10px;
+            padding: 12px 24px;
+            background: #4ade80;
+            color: black;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .controls button:hover {
+            background: #22c55e;
+        }
+        .info-panel {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4ade80;
+        }
+        .info-panel h4 {
+            color: #4ade80;
+            margin: 0 0 10px 0;
+        }
+        .info-panel p {
+            color: rgba(255, 255, 255, 0.9);
+            margin: 5px 0;
+        }
+        .single-demo {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .single-demo h3 {
+            color: white;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 style="color: white; text-align: center; margin-bottom: 40px;">✨ Glow Reduction Test</h1>
+        
+        <div class="info-panel">
+            <h4>🎯 Glow Reduction Applied</h4>
+            <p><strong>Problem:</strong> Spaceship glow effects were too intense, covering too much space background</p>
+            <p><strong>Solution:</strong> Reduced all glow effects by ~50% while maintaining visual hierarchy</p>
+            <p><strong>Result:</strong> More subtle, professional look that doesn't overwhelm the space theme</p>
+        </div>
+
+        <div class="comparison-grid">
+            <div class="demo-section old-glow">
+                <h3>❌ Before (Intense Glow)</h3>
+                <div class="spaceship-demo">
+                    <div class="spaceship-item">
+                        <div class="spaceship-image-demo rank-1">🥇</div>
+                        <div class="rank-label">1st Place</div>
+                    </div>
+                    <div class="spaceship-item">
+                        <div class="spaceship-image-demo rank-2">🥈</div>
+                        <div class="rank-label">2nd Place</div>
+                    </div>
+                    <div class="spaceship-item">
+                        <div class="spaceship-image-demo rank-3">🥉</div>
+                        <div class="rank-label">3rd Place</div>
+                    </div>
+                    <div class="spaceship-item">
+                        <div class="spaceship-image-demo rank-other">🚀</div>
+                        <div class="rank-label">Other</div>
+                    </div>
+                </div>
+                <p style="color: rgba(255, 255, 255, 0.7);">
+                    Glow was too intense, covering background
+                </p>
+            </div>
+            
+            <div class="demo-section new-glow">
+                <h3>✅ After (Subtle Glow)</h3>
+                <div class="spaceship-demo">
+                    <div class="spaceship-item">
+                        <div class="spaceship-image-demo rank-1">🥇</div>
+                        <div class="rank-label">1st Place</div>
+                    </div>
+                    <div class="spaceship-item">
+                        <div class="spaceship-image-demo rank-2">🥈</div>
+                        <div class="rank-label">2nd Place</div>
+                    </div>
+                    <div class="spaceship-item">
+                        <div class="spaceship-image-demo rank-3">🥉</div>
+                        <div class="rank-label">3rd Place</div>
+                    </div>
+                    <div class="spaceship-item">
+                        <div class="spaceship-image-demo rank-other">🚀</div>
+                        <div class="rank-label">Other</div>
+                    </div>
+                </div>
+                <p style="color: rgba(255, 255, 255, 0.7);">
+                    Subtle glow that doesn't overwhelm
+                </p>
+            </div>
+        </div>
+
+        <div class="single-demo new-glow">
+            <h3>🌟 Current Glow Effects (Applied to Dashboard)</h3>
+            <div class="spaceship-demo">
+                <div class="spaceship-item">
+                    <div class="spaceship-image-demo rank-1">🚀</div>
+                    <div class="rank-label">Gold: 10px → 20px → 30px</div>
+                </div>
+                <div class="spaceship-item">
+                    <div class="spaceship-image-demo rank-2">🚀</div>
+                    <div class="rank-label">Silver: 9px → 18px → 25px</div>
+                </div>
+                <div class="spaceship-item">
+                    <div class="spaceship-image-demo rank-3">🚀</div>
+                    <div class="rank-label">Bronze: 8px → 15px → 22px</div>
+                </div>
+                <div class="spaceship-item">
+                    <div class="spaceship-image-demo rank-other">🚀</div>
+                    <div class="rank-label">Other: 5px → 10px</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="toggleComparison()">👀 Toggle Comparison</button>
+            <button onclick="testHover()">🖱️ Test Hover Effects</button>
+            <button onclick="showTechnical()">🔧 Show Technical Details</button>
+        </div>
+
+        <div class="info-panel" id="technical-details" style="display: none;">
+            <h4>🔧 Technical Changes Made</h4>
+            <p><strong>Base Glow:</strong> 10px → 5px (50% reduction)</p>
+            <p><strong>Gold (1st):</strong> 20px/40px/60px → 10px/20px/30px (50% reduction)</p>
+            <p><strong>Silver (2nd):</strong> 18px/35px/50px → 9px/18px/25px (50% reduction)</p>
+            <p><strong>Bronze (3rd):</strong> 15px/30px/45px → 8px/15px/22px (47% reduction)</p>
+            <p><strong>Other ranks:</strong> 10px/20px → 5px/10px (50% reduction)</p>
+            <p><strong>Hover effects:</strong> Also reduced by ~50% across all ranks</p>
+            <p><strong>Animations:</strong> Keyframe glow animations reduced proportionally</p>
+        </div>
+    </div>
+
+    <script>
+        let showingComparison = true;
+        
+        function toggleComparison() {
+            const comparisonGrid = document.querySelector('.comparison-grid');
+            const singleDemo = document.querySelector('.single-demo');
+            
+            if (showingComparison) {
+                comparisonGrid.style.display = 'none';
+                singleDemo.style.display = 'block';
+                showingComparison = false;
+            } else {
+                comparisonGrid.style.display = 'grid';
+                singleDemo.style.display = 'none';
+                showingComparison = true;
+            }
+        }
+        
+        function testHover() {
+            const spaceships = document.querySelectorAll('.spaceship-image-demo');
+            spaceships.forEach(spaceship => {
+                spaceship.style.transform = 'scale(1.1)';
+                spaceship.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    spaceship.style.transform = 'scale(1)';
+                }, 1000);
+            });
+        }
+        
+        function showTechnical() {
+            const technical = document.getElementById('technical-details');
+            technical.style.display = technical.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Log current settings
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('✨ Glow reduction test loaded');
+            console.log('📉 All glow effects reduced by ~50%');
+            console.log('🎯 Better balance between visibility and background preservation');
+        });
+    </script>
+</body>
+</html>

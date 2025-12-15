@@ -33,6 +33,7 @@ html, body {
     opacity: 0;
     visibility: hidden;
     z-index: 1;
+    overflow: visible;
 }
 
 .view.active {
@@ -53,7 +54,8 @@ html, body {
 .ranking-view {
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 10px;
+    overflow: visible;
 }
 
 .ranking-title {
@@ -95,7 +97,8 @@ html, body {
 .ranking-container {
     flex: 1;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    min-height: calc(100vh - 200px);
 }
 
 /* Spaceship styles */

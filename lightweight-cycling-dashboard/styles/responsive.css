@@ -92,7 +92,8 @@
     }
     
     .ranking-view {
-        padding: 15px;
+        padding: 8px;
+        overflow: visible;
     }
 }
 
@@ -123,7 +124,8 @@
     }
     
     .ranking-view {
-        padding: 10px;
+        padding: 5px;
+        overflow: visible;
     }
 }
 
@@ -132,6 +134,7 @@
     /* Fallback for older Smart TV browsers */
     .ranking-container {
         display: block;
+        overflow: visible;
     }
     
     .spaceship {
@@ -294,6 +297,7 @@
 .no-flexbox .ranking-container {
     position: relative !important;
     height: calc(100vh - 120px) !important;
+    overflow: visible !important;
 }
 
 .no-transforms .spaceship {
@@ -324,6 +328,7 @@
     .ranking-container {
         display: block;
         text-align: left;
+        overflow: visible;
     }
 }
 

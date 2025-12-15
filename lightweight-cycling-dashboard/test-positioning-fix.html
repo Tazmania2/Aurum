@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positioning Fix Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a0b2e 0%, #2d1b69 25%, #4a2c8f 50%, #6b46c1 75%, #8b5cf6 100%);
+            min-height: 100vh;
+            font-family: 'Orbitron', Arial, sans-serif;
+        }
+        .test-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            z-index: 1000;
+            border-bottom: 2px solid #4ade80;
+        }
+        .test-header h1 {
+            color: white;
+            margin: 0;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+        .test-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .test-controls button {
+            padding: 8px 16px;
+            background: #4ade80;
+            color: black;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .test-controls button:hover {
+            background: #22c55e;
+        }
+        .main-container {
+            margin-top: 120px;
+            height: calc(100vh - 120px);
+        }
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            max-width: 300px;
+        }
+        .spaceship-demo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, #4a90e2, #7b68ee);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        .spaceship-demo.rank-1 {
+            width: 190px;
+            height: 190px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+        }
+        .spaceship-demo.rank-2 {
+            width: 176px;
+            height: 176px;
+            background: linear-gradient(45deg, #c0c0c0, #e5e5e5);
+        }
+        .spaceship-demo.rank-3 {
+            width: 170px;
+            height: 170px;
+            background: linear-gradient(45deg, #cd7f32, #daa520);
+        }
+        .container-bounds {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+        }
+        .safe-zone {
+            position: absolute;
+            top: 80px;
+            left: 120px;
+            right: 120px;
+            bottom: 120px;
+            border: 1px dashed rgba(0, 255, 0, 0.5);
+            pointer-events: none;
+        }
+        .safe-zone::before {
+            content: 'Safe Zone';
+            position: absolute;
+            top: -20px;
+            left: 10px;
+            color: rgba(0, 255, 0, 0.7);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>🎯 Spaceship Positioning Fix Test</h1>
+        <div class="test-controls">
+            <button onclick="testPositioning()">🚀 Test Positioning</button>
+            <button onclick="toggleBounds()">📐 Toggle Bounds</button>
+            <button onclick="simulateResize()">📱 Simulate Resize</button>
+            <button onclick="clearSpaceships()">🗑️ Clear</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="view active ranking-view" id="test-view">
+            <h1 class="ranking-title">Positioning Test</h1>
+            <div class="ranking-container" id="test-container">
+                <div class="container-bounds" id="bounds-indicator"></div>
+                <div class="safe-zone" id="safe-zone"></div>
+                <!-- Spaceships will be positioned here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="debug-info" id="debug-info">
+        <strong>Debug Info:</strong><br>
+        Container: <span id="container-size">-</span><br>
+        Spaceships: <span id="spaceship-count">0</span><br>
+        Clipped: <span id="clipped-count">0</span><br>
+        <button onclick="analyzePositions()" style="margin-top: 5px; padding: 4px 8px; background: #4ade80; border: none; border-radius: 2px;">Analyze</button>
+    </div>
+
+    <script>
+        let spaceshipCount = 0;
+        let showBounds = true;
+
+        // Simulate the positioning algorithm from ranking-renderer.js
+        function calculatePosition(position, totalPlayers, container) {
+            const containerWidth = container.offsetWidth || 800;
+            const containerHeight = container.offsetHeight || 600;
+            
+            // Dynamic margins based on spaceship sizes (larger for bigger ships)
+            const baseMargin = 120;
+            const spaceshipSize = position === 1 ? 190 : position === 2 ? 176 : position === 3 ? 170 : 160;
+            const dynamicMargin = Math.max(baseMargin, spaceshipSize / 2 + 50);
+            
+            const raceWidth = containerWidth - (dynamicMargin * 2);
+            
+            // Position 1 (1st place) should be rightmost, higher positions move left
+            const normalizedPosition = (position - 1) / Math.max(totalPlayers - 1, 1);
+            const x = dynamicMargin + raceWidth * (1 - normalizedPosition);
+            
+            // Y position with adaptive variation
+            const centerY = containerHeight / 2;
+            const yVariation = Math.min(60, containerHeight * 0.15);
+            
+            const yOffset = (Math.sin(position * 2.5) * yVariation) + (Math.cos(position * 1.7) * yVariation * 0.5);
+            
+            // Calculate safe Y bounds
+            const playerInfoHeight = 80;
+            const safeTopMargin = Math.max(80, spaceshipSize / 2 + 20);
+            const safeBottomMargin = Math.max(120, spaceshipSize / 2 + playerInfoHeight + 20);
+            
+            const y = Math.max(safeTopMargin, Math.min(containerHeight - safeBottomMargin, centerY + yOffset));
+            
+            // Ensure X position keeps spaceship fully visible
+            const safeX = Math.max(spaceshipSize / 2 + 20, Math.min(x, containerWidth - spaceshipSize / 2 - 20));
+            
+            return { x: safeX, y: y, size: spaceshipSize };
+        }
+
+        function createSpaceship(position, totalPlayers) {
+            const container = document.getElementById('test-container');
+            const pos = calculatePosition(position, totalPlayers, container);
+            
+            const spaceship = document.createElement('div');
+            spaceship.className = `spaceship rank-${position <= 3 ? position : 'other'}`;
+            spaceship.innerHTML = `
+                <div class="spaceship-demo rank-${position}">
+                    ${position === 1 ? '🥇' : position === 2 ? '🥈' : position === 3 ? '🥉' : '🚀'}
+                </div>
+                <div class="player-info">
+                    <div class="player-name">Player ${position}</div>
+                    <div class="player-score">${1000 - (position - 1) * 100}K</div>
+                </div>
+            `;
+            
+            spaceship.style.left = pos.x + 'px';
+            spaceship.style.top = pos.y + 'px';
+            spaceship.style.transform = 'translate(-50%, -50%)';
+            spaceship.setAttribute('data-position', position);
+            spaceship.setAttribute('data-size', pos.size);
+            
+            container.appendChild(spaceship);
+            spaceshipCount++;
+            
+            console.log(`Created spaceship ${position} at (${pos.x}, ${pos.y}) with size ${pos.size}px`);
+            updateDebugInfo();
+        }
+
+        function testPositioning() {
+            clearSpaceships();
+            const totalPlayers = 8;
+            
+            for (let i = 1; i <= totalPlayers; i++) {
+                setTimeout(() => {
+                    createSpaceship(i, totalPlayers);
+                }, i * 200);
+            }
+        }
+
+        function clearSpaceships() {
+            const spaceships = document.querySelectorAll('.spaceship');
+            spaceships.forEach(spaceship => spaceship.remove());
+            spaceshipCount = 0;
+            updateDebugInfo();
+        }
+
+        function toggleBounds() {
+            const bounds = document.getElementById('bounds-indicator');
+            const safeZone = document.getElementById('safe-zone');
+            showBounds = !showBounds;
+            
+            bounds.style.display = showBounds ? 'block' : 'none';
+            safeZone.style.display = showBounds ? 'block' : 'none';
+        }
+
+        function simulateResize() {
+            const container = document.getElementById('test-container');
+            const currentWidth = container.offsetWidth;
+            const currentHeight = container.offsetHeight;
+            
+            // Simulate different screen sizes
+            const sizes = [
+                { w: 1920, h: 1080, name: 'Full HD' },
+                { w: 1366, h: 768, name: 'Laptop' },
+                { w: 3840, h: 2160, name: '4K' },
+                { w: 800, h: 600, name: 'Small' }
+            ];
+            
+            const randomSize = sizes[Math.floor(Math.random() * sizes.length)];
+            console.log(`Simulating ${randomSize.name} (${randomSize.w}x${randomSize.h})`);
+            
+            // This is just for demonstration - in real app the container would resize
+            alert(`Simulated resize to ${randomSize.name} (${randomSize.w}x${randomSize.h})\nCurrent: ${currentWidth}x${currentHeight}`);
+        }
+
+        function analyzePositions() {
+            const container = document.getElementById('test-container');
+            const spaceships = document.querySelectorAll('.spaceship');
+            const containerRect = container.getBoundingClientRect();
+            
+            let clippedCount = 0;
+            let analysis = 'Position Analysis:\n\n';
+            
+            spaceships.forEach(spaceship => {
+                const rect = spaceship.getBoundingClientRect();
+                const position = spaceship.getAttribute('data-position');
+                const size = spaceship.getAttribute('data-size');
+                
+                const isClipped = rect.left < containerRect.left || 
+                                rect.right > containerRect.right || 
+                                rect.top < containerRect.top || 
+                                rect.bottom > containerRect.bottom;
+                
+                if (isClipped) clippedCount++;
+                
+                analysis += `Player ${position} (${size}px): ${isClipped ? '❌ CLIPPED' : '✅ OK'}\n`;
+                analysis += `  Bounds: ${Math.round(rect.left)},${Math.round(rect.top)} to ${Math.round(rect.right)},${Math.round(rect.bottom)}\n\n`;
+            });
+            
+            analysis += `Container: ${Math.round(containerRect.width)}x${Math.round(containerRect.height)}\n`;
+            analysis += `Clipped: ${clippedCount}/${spaceships.length}`;
+            
+            console.log(analysis);
+            document.getElementById('clipped-count').textContent = clippedCount;
+        }
+
+        function updateDebugInfo() {
+            const container = document.getElementById('test-container');
+            document.getElementById('container-size').textContent = `${container.offsetWidth}x${container.offsetHeight}`;
+            document.getElementById('spaceship-count').textContent = spaceshipCount;
+        }
+
+        // Auto-update debug info
+        setInterval(updateDebugInfo, 1000);
+
+        // Initial test
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Positioning fix test loaded');
+            updateDebugInfo();
+            
+            setTimeout(() => {
+                console.log('🚀 Running initial positioning test...');
+                testPositioning();
+            }, 1000);
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            console.log('📱 Window resized, updating debug info');
+            updateDebugInfo();
+        });
+    </script>
+</body>
+</html>

@@ -597,9 +597,11 @@ class App {
         }
     }
     
-    // Enhanced Looker view loading with error handling
+    // Enhanced Looker view loading with iframe load detection
     async loadLookerView(viewConfig) {
         try {
+            console.log('📊 Loading Looker view with iframe load detection...');
+            
             // Refresh Looker iframe with timestamp - implements Requirements 2.2
             const refreshSuccess = this.refreshLookerIframe();
             
@@ -609,20 +611,25 @@ class App {
                 return; // Don't throw - allow cycling to continue
             }
             
-            // Don't wait for iframe loading - let it load asynchronously
-            // This prevents blocking the view cycling
-            console.log('Looker iframe refresh initiated, continuing cycle');
+            // Wait for iframe to load completely before starting cycle timer
+            const loadSuccess = await this.waitForIframeLoad();
             
-            // Optional: Check iframe configuration without blocking
-            setTimeout(() => {
-                const iframe = document.getElementById('looker-iframe');
-                if (!iframe || !iframe.src) {
-                    console.warn('Looker iframe not properly configured after refresh');
-                    this.showLookerError(viewConfig, new Error('Looker iframe not properly configured'));
+            if (loadSuccess) {
+                console.log('📊 Looker iframe loaded successfully, starting cycle timer');
+                // Notify cycle manager that view is ready
+                if (this.cycleManager) {
+                    this.cycleManager.onViewReady();
                 }
-            }, 1000);
+            } else {
+                console.warn('📊 Looker iframe failed to load within timeout, continuing anyway');
+                this.showLookerError(viewConfig, new Error('Dashboard took too long to load'));
+                // Still notify cycle manager to continue
+                if (this.cycleManager) {
+                    this.cycleManager.onViewReady();
+                }
+            }
             
-            console.log('Looker view load initiated successfully');
+            console.log('Looker view load process completed');
             
         } catch (error) {
             console.error('Failed to load Looker view:', error);
@@ -630,8 +637,99 @@ class App {
             // Show fallback content for Looker errors but don't throw
             this.showLookerError(viewConfig, error);
             console.log('Continuing cycle despite Looker error');
-            // Don't re-throw - allow cycling to continue
+            
+            // Still notify cycle manager to continue
+            if (this.cycleManager) {
+                this.cycleManager.onViewReady();
+            }
         }
+    }
+    
+    // Wait for iframe to load completely
+    async waitForIframeLoad(maxWaitTime = 15000) {
+        return new Promise((resolve) => {
+            const iframe = document.getElementById('looker-iframe');
+            
+            if (!iframe) {
+                console.error('Looker iframe not found');
+                resolve(false);
+                return;
+            }
+            
+            let loadTimeout;
+            let checkInterval;
+            let hasResolved = false;
+            
+            const resolveOnce = (success) => {
+                if (hasResolved) return;
+                hasResolved = true;
+                
+                if (loadTimeout) clearTimeout(loadTimeout);
+                if (checkInterval) clearInterval(checkInterval);
+                
+                resolve(success);
+            };
+            
+            // Set maximum wait time
+            loadTimeout = setTimeout(() => {
+                console.warn(`⏰ Iframe load timeout after ${maxWaitTime}ms`);
+                resolveOnce(false);
+            }, maxWaitTime);
+            
+            // Method 1: Try to use iframe load event (may not work for cross-origin)
+            const onLoad = () => {
+                console.log('📊 Iframe load event fired');
+                resolveOnce(true);
+            };
+            
+            const onError = () => {
+                console.warn('📊 Iframe error event fired');
+                resolveOnce(false);
+            };
+            
+            iframe.addEventListener('load', onLoad, { once: true });
+            iframe.addEventListener('error', onError, { once: true });
+            
+            // Method 2: Check for iframe content changes (fallback for cross-origin)
+            let lastSrc = iframe.src;
+            let stableCount = 0;
+            const requiredStableChecks = 3; // Need 3 stable checks to consider loaded
+            
+            checkInterval = setInterval(() => {
+                try {
+                    const currentSrc = iframe.src;
+                    
+                    // Check if src has stabilized (not changing)
+                    if (currentSrc === lastSrc && currentSrc) {
+                        stableCount++;
+                        console.log(`📊 Iframe src stable (${stableCount}/${requiredStableChecks}): ${currentSrc.substring(0, 100)}...`);
+                        
+                        if (stableCount >= requiredStableChecks) {
+                            console.log('📊 Iframe appears to be loaded (src stable)');
+                            resolveOnce(true);
+                        }
+                    } else {
+                        stableCount = 0;
+                        lastSrc = currentSrc;
+                    }
+                    
+                    // Additional check: try to access iframe properties (may fail for cross-origin)
+                    try {
+                        if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+                            console.log('📊 Iframe content document ready');
+                            resolveOnce(true);
+                        }
+                    } catch (crossOriginError) {
+                        // Expected for cross-origin iframes, continue with other methods
+                    }
+                    
+                } catch (error) {
+                    console.warn('Error checking iframe status:', error);
+                }
+            }, 1000); // Check every second
+            
+            console.log(`📊 Started waiting for iframe load (max ${maxWaitTime}ms)...`);
+        });
     }
     
     // Show Looker-specific error state
@@ -730,6 +828,10 @@ class App {
                 
                 if (renderSuccess) {
                     console.log(`Successfully loaded ranking view ${viewConfig.id} with ${playerData.length} players`);
+                    // Notify cycle manager that ranking view is ready
+                    if (this.cycleManager) {
+                        this.cycleManager.onViewReady();
+                    }
                     return; // Success - exit retry loop
                 } else {
                     throw new Error('Failed to render ranking display');
@@ -746,6 +848,11 @@ class App {
                     
                     // Show error state with recovery information
                     this.rankingRenderer.renderRanking(null, containerId, viewConfig.title, errorInfo);
+                    
+                    // Notify cycle manager that view is ready (even with error)
+                    if (this.cycleManager) {
+                        this.cycleManager.onViewReady();
+                    }
                     
                     // Don't throw - allow cycling to continue
                     return;

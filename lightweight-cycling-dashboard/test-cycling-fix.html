@@ -63,6 +63,9 @@
         .debug-panel div {
             margin: 5px 0;
         }
+        .status-paused {
+            color: #fbbf24;
+        }
         .status-running {
             color: #4ade80;
         }
@@ -94,6 +97,7 @@
     <div class="debug-panel">
         <h3>🔍 Cycling Debug</h3>
         <div>Status: <span id="cycle-status" class="status-running">Starting...</span></div>
+        <div>Paused: <span id="cycle-paused" class="status-running">No</span></div>
         <div>Current View: <span id="current-view">-</span></div>
         <div>View Index: <span id="view-index">-</span></div>
         <div>Interval: <span id="interval-time">-</span></div>
@@ -179,7 +183,7 @@
         let cycleManager = null;
         let errorCount = 0;
 
-        // View change callback with error simulation
+        // View change callback with iframe load detection simulation
         async function onViewChange(viewConfig) {
             try {
                 console.log(`🔄 View change to: ${viewConfig.id} (${viewConfig.type})`);
@@ -189,20 +193,39 @@
                 
                 // Simulate different loading behaviors
                 if (viewConfig.type === 'looker') {
-                    console.log('📊 Loading Looker view...');
-                    // Simulate potential iframe issues without blocking
-                    setTimeout(() => {
-                        console.log('📊 Looker iframe loaded (simulated)');
-                    }, 500);
+                    console.log('📊 Loading Looker view with iframe detection...');
+                    
+                    // Simulate iframe loading time (3-8 seconds)
+                    const loadTime = 3000 + Math.random() * 5000;
+                    console.log(`📊 Simulating iframe load time: ${Math.round(loadTime)}ms`);
+                    
+                    // Show the view immediately
+                    viewController.showView(viewConfig.id);
+                    
+                    // Simulate waiting for iframe to load
+                    await new Promise(resolve => {
+                        setTimeout(() => {
+                            console.log('📊 Looker iframe loaded (simulated) - notifying cycle manager');
+                            // Notify cycle manager that view is ready
+                            if (cycleManager) {
+                                cycleManager.onViewReady();
+                            }
+                            resolve();
+                        }, loadTime);
+                    });
+                    
                 } else if (viewConfig.type === 'ranking') {
                     console.log('🏆 Loading ranking view...');
-                    // Simulate API call
-                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    // Show the view immediately
+                    viewController.showView(viewConfig.id);
+                    
+                    // Simulate API call (faster than iframe)
+                    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
                     console.log('🏆 Ranking data loaded (simulated)');
+                    
+                    // Ranking views don't pause the cycle, so no need to notify
                 }
-                
-                // Show the view
-                viewController.showView(viewConfig.id);
                 
                 updateDebugPanel();
                 
@@ -213,6 +236,11 @@
                 
                 // Still show the view to maintain cycling
                 viewController.showView(viewConfig.id);
+                
+                // Make sure to notify cycle manager even on error
+                if (cycleManager) {
+                    cycleManager.onViewReady();
+                }
             }
         }
 
@@ -227,6 +255,8 @@
             if (cycleManager) {
                 document.getElementById('cycle-status').textContent = cycleManager.isRunning ? 'Running' : 'Stopped';
                 document.getElementById('cycle-status').className = cycleManager.isRunning ? 'status-running' : 'status-error';
+                document.getElementById('cycle-paused').textContent = cycleManager.isPaused ? 'Yes' : 'No';
+                document.getElementById('cycle-paused').className = cycleManager.isPaused ? 'status-paused' : 'status-running';
                 document.getElementById('interval-time').textContent = cycleManager.intervalMs + 'ms';
             }
         }

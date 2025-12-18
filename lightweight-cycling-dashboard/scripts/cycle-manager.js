@@ -68,6 +68,9 @@ class CycleManager {
         console.log(`🔄 Cycling to view ${this.currentIndex}: ${nextView.id} (${nextView.type})`);
         console.log(`🔄 Cycle manager status: running=${this.isRunning}, paused=${this.isPaused}, interval=${this.intervalMs}ms`);
         
+        // Performance optimization: Preload next view data
+        this.preloadNextViewData();
+        
         // Update app state
         if (this.appState) {
             this.appState.setCurrentViewIndex(this.currentIndex);
@@ -239,6 +242,19 @@ class CycleManager {
         if (this.isRunning) {
             this.stop();
             this.start();
+        }
+    }
+    
+    // Performance optimization: Preload data for next view
+    preloadNextViewData() {
+        const nextIndex = (this.currentIndex + 1) % this.views.length;
+        const nextView = this.views[nextIndex];
+        
+        if (nextView.type === 'ranking' && window.app && window.app.dataFetcher) {
+            // Preload data for next ranking view
+            window.app.dataFetcher.fetchLeaderboard(nextView.leaderboardId).catch(error => {
+                console.log('Preload failed (non-critical):', error.message);
+            });
         }
     }
     

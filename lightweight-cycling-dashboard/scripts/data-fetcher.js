@@ -3,13 +3,26 @@
 class DataFetcher {
     constructor() {
         this.baseUrl = 'https://service2.funifier.com/v3/leaderboard';
-        this.timeout = 10000; // 10 second timeout
+        this.timeout = 8000; // Reduced to 8 seconds for faster timeouts
         this.maxRetries = 3;
         this.callHistory = []; // Track API calls for testing
+        
+        // Performance optimization: Add caching
+        this.cache = new Map();
+        this.cacheExpiry = 3 * 60 * 1000; // 3 minutes cache
     }
     
     async fetchLeaderboard(leaderboardId) {
         console.log(`Fetching leaderboard data for: ${leaderboardId}`);
+        
+        // Performance optimization: Check cache first
+        const cacheKey = `leaderboard_${leaderboardId}`;
+        const cached = this.cache.get(cacheKey);
+        
+        if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
+            console.log(`📦 Using cached data for ${leaderboardId}`);
+            return cached.data;
+        }
         
         // Record the API call for testing purposes
         this.callHistory.push({
@@ -24,7 +37,15 @@ class DataFetcher {
             try {
                 const data = await this.makeApiCall(leaderboardId);
                 console.log(`Successfully fetched data for ${leaderboardId} on attempt ${attempt}`);
-                return this.processPlayerData(data);
+                const processedData = this.processPlayerData(data);
+                
+                // Performance optimization: Cache the result
+                this.cache.set(cacheKey, {
+                    data: processedData,
+                    timestamp: Date.now()
+                });
+                
+                return processedData;
                 
             } catch (error) {
                 console.warn(`Attempt ${attempt} failed for ${leaderboardId}:`, error.message);
